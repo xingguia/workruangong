@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">燃动时刻</string>
+
+    <!-- Navigation -->
+    <string name="title_home">首页</string>
+    <string name="title_training">训练</string>
+    <string name="title_progress">进度</string>
+    <string name="title_profile">我的</string>
+
+    <!-- Common -->
+    <string name="loading">加载中…</string>
+    <string name="error">错误</string>
+    <string name="retry">重试</string>
+    <string name="cancel">取消</string>
+    <string name="confirm">确认</string>
+    <string name="save">保存</string>
+    <string name="submit">提交</string>
+    <string name="next">下一步</string>
+    <string name="previous">上一步</string>
+    <string name="skip">跳过</string>
+    <string name="complete">完成</string>
+
+    <!-- Login -->
+    <string name="login">登录</string>
+    <string name="login_title">欢迎回来</string>
+    <string name="login_subtitle">登录账号开始今日训练</string>
+    <string name="phone_number">手机号</string>
+    <string name="password">密码</string>
+    <string name="verification_code">验证码</string>
+    <string name="get_code">获取验证码</string>
+    <string name="login_sms">验证码登录</string>
+    <string name="login_password">密码登录</string>
+    <string name="forgot_password">忘记密码？</string>
+    <string name="wechat_login">微信一键登录</string>
+    <string name="no_account">还没有账号？</string>
+    <string name="register_now">立即注册</string>
+    <string name="login_agreement">登录即表示同意《用户协议》和《隐私政策》</string>
+
+    <!-- Register -->
+    <string name="register">注册</string>
+    <string name="register_title">创建账号</string>
+    <string name="register_subtitle">开启你的健身之旅</string>
+    <string name="set_password">设置密码</string>
+    <string name="confirm_password">确认密码</string>
+    <string name="password_hint">至少6位密码</string>
+    <string name="password_strength_weak">弱</string>
+    <string name="password_strength_medium">中等</string>
+    <string name="password_strength_strong">强</string>
+    <string name="agree_terms">我已阅读并同意</string>
+    <string name="user_agreement">《用户协议》</string>
+    <string name="privacy_policy">《隐私政策》</string>
+
+    <!-- Home -->
+    <string name="good_morning">早上好</string>
+    <string name="good_afternoon">下午好</string>
+    <string name="good_evening">晚上好</string>
+    <string name="today_training">今日训练</string>
+    <string name="today_workout">今日训练</string>
+    <string name="no_training_plan">暂无训练计划</string>
+    <string name="start_assessment">完成评估获得专属计划</string>
+    <string name="view_all">查看全部</string>
+    <string name="activate_vip">激活VIP会员</string>
+    <string name="vip_benefits_hint">解锁全部高级功能</string>
+    <string name="weight_kg">体重/kg</string>
+    <string name="fat_percent">体脂率</string>
+    <string name="total_workouts">累计训练</string>
+    <string name="total_calories">消耗千卡</string>
+    <string name="current_streak">连续打卡</string>
+    <string name="week_plan">本周计划</string>
+    <string name="quick_actions">快捷功能</string>
+    <string name="body_data">身体数据</string>
+    <string name="my_badges">我的徽章</string>
+    <string name="workout_history">训练记录</string>
+    <string name="vip_center">会员中心</string>
+    <string name="start_training">开始训练</string>
+    <string name="view_detail">查看详情</string>
+
+    <!-- Training -->
+    <string name="training_plan">训练计划</string>
+    <string name="week">第%1$d周</string>
+    <string name="training_complete">已完成</string>
+    <string name="training_remaining">剩余</string>
+    <string name="completion_rate">完成率</string>
+    <string name="training_duration">%1$d分钟</string>
+    <string name="training_actions">%1$d个动作</string>
+    <string name="training_calories">约%1$d千卡</string>
+    <string name="rest_day">休息日</string>
+    <string name="rest_desc">好好休息，让肌肉恢复生长</string>
+    <string name="stretch_suggestions">推荐拉伸动作</string>
+    <string name="week_progress">本周进度</string>
+
+    <!-- Progress -->
+    <string name="body_stats">身体数据</string>
+    <string name="weight">体重</string>
+    <string name="height">身高</string>
+    <string name="bmi">BMI指数</string>
+    <string name="body_fat">体脂率</string>
+    <string name="waist">腰围</string>
+    <string name="hip">臀围</string>
+    <string name="arm">臂围</string>
+    <string name="thigh">大腿围</string>
+    <string name="data_trend">数据趋势</string>
+    <string name="measurement_records">测量记录</string>
+    <string name="add_record">录入今日数据</string>
+    <string name="initial_data">最初数据</string>
+    <string name="bmi_underweight">偏瘦</string>
+    <string name="bmi_normal">正常</string>
+    <string name="bmi_overweight">偏胖</string>
+    <string name="bmi_obese">肥胖</string>
+
+    <!-- Profile -->
+    <string name="personal_center">个人中心</string>
+    <string name="settings">设置</string>
+    <string name="training_data">训练数据</string>
+    <string name="achievements">我的成就</string>
+    <string name="badge_wall">徽章墙</string>
+    <string name="account">账户</string>
+    <string name="help_center">帮助中心</string>
+    <string name="feedback">意见反馈</string>
+    <string name="about_us">关于我们</string>
+    <string name="logout">退出登录</string>
+    <string name="logout_confirm">确定要退出登录吗？</string>
+    <string name="level_badge">LV%1$d</string>
+    <string name="level_newbie">健身新手</string>
+    <string name="level_enthusiast">健身爱好者</string>
+    <string name="level_expert">健身达人</string>
+    <string name="level_master">健身大师</string>
+    <string name="level_legend">健身传奇</string>
+
+    <!-- Assessment -->
+    <string name="initial_assessment">初始评估</string>
+    <string name="step_indicator">%1$d/%2$d</string>
+    <string name="fitness_goal">你的健身目标是什么？</string>
+    <string name="goal_fat_loss">减脂</string>
+    <string name="goal_fat_loss_desc">减少体脂，塑造线条</string>
+    <string name="goal_muscle_gain">增肌</string>
+    <string name="goal_muscle_gain_desc">增加肌肉，塑造体型</string>
+    <string name="goal_shape">塑形</string>
+    <string name="goal_shape_desc">紧致身材，提升气质</string>
+    <string name="goal_posture">体态</string>
+    <string name="goal_posture_desc">改善体态，提升气质</string>
+    <string name="exercise_experience">你的运动经验？</string>
+    <string name="exp_beginner">健身新手</string>
+    <string name="exp_beginner_desc">刚开始接触健身，或停练超过半年</string>
+    <string name="exp_intermediate">有一定基础</string>
+    <string name="exp_intermediate_desc">有规律训练经验，能完成基础动作</string>
+    <string name="exp_advanced">资深健身者</string>
+    <string name="exp_advanced_desc">长期训练，追求突破和精细化</string>
+    <string name="equipment_available">你有哪些健身器材？</string>
+    <string name="equip_none">徒手</string>
+    <string name="equip_dumbbell">哑铃</string>
+    <string name="equip_barbell">杠铃</string>
+    <string name="equip_band">弹力带</string>
+    <string name="equip_gym">健身房</string>
+    <string name="equip_kettlebell">壶铃</string>
+    <string name="weekly_days">每周能训练几天？</string>
+    <string name="days_selected">已选择%1$d天/周</string>
+    <string name="days_recommended">（推荐）</string>
+    <string name="body_measurement">最后，告诉我们你的身体数据</string>
+    <string name="your_bmi">你的BMI</string>
+    <string name="generate_plan">生成计划</string>
+    <string name="skip_assessment">跳过评估，直接体验</string>
+
+    <!-- VIP -->
+    <string name="vip_page">会员中心</string>
+    <string name="open_vip">开通燃动会员</string>
+    <string name="vip_features">解锁全部高级功能，加速你的健身目标</string>
+    <string name="vip_feature_personal">个性化训练计划</string>
+    <string name="vip_feature_ai">AI动作智能纠错</string>
+    <string name="vip_feature_coach">专业教练1对1指导</string>
+    <string name="vip_feature_library">专属高级动作库</string>
+    <string name="premium_member">高级会员</string>
+    <string name="valid_until">有效期至 %1$s</string>
+    <string name="renew">续费</string>
+    <string name="choose_plan">选择会员套餐</string>
+    <string name="recommended">推荐</string>
+    <string name="discount_off">%1$d%%off</string>
+    <string name="per_month">/月</string>
+    <string name="per_quarter">/季</string>
+    <string name="per_year">/年</string>
+    <string name="monthly_vip">月度会员</string>
+    <string name="quarterly_vip">季度会员</string>
+    <string name="yearly_vip">年度会员</string>
+    <string name="faq_title">常见问题</string>
+    <string name="refund_guarantee">7天无理由退款</string>
+    <string name="open_now">立即开通</string>
+
+    <!-- Error Messages -->
+    <string name="error_empty_phone">请输入手机号</string>
+    <string name="error_invalid_phone">请输入正确的11位手机号</string>
+    <string name="error_empty_code">请输入验证码</string>
+    <string name="error_invalid_code">请输入6位验证码</string>
+    <string name="error_empty_password">请输入密码</string>
+    <string name="error_short_password">密码长度至少6位</string>
+    <string name="error_password_mismatch">两次密码输入不一致</string>
+    <string name="error_agree_terms">请先同意用户协议</string>
+    <string name="error_empty_height">请输入身高</string>
+    <string name="error_empty_weight">请输入体重</string>
+    <string name="error_network">网络连接失败，请检查网络</string>
+    <string name="error_unknown">操作失败，请重试</string>
+
+    <!-- Success Messages -->
+    <string name="success_login">登录成功</string>
+    <string name="success_register">注册成功</string>
+    <string name="success_save">保存成功</string>
+    <string name="success_send_code">验证码已发送</string>
+
+    <!-- Units -->
+    <string name="unit_kg">kg</string>
+    <string name="unit_cm">cm</string>
+    <string name="unit_percent">%</string>
+    <string name="unit_day">天</string>
+    <string name="unit_minute">分钟</string>
+    <string name="unit_kcal">千卡</string>
+</resources>

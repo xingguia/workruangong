@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Margins and Paddings -->
+    <dimen name="margin_tiny">4dp</dimen>
+    <dimen name="margin_small">8dp</dimen>
+    <dimen name="margin_medium">12dp</dimen>
+    <dimen name="margin_normal">16dp</dimen>
+    <dimen name="margin_large">20dp</dimen>
+    <dimen name="margin_xlarge">24dp</dimen>
+    <dimen name="margin_xxlarge">32dp</dimen>
+
+    <!-- Card -->
+    <dimen name="card_corner_radius">16dp</dimen>
+    <dimen name="card_padding">16dp</dimen>
+
+    <!-- Button -->
+    <dimen name="button_height">56dp</dimen>
+    <dimen name="button_corner_radius">12dp</dimen>
+    <dimen name="button_small_height">44dp</dimen>
+
+    <!-- Input -->
+    <dimen name="input_height">52dp</dimen>
+    <dimen name="input_corner_radius">12dp</dimen>
+
+    <!-- Icon -->
+    <dimen name="icon_small">16dp</dimen>
+    <dimen name="icon_normal">20dp</dimen>
+    <dimen name="icon_medium">24dp</dimen>
+    <dimen name="icon_large">32dp</dimen>
+    <dimen name="icon_xlarge">48dp</dimen>
+
+    <!-- Avatar -->
+    <dimen name="avatar_small">36dp</dimen>
+    <dimen name="avatar_normal">48dp</dimen>
+    <dimen name="avatar_large">72dp</dimen>
+    <dimen name="avatar_xlarge">96dp</dimen>
+
+    <!-- Text -->
+    <dimen name="text_tiny">10sp</dimen>
+    <dimen name="text_small">12sp</dimen>
+    <dimen name="text_caption">13sp</dimen>
+    <dimen name="text_body">14sp</dimen>
+    <dimen name="text_subtitle">15sp</dimen>
+    <dimen name="text_title">16sp</dimen>
+    <dimen name="text_headline">18sp</dimen>
+    <dimen name="text_large">20sp</dimen>
+    <dimen name="text_xlarge">22sp</dimen>
+    <dimen name="text_xxlarge">24sp</dimen>
+    <dimen name="text_display">28sp</dimen>
+    <dimen name="text_logo">32sp</dimen>
+
+    <!-- Bottom Navigation -->
+    <dimen name="bottom_nav_height">60dp</dimen>
+
+    <!-- Badge -->
+    <dimen name="badge_size_small">16dp</dimen>
+    <dimen name="badge_size_normal">20dp</dimen>
+
+    <!-- Stat Card -->
+    <dimen name="stat_icon_size">36dp</dimen>
+    <dimen name="stat_value_size">22sp</dimen>
+
+    <!-- Day Selector -->
+    <dimen name="day_button_size">44dp</dimen>
+</resources>

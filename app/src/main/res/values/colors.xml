@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Primary Colors - 燃动橙 -->
+    <color name="primary">#FF6B35</color>
+    <color name="primary_dark">#E55A25</color>
+    <color name="primary_light">#FF8F66</color>
+
+    <!-- Accent Colors - 活力绿 -->
+    <color name="accent">#00FF88</color>
+    <color name="accent_dark">#00DD77</color>
+
+    <!-- Background Colors -->
+    <color name="bg_dark">#0D0D14</color>
+    <color name="bg_card">#1A1A2E</color>
+    <color name="bg_card_light">#252545</color>
+
+    <!-- Text Colors -->
+    <color name="text_primary">#FFFFFF</color>
+    <color name="text_secondary">#B0B0B0</color>
+    <color name="text_muted">#6B6B6B</color>
+
+    <!-- Border Color -->
+    <color name="border_color">#2A2A3E</color>
+
+    <!-- Status Colors -->
+    <color name="success">#2ED573</color>
+    <color name="warning">#FFA502</color>
+    <color name="error">#FF4757</color>
+    <color name="info">#3498DB</color>
+
+    <!-- VIP Colors -->
+    <color name="vip_gold">#FFD700</color>
+    <color name="vip_gold_dark">#FFA500</color>
+
+    <!-- Gradient Colors -->
+    <color name="gradient_start">#FF6B35</color>
+    <color name="gradient_end">#00FF88</color>
+
+    <!-- Material Colors (保留兼容性) -->
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <!-- Transparent Colors -->
+    <color name="transparent">#00000000</color>
+    <color name="overlay_dark">#CC000000</color>
+    <color name="overlay_light">#33000000</color>
+
+    <!-- Primary with alpha -->
+    <color name="primary_10">#1AFF6B35</color>
+    <color name="primary_20">#33FF6B35</color>
+    <color name="primary_50">#80FF6B35</color>
+
+    <!-- Accent with alpha -->
+    <color name="accent_10">#1A00FF88</color>
+    <color name="accent_20">#3300FF88</color>
+
+    <!-- White with alpha -->
+    <color name="white_5">#0DFFFFFF</color>
+    <color name="white_10">#1AFFFFFF</color>
+    <color name="white_70">#B3FFFFFF</color>
+</resources>
