@@ -381,9 +381,9 @@ public class ProgressFragment extends Fragment {
         TextView subtitle = dialogView.findViewById(R.id.dialogSubtitle);
 
         title.setText("添加记录");
-        title.setTextColor(getResources().getColor(R.color.text_primary, null));
+        title.setTextColor(Color.BLACK);
         subtitle.setText("记录今天的身体数据，追踪你的变化");
-        subtitle.setTextColor(getResources().getColor(R.color.text_secondary, null));
+        subtitle.setTextColor(Color.parseColor("#666666"));
 
         // 设置输入框文字颜色为黑色
         setInputTextColorBlack(heightInput);
@@ -553,9 +553,9 @@ public class ProgressFragment extends Fragment {
         TextView subtitle = dialogView.findViewById(R.id.dialogSubtitle);
 
         title.setText("设置最初数据");
-        title.setTextColor(getResources().getColor(R.color.text_primary, null));
+        title.setTextColor(Color.BLACK);
         subtitle.setText("作为基准线，记录你的起点");
-        subtitle.setTextColor(getResources().getColor(R.color.text_secondary, null));
+        subtitle.setTextColor(Color.parseColor("#666666"));
 
         // 设置输入框文字颜色为黑色
         setInputTextColorBlack(heightInput);

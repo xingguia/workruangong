@@ -69,64 +69,23 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/margin_medium"
-            android:orientation="horizontal"
-            android:paddingHorizontal="@dimen/margin_normal" />
+            android:orientation="vertical"
+            android:paddingHorizontal="@dimen/margin_normal">
 
-        <!-- VIP Card -->
-        <LinearLayout
-            android:id="@+id/vipCard"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginHorizontal="@dimen/margin_normal"
-            android:layout_marginTop="@dimen/margin_large"
-            android:background="@drawable/bg_gradient_primary"
-            android:orientation="horizontal"
-            android:padding="@dimen/margin_normal">
-
-            <FrameLayout
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:background="@drawable/bg_avatar_placeholder">
-
-                <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:layout_gravity="center"
-                    android:src="@drawable/ic_star"
-                    app:tint="@color/vip_gold" />
-            </FrameLayout>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="本周计划"
+                android:textColor="@color/text_primary"
+                android:textSize="@dimen/text_subtitle"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp" />
 
             <LinearLayout
-                android:layout_width="0dp"
+                android:id="@+id/weekDaysRow"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginStart="@dimen/margin_medium"
-                android:gravity="center_vertical"
-                android:orientation="vertical">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/activate_vip"
-                    android:textColor="@color/white"
-                    android:textSize="@dimen/text_subtitle"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:text="@string/vip_benefits_hint"
-                    android:textColor="@color/white_70"
-                    android:textSize="@dimen/text_caption" />
-            </LinearLayout>
-
-            <ImageView
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:layout_gravity="center_vertical"
-                android:src="@drawable/ic_arrow_forward"
-                app:tint="@color/white" />
+                android:orientation="horizontal" />
         </LinearLayout>
 
         <!-- Body Data Card -->
@@ -148,6 +107,7 @@
                 android:orientation="vertical">
 
                 <TextView
+                    android:id="@+id/weightValue"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="--"
@@ -177,6 +137,7 @@
                 android:orientation="vertical">
 
                 <TextView
+                    android:id="@+id/bmiValue"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="--"
@@ -206,6 +167,7 @@
                 android:orientation="vertical">
 
                 <TextView
+                    android:id="@+id/bodyFatValue"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="--"
@@ -223,16 +185,13 @@
             </LinearLayout>
         </LinearLayout>
 
-        <!-- Training Card -->
+        <!-- Today Training Section -->
         <LinearLayout
-            android:id="@+id/trainingCard"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginHorizontal="@dimen/margin_normal"
-            android:layout_marginTop="@dimen/margin_normal"
-            android:background="@drawable/bg_card"
+            android:layout_marginTop="@dimen/margin_large"
             android:orientation="vertical"
-            android:padding="@dimen/margin_normal">
+            android:paddingHorizontal="@dimen/margin_normal">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -249,57 +208,87 @@
                     android:textSize="@dimen/text_title"
                     android:textStyle="bold" />
 
-                <TextView
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/addTaskBtn"
+                    style="@style/Widget.MaterialComponents.Button.TextButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/view_all"
+                    android:text="添加任务"
                     android:textColor="@color/primary"
-                    android:textSize="@dimen/text_caption" />
+                    app:icon="@drawable/ic_add"
+                    app:iconTint="@color/primary"
+                    app:iconSize="18dp" />
             </LinearLayout>
 
+            <!-- Training Progress -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/margin_medium"
+                android:layout_marginTop="@dimen/margin_small"
                 android:orientation="horizontal"
                 android:gravity="center_vertical">
 
-                <FrameLayout
-                    android:layout_width="56dp"
-                    android:layout_height="56dp"
-                    android:background="@drawable/bg_stat_icon">
-
-                    <ImageView
-                        android:layout_width="28dp"
-                        android:layout_height="28dp"
-                        android:layout_gravity="center"
-                        android:src="@drawable/ic_training"
-                        app:tint="@color/primary" />
-                </FrameLayout>
-
-                <LinearLayout
-                    android:layout_width="0dp"
+                <TextView
+                    android:id="@+id/trainingProgress"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:text="已完成 0/0"
+                    android:textColor="@color/text_muted"
+                    android:textSize="@dimen/text_caption" />
+
+                <ProgressBar
+                    android:id="@+id/trainingProgressBar"
+                    style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+                    android:layout_width="0dp"
+                    android:layout_height="6dp"
                     android:layout_weight="1"
                     android:layout_marginStart="@dimen/margin_medium"
-                    android:orientation="vertical">
+                    android:progress="0"
+                    android:max="100"
+                    android:progressTint="@color/primary"
+                    android:progressBackgroundTint="@color/border_color" />
+            </LinearLayout>
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/no_training_plan"
-                        android:textColor="@color/text_primary"
-                        android:textSize="@dimen/text_subtitle"
-                        android:textStyle="bold" />
+            <!-- Training Tasks Container -->
+            <LinearLayout
+                android:id="@+id/tasksContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/margin_medium"
+                android:orientation="vertical" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:text="@string/start_assessment"
-                        android:textColor="@color/text_muted"
-                        android:textSize="@dimen/text_caption" />
-                </LinearLayout>
+            <!-- Empty Training State -->
+            <LinearLayout
+                android:id="@+id/emptyTrainingState"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/margin_medium"
+                android:background="@drawable/bg_card"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:padding="@dimen/margin_xxlarge">
+
+                <ImageView
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:src="@drawable/ic_training"
+                    app:tint="@color/text_muted" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/margin_medium"
+                    android:text="今日暂无训练任务"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="@dimen/text_body" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/margin_small"
+                    android:text="点击上方添加按钮添加训练任务"
+                    android:textColor="@color/text_muted"
+                    android:textSize="@dimen/text_caption" />
             </LinearLayout>
         </LinearLayout>
 
