@@ -29,6 +29,10 @@ public class SessionManager {
     private static final String KEY_ASSESSMENT_COMPLETED = "assessment_completed";
     private static final String KEY_USERNAME_SET = "username_set";
     private static final String KEY_ALL_USERNAMES = "all_usernames";
+    private static final String KEY_GENDER = "gender";
+    private static final String KEY_FITNESS_GOAL = "fitness_goal";
+    private static final String KEY_WORKOUT_REMINDER = "workout_reminder";
+    private static final String KEY_ACHIEVEMENT_NOTIFICATION = "achievement_notification";
 
     private static SessionManager instance;
     private SharedPreferences prefs;
@@ -115,6 +119,18 @@ public class SessionManager {
         editor.putString(KEY_NICKNAME, nickname).apply();
     }
 
+    public void setNickname(String nickname) {
+        editor.putString(KEY_NICKNAME, nickname).apply();
+    }
+
+    public void setHeight(int height) {
+        editor.putInt(KEY_HEIGHT, height).apply();
+    }
+
+    public void setWeight(float weight) {
+        editor.putFloat(KEY_WEIGHT, weight).apply();
+    }
+
     public boolean isNicknameAvailable(String nickname) {
         Set<String> allUsernames = getAllUsernames();
         return !allUsernames.contains(nickname);
@@ -166,6 +182,10 @@ public class SessionManager {
         return prefs.getString(KEY_AVATAR, null);
     }
 
+    public void setAvatar(String avatar) {
+        editor.putString(KEY_AVATAR, avatar).apply();
+    }
+
     public int getHeight() {
         return prefs.getInt(KEY_HEIGHT, 0);
     }
@@ -208,5 +228,41 @@ public class SessionManager {
 
     public void logout() {
         prefs.edit().clear().apply();
+    }
+
+    // Gender
+    public void setGender(String gender) {
+        editor.putString(KEY_GENDER, gender).apply();
+    }
+
+    public String getGender() {
+        return prefs.getString(KEY_GENDER, null);
+    }
+
+    // Fitness Goal
+    public void setFitnessGoal(String goal) {
+        editor.putString(KEY_FITNESS_GOAL, goal).apply();
+    }
+
+    public String getFitnessGoal() {
+        return prefs.getString(KEY_FITNESS_GOAL, null);
+    }
+
+    // Workout Reminder
+    public void setWorkoutReminderEnabled(boolean enabled) {
+        editor.putBoolean(KEY_WORKOUT_REMINDER, enabled).apply();
+    }
+
+    public boolean isWorkoutReminderEnabled() {
+        return prefs.getBoolean(KEY_WORKOUT_REMINDER, true);
+    }
+
+    // Achievement Notification
+    public void setAchievementNotificationEnabled(boolean enabled) {
+        editor.putBoolean(KEY_ACHIEVEMENT_NOTIFICATION, enabled).apply();
+    }
+
+    public boolean isAchievementNotificationEnabled() {
+        return prefs.getBoolean(KEY_ACHIEVEMENT_NOTIFICATION, true);
     }
 }

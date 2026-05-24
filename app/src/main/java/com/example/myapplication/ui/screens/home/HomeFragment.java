@@ -14,8 +14,14 @@ import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
+import androidx.fragment.app.Fragment;
+
+import com.example.myapplication.R;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
@@ -23,13 +29,16 @@ import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 
 import com.example.myapplication.R;
+import com.example.myapplication.api.AICalorieService;
 import com.example.myapplication.databinding.FragmentHomeBinding;
 import com.example.myapplication.model.ExercisePlan;
 import com.example.myapplication.model.TrainingTask;
+import com.example.myapplication.model.WorkoutRecord;
 import com.example.myapplication.util.ExercisePlanManager;
 import com.example.myapplication.util.RecordManager;
 import com.example.myapplication.util.SessionManager;
 import com.example.myapplication.util.TrainingTaskManager;
+import com.example.myapplication.util.WorkoutRecordManager;
 import com.google.android.material.textfield.TextInputEditText;
 
 import java.util.Calendar;
@@ -43,6 +52,8 @@ public class HomeFragment extends Fragment {
     private ExercisePlanManager exercisePlanManager;
     private TrainingTaskManager trainingTaskManager;
     private RecordManager recordManager;
+    private WorkoutRecordManager workoutRecordManager;
+    private AICalorieService aiCalorieService;
 
     private int selectedDayIndex = -1;
 
@@ -60,6 +71,8 @@ public class HomeFragment extends Fragment {
         exercisePlanManager = ExercisePlanManager.getInstance(requireContext());
         trainingTaskManager = TrainingTaskManager.getInstance(requireContext());
         recordManager = RecordManager.getInstance(requireContext());
+        workoutRecordManager = WorkoutRecordManager.getInstance(requireContext());
+        aiCalorieService = AICalorieService.getInstance();
 
         setupHeader();
         setupWeekDays();
@@ -343,14 +356,20 @@ public class HomeFragment extends Fragment {
         }
 
         checkbox.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            task.setStatus(isChecked ? TrainingTask.TaskStatus.COMPLETED : TrainingTask.TaskStatus.NOT_STARTED);
-            trainingTaskManager.updateTask(task);
-
-            if (isChecked) {
-                nameView.setTextColor(Color.parseColor("#2ED573")); // 绿色-已完成
-            } else {
-                nameView.setTextColor(Color.parseColor("#666666")); // 灰色-未完成
+            // Prevent duplicate calorie records
+            if (isChecked && !task.isCaloriesRecorded()) {
+                task.setStatus(TrainingTask.TaskStatus.COMPLETED);
+                nameView.setTextColor(Color.parseColor("#2ED573"));
+                calculateAndSaveCalories(task);
+            } else if (!isChecked) {
+                task.setStatus(TrainingTask.TaskStatus.NOT_STARTED);
+                task.setCaloriesRecorded(false); // Reset flag when unchecking
+                nameView.setTextColor(Color.parseColor("#666666"));
+                // Remove the calorie record for this task
+                workoutRecordManager.deleteRecordByTaskId(task.getId());
+                updateTodayProgress();
             }
+            trainingTaskManager.updateTask(task);
             setupTrainingTasks();
         });
 
@@ -359,14 +378,310 @@ public class HomeFragment extends Fragment {
                     .setTitle("删除任务")
                     .setMessage("确定要删除这个训练任务吗？")
                     .setPositiveButton("删除", (dialog, which) -> {
+                        // Delete associated workout record first
+                        workoutRecordManager.deleteRecordByTaskId(task.getId());
+                        // Then delete the task
                         trainingTaskManager.deleteTask(task.getId());
                         setupTrainingTasks();
+                        updateTodayProgress();
                     })
                     .setNegativeButton("取消", null)
                     .show();
         });
 
         return view;
+    }
+
+    private void calculateAndSaveCalories(TrainingTask task) {
+        // Get user info for better calorie calculation
+        final float userWeight;
+        if (sessionManager.getWeight() > 0) {
+            userWeight = sessionManager.getWeight();
+        } else {
+            userWeight = 70f; // Default weight
+        }
+
+        final int userHeight;
+        if (sessionManager.getHeight() > 0) {
+            userHeight = sessionManager.getHeight();
+        } else {
+            userHeight = 170; // Default height
+        }
+
+        final String gender;
+        String genderFromSession = sessionManager.getGender();
+        if (genderFromSession != null && !genderFromSession.isEmpty()) {
+            gender = genderFromSession;
+        } else {
+            gender = "未知";
+        }
+
+        // Calculate age (simplified - assume 25 if not available)
+        final int userAge = 25;
+
+        // Get exercise data from task
+        final int reps = task.getReps();
+        final int sets = task.getSets();
+        final float weight = task.getWeight();
+
+        // Check if this is a treadmill exercise
+        if (task.isTreadmillExercise() && task.getTreadmillSpeed() > 0) {
+            // Use treadmill calorie calculation
+            calculateTreadmillCalories(task, userWeight, userAge, gender);
+        } else {
+            // Use AI service for regular exercises
+            calculateCaloriesWithAI(task, userWeight, userHeight, userAge, gender, reps, sets, weight);
+        }
+    }
+
+    /**
+     * 跑步机卡路里计算
+     */
+    private void calculateTreadmillCalories(TrainingTask task, float userWeight, int userAge, String gender) {
+        float speed = task.getTreadmillSpeed();
+        float incline = task.getTreadmillIncline();
+        int duration = task.getDuration();
+
+        aiCalorieService.calculateTreadmillCalories(
+                speed,
+                incline,
+                duration,
+                userWeight,
+                userAge,
+                gender,
+                new AICalorieService.AICalorieCallback() {
+                    @Override
+                    public void onSuccess(float calories) {
+                        saveWorkoutRecord(task, calories);
+                    }
+
+                    @Override
+                    public void onError(String error) {
+                        // Fallback: use MET formula directly
+                        float met = calculateMET(speed, incline);
+                        float calories = met * userWeight * (duration / 60.0f);
+                        saveWorkoutRecord(task, calories);
+                    }
+                }
+        );
+    }
+
+    /**
+     * 根据速度和坡度计算MET值
+     */
+    private float calculateMET(float speed, float incline) {
+        float met;
+        if (speed < 4) {
+            met = 3.0f + speed * 0.2f;
+        } else if (speed < 6) {
+            met = 4.0f + (speed - 4) * 0.5f;
+        } else if (speed < 8) {
+            met = 6.0f + (speed - 6) * 0.8f;
+        } else if (speed < 10) {
+            met = 8.0f + (speed - 8) * 0.7f;
+        } else if (speed < 12) {
+            met = 9.5f + (speed - 10) * 0.6f;
+        } else {
+            met = 11.0f + (speed - 12) * 0.5f;
+        }
+        // 坡度影响：每1%坡度增加约10%
+        float inclineFactor = 1.0f + (incline / 100.0f) * 0.1f * incline;
+        return met * inclineFactor;
+    }
+
+    /**
+     * 使用AI计算常规运动卡路里
+     */
+    private void calculateCaloriesWithAI(TrainingTask task, float userWeight, int userHeight,
+                                         int userAge, String gender, int reps, int sets, float weight) {
+        // If reps/sets/weight are not set in task, try to parse from description
+        if (reps <= 0 && sets <= 0 && weight <= 0 && task.getDescription() != null && !task.getDescription().isEmpty()) {
+            parseExerciseDataFromDescription(task.getDescription());
+        }
+
+        final int totalReps = task.getReps() * task.getSets();
+
+        aiCalorieService.calculateCalories(
+                task.getName(),
+                task.getDuration(),
+                totalReps,
+                task.getWeight(),
+                userWeight,
+                userHeight,
+                userAge,
+                gender,
+                new AICalorieService.AICalorieCallback() {
+                    @Override
+                    public void onSuccess(float calories) {
+                        saveWorkoutRecord(task, calories);
+                    }
+
+                    @Override
+                    public void onError(String error) {
+                        // Fallback: use estimated calories based on exercise type
+                        float estimatedCalories = estimateCaloriesWithType(
+                                task.getName(),
+                                task.getExerciseType(),
+                                task.getDuration(),
+                                totalReps,
+                                task.getWeight(),
+                                userWeight
+                        );
+                        saveWorkoutRecord(task, estimatedCalories);
+                    }
+                }
+        );
+    }
+
+    /**
+     * 保存训练记录
+     */
+    private void saveWorkoutRecord(TrainingTask task, float calories) {
+        // Mark calories as recorded to prevent duplicates
+        task.setCaloriesRecorded(true);
+        trainingTaskManager.updateTask(task);
+
+        // Save workout record with task ID for deduplication
+        WorkoutRecord record = new WorkoutRecord(
+                task.getName(),
+                task.getDuration(),
+                calories
+        );
+        record.setTaskId(task.getId());
+        record.setReps(task.getReps() * task.getSets());
+        record.setSets(task.getSets());
+        record.setWeight(task.getWeight());
+
+        // Include treadmill info in notes
+        String notes = task.getDescription() != null ? task.getDescription() : "";
+        if (task.isTreadmillExercise()) {
+            notes += String.format(" [跑步机: %.1f km/h, %d%%坡度]", task.getTreadmillSpeed(), (int) task.getTreadmillIncline());
+        }
+        record.setNotes(notes);
+
+        workoutRecordManager.addRecord(record);
+
+        // Update the progress card
+        updateTodayProgress();
+    }
+
+    private int[] parseExerciseDataFromDescription(String description) {
+        int[] result = new int[]{0, 0}; // [reps, sets]
+        try {
+            StringBuilder currentNumber = new StringBuilder();
+            for (char c : description.toCharArray()) {
+                if (Character.isDigit(c)) {
+                    currentNumber.append(c);
+                } else {
+                    if (currentNumber.length() > 0) {
+                        int num = Integer.parseInt(currentNumber.toString());
+                        if (description.contains("组") || description.contains("set")) {
+                            result[1] = num;
+                        } else if (description.contains("次") || description.contains("rep")) {
+                            result[0] = num;
+                        } else if (result[0] == 0) {
+                            result[0] = num;
+                        }
+                        currentNumber = new StringBuilder();
+                    }
+                }
+            }
+        } catch (Exception e) {
+            // Ignore parsing errors
+        }
+        return result;
+    }
+
+    private float estimateCaloriesFallback(String exerciseName, int duration) {
+        return estimateCaloriesWithType(exerciseName, null, duration, 0, 0, 70f);
+    }
+
+    private float estimateCaloriesWithType(String exerciseName, TrainingTask.ExerciseType type,
+                                            int duration, int totalReps, float weight, float userWeight) {
+        // Base calories per minute depends on exercise type
+        float baseCaloriesPerMinute;
+        String name = exerciseName.toLowerCase();
+
+        if (type != null) {
+            switch (type) {
+                case CARDIO:
+                    baseCaloriesPerMinute = 10f;
+                    break;
+                case HIIT:
+                    baseCaloriesPerMinute = 12f;
+                    break;
+                case EQUIPMENT:
+                    baseCaloriesPerMinute = 7f;
+                    break;
+                case CORE:
+                    baseCaloriesPerMinute = 6f;
+                    break;
+                case FLEXIBILITY:
+                    baseCaloriesPerMinute = 3f;
+                    break;
+                case STRENGTH:
+                default:
+                    baseCaloriesPerMinute = 5f;
+                    break;
+            }
+        } else {
+            // Fallback to name-based detection
+            if (name.contains("俯卧撑")) baseCaloriesPerMinute = 7f;
+            else if (name.contains("仰卧起坐") || name.contains("卷腹")) baseCaloriesPerMinute = 5f;
+            else if (name.contains("深蹲")) baseCaloriesPerMinute = 6f;
+            else if (name.contains("跑步") || name.contains("慢跑")) baseCaloriesPerMinute = 10f;
+            else if (name.contains("跳绳")) baseCaloriesPerMinute = 12f;
+            else if (name.contains("游泳")) baseCaloriesPerMinute = 11f;
+            else if (name.contains("骑行") || name.contains("自行车")) baseCaloriesPerMinute = 8f;
+            else if (name.contains("瑜伽")) baseCaloriesPerMinute = 4f;
+            else if (name.contains("拉伸")) baseCaloriesPerMinute = 3f;
+            else if (name.contains("平板支撑")) baseCaloriesPerMinute = 5f;
+            else if (name.contains("波比")) baseCaloriesPerMinute = 10f;
+            else if (name.contains("引体向上")) baseCaloriesPerMinute = 6f;
+            else if (name.contains("硬拉")) baseCaloriesPerMinute = 8f;
+            else if (name.contains("卧推")) baseCaloriesPerMinute = 7f;
+            else if (name.contains("哑铃")) baseCaloriesPerMinute = 6f;
+            else if (name.contains("开合跳")) baseCaloriesPerMinute = 8f;
+            else if (name.contains("高抬腿")) baseCaloriesPerMinute = 9f;
+            else baseCaloriesPerMinute = 5f;
+        }
+
+        float calories = baseCaloriesPerMinute * duration;
+
+        // Adjust for repetitions (if applicable)
+        if (totalReps > 0) {
+            calories += (totalReps / 10.0f) * baseCaloriesPerMinute * 0.5f;
+        }
+
+        // Adjust for added weight (if using equipment)
+        if (weight > 0) {
+            // More weight = more calories burned
+            calories *= (1 + weight / 50.0f);
+        }
+
+        // Adjust for user body weight
+        if (userWeight > 0) {
+            float weightFactor = userWeight / 70.0f; // Normalize to 70kg
+            calories *= weightFactor;
+        }
+
+        return calories;
+    }
+
+    private void updateTodayProgress() {
+        int todayCount = workoutRecordManager.getWorkoutCountForToday();
+        float todayCalories = workoutRecordManager.getCaloriesForToday();
+        int todayMinutes = workoutRecordManager.getTotalMinutesForToday();
+
+        // Update the training progress UI
+        binding.trainingProgress.setText(String.format("已完成 %d/%d", todayCount, trainingTaskManager.getTodayTotalCount()));
+
+        int totalCount = trainingTaskManager.getTodayTotalCount();
+        if (totalCount > 0) {
+            binding.trainingProgressBar.setProgress((todayCount * 100) / totalCount);
+        } else {
+            binding.trainingProgressBar.setProgress(0);
+        }
     }
 
     private void showAddTaskDialog() {
@@ -376,6 +691,22 @@ public class HomeFragment extends Fragment {
         TextInputEditText nameInput = dialogView.findViewById(R.id.taskNameInput);
         TextInputEditText durationInput = dialogView.findViewById(R.id.taskDurationInput);
         TextInputEditText descInput = dialogView.findViewById(R.id.taskDescInput);
+        TextInputEditText setsInput = dialogView.findViewById(R.id.taskSetsInput);
+        TextInputEditText repsInput = dialogView.findViewById(R.id.taskRepsInput);
+        TextInputEditText weightInput = dialogView.findViewById(R.id.taskWeightInput);
+        TextInputEditText speedInput = dialogView.findViewById(R.id.taskSpeedInput);
+        TextInputEditText inclineInput = dialogView.findViewById(R.id.taskInclineInput);
+        RadioGroup exerciseTypeGroup = dialogView.findViewById(R.id.exerciseTypeGroup);
+        LinearLayout treadmillSettings = dialogView.findViewById(R.id.treadmillSettings);
+
+        // Listen for exercise type changes to show/hide treadmill settings
+        exerciseTypeGroup.setOnCheckedChangeListener((group, checkedId) -> {
+            // Check if name contains treadmill keywords or if cardio is selected
+            String name = nameInput.getText() != null ? nameInput.getText().toString().toLowerCase() : "";
+            boolean isTreadmill = name.contains("跑步机") || name.contains("treadmill")
+                    || checkedId == R.id.radioCardio;
+            treadmillSettings.setVisibility(isTreadmill ? View.VISIBLE : View.GONE);
+        });
 
         AlertDialog dialog = new AlertDialog.Builder(requireContext())
                 .setView(dialogView)
@@ -397,6 +728,11 @@ public class HomeFragment extends Fragment {
                 String name = nameInput.getText() != null ? nameInput.getText().toString().trim() : "";
                 String durationStr = durationInput.getText() != null ? durationInput.getText().toString().trim() : "30";
                 String desc = descInput.getText() != null ? descInput.getText().toString().trim() : "";
+                String setsStr = setsInput.getText() != null ? setsInput.getText().toString().trim() : "3";
+                String repsStr = repsInput.getText() != null ? repsInput.getText().toString().trim() : "10";
+                String weightStr = weightInput.getText() != null ? weightInput.getText().toString().trim() : "0";
+                String speedStr = speedInput.getText() != null ? speedInput.getText().toString().trim() : "8";
+                String inclineStr = inclineInput.getText() != null ? inclineInput.getText().toString().trim() : "0";
 
                 if (name.isEmpty()) {
                     nameInput.setError("请输入任务名称");
@@ -410,8 +746,69 @@ public class HomeFragment extends Fragment {
                     duration = 30;
                 }
 
+                int sets = 3;
+                try {
+                    sets = Integer.parseInt(setsStr);
+                } catch (NumberFormatException e) {
+                    sets = 3;
+                }
+
+                int reps = 10;
+                try {
+                    reps = Integer.parseInt(repsStr);
+                } catch (NumberFormatException e) {
+                    reps = 10;
+                }
+
+                float weight = 0f;
+                try {
+                    weight = Float.parseFloat(weightStr);
+                } catch (NumberFormatException e) {
+                    weight = 0f;
+                }
+
+                float speed = 8f;
+                try {
+                    speed = Float.parseFloat(speedStr);
+                } catch (NumberFormatException e) {
+                    speed = 8f;
+                }
+
+                float incline = 0f;
+                try {
+                    incline = Float.parseFloat(inclineStr);
+                } catch (NumberFormatException e) {
+                    incline = 0f;
+                }
+
+                // Get exercise type
+                TrainingTask.ExerciseType exerciseType = TrainingTask.ExerciseType.STRENGTH;
+                int checkedId = exerciseTypeGroup.getCheckedRadioButtonId();
+                if (checkedId == R.id.radioEquipment) {
+                    exerciseType = TrainingTask.ExerciseType.EQUIPMENT;
+                } else if (checkedId == R.id.radioCardio) {
+                    exerciseType = TrainingTask.ExerciseType.CARDIO;
+                } else if (checkedId == R.id.radioHIIT) {
+                    exerciseType = TrainingTask.ExerciseType.HIIT;
+                } else if (checkedId == R.id.radioFlexibility) {
+                    exerciseType = TrainingTask.ExerciseType.FLEXIBILITY;
+                } else if (checkedId == R.id.radioCore) {
+                    exerciseType = TrainingTask.ExerciseType.CORE;
+                }
+
                 TrainingTask task = new TrainingTask(name, desc, duration);
                 task.setDate(System.currentTimeMillis());
+                task.setExerciseType(exerciseType);
+                task.setSets(sets);
+                task.setReps(reps);
+                task.setWeight(weight);
+
+                // Set treadmill parameters if applicable
+                if (name.contains("跑步机") || name.contains("treadmill") || exerciseType == TrainingTask.ExerciseType.CARDIO) {
+                    task.setTreadmillSpeed(speed);
+                    task.setTreadmillIncline(incline);
+                }
+
                 trainingTaskManager.addTask(task);
 
                 dialog.dismiss();

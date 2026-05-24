@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:background="#FFFFFF">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="更换头像"
+        android:textColor="#000000"
+        android:textSize="18sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="选择你喜欢的颜色作为头像背景，或从相册选择图片"
+        android:textColor="#666666"
+        android:textSize="14sp" />
+
+    <!-- 选择图片按钮 -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnPickFromGallery"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="从相册选择图片"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+        app:cornerRadius="12dp"
+        xmlns:app="http://schemas.android.com/apk/res-auto" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="选择头像颜色"
+        android:textColor="#000000"
+        android:textSize="16sp"
+        android:textStyle="bold" />
+
+    <GridLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:columnCount="4"
+        android:rowCount="3"
+        android:alignmentMode="alignBounds">
+
+        <FrameLayout
+            android:id="@+id/avatar_color_1"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:layout_margin="4dp"
+            android:background="@drawable/bg_avatar_color_1" />
+
+        <FrameLayout
+            android:id="@+id/avatar_color_2"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:layout_margin="4dp"
+            android:background="@drawable/bg_avatar_color_2" />
+
+        <FrameLayout
+            android:id="@+id/avatar_color_3"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:layout_margin="4dp"
+            android:background="@drawable/bg_avatar_color_3" />
+
+        <FrameLayout
+            android:id="@+id/avatar_color_4"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:layout_margin="4dp"
+            android:background="@drawable/bg_avatar_color_4" />
+
+        <FrameLayout
+            android:id="@+id/avatar_color_5"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:layout_margin="4dp"
+            android:background="@drawable/bg_avatar_color_5" />
+
+        <FrameLayout
+            android:id="@+id/avatar_color_6"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:layout_margin="4dp"
+            android:background="@drawable/bg_avatar_color_6" />
+
+        <FrameLayout
+            android:id="@+id/avatar_color_7"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:layout_margin="4dp"
+            android:background="@drawable/bg_avatar_color_7" />
+
+        <FrameLayout
+            android:id="@+id/avatar_color_8"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:layout_margin="4dp"
+            android:background="@drawable/bg_avatar_color_8" />
+
+        <FrameLayout
+            android:id="@+id/avatar_color_9"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:layout_margin="4dp"
+            android:background="@drawable/bg_avatar_color_9" />
+
+        <FrameLayout
+            android:id="@+id/avatar_color_10"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:layout_margin="4dp"
+            android:background="@drawable/bg_avatar_color_10" />
+
+        <FrameLayout
+            android:id="@+id/avatar_color_11"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:layout_margin="4dp"
+            android:background="@drawable/bg_avatar_color_11" />
+
+        <FrameLayout
+            android:id="@+id/avatar_color_12"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:layout_margin="4dp"
+            android:background="@drawable/bg_avatar_color_12" />
+    </GridLayout>
+
+</LinearLayout>

@@ -85,7 +85,57 @@
             app:destination="@id/navigation_login"
             app:popUpTo="@id/navigation_home"
             app:popUpToInclusive="true" />
+        <action
+            android:id="@+id/action_profile_to_settings"
+            app:destination="@id/navigation_settings" />
+        <action
+            android:id="@+id/action_profile_to_profile_edit"
+            app:destination="@id/navigation_profile_edit" />
+        <action
+            android:id="@+id/action_profile_to_workout_history"
+            app:destination="@id/navigation_workout_history" />
+        <action
+            android:id="@+id/action_profile_to_achievements"
+            app:destination="@id/navigation_achievements" />
+        <action
+            android:id="@+id/action_profile_to_badge_wall"
+            app:destination="@id/navigation_badge_wall" />
     </fragment>
+
+    <!-- Settings Page -->
+    <fragment
+        android:id="@+id/navigation_settings"
+        android:name="com.example.myapplication.ui.screens.profile.SettingsFragment"
+        android:label="@string/settings"
+        tools:layout="@layout/fragment_settings" />
+
+    <!-- Profile Edit Page -->
+    <fragment
+        android:id="@+id/navigation_profile_edit"
+        android:name="com.example.myapplication.ui.screens.profile.ProfileEditFragment"
+        android:label="编辑个人信息"
+        tools:layout="@layout/fragment_profile_edit" />
+
+    <!-- Workout History Page -->
+    <fragment
+        android:id="@+id/navigation_workout_history"
+        android:name="com.example.myapplication.ui.screens.profile.WorkoutHistoryFragment"
+        android:label="训练记录"
+        tools:layout="@layout/fragment_workout_history" />
+
+    <!-- Achievements Page -->
+    <fragment
+        android:id="@+id/navigation_achievements"
+        android:name="com.example.myapplication.ui.screens.profile.AchievementsFragment"
+        android:label="我的成就"
+        tools:layout="@layout/fragment_achievements" />
+
+    <!-- Badge Wall Page -->
+    <fragment
+        android:id="@+id/navigation_badge_wall"
+        android:name="com.example.myapplication.ui.screens.profile.BadgeWallFragment"
+        android:label="徽章墙"
+        tools:layout="@layout/fragment_badge_wall" />
 
     <!-- VIP Page -->
     <fragment

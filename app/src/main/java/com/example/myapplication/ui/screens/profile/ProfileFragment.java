@@ -1,9 +1,12 @@
 package com.example.myapplication.ui.screens.profile;
 
 import android.app.AlertDialog;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,6 +22,7 @@ import com.example.myapplication.R;
 import com.example.myapplication.databinding.FragmentProfileBinding;
 import com.example.myapplication.util.SessionManager;
 import com.example.myapplication.util.UsernameValidator;
+import com.example.myapplication.util.WorkoutRecordManager;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 
@@ -27,6 +31,7 @@ public class ProfileFragment extends Fragment {
     private FragmentProfileBinding binding;
     private NavController navController;
     private SessionManager sessionManager;
+    private WorkoutRecordManager workoutRecordManager;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -39,6 +44,7 @@ public class ProfileFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         navController = Navigation.findNavController(view);
         sessionManager = SessionManager.getInstance(requireContext());
+        workoutRecordManager = WorkoutRecordManager.getInstance(requireContext());
 
         setupUserInfo();
         setupListeners();
@@ -47,6 +53,13 @@ public class ProfileFragment extends Fragment {
         if (!sessionManager.isUsernameSet()) {
             showUsernameSetDialog();
         }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        // Refresh data when returning to this fragment
+        setupUserInfo();
     }
 
     private void showUsernameSetDialog() {
@@ -133,16 +146,38 @@ public class ProfileFragment extends Fragment {
 
         binding.userName.setText(nickname);
 
-        // Set avatar placeholder with first character
-        if (nickname.length() > 0) {
-            String firstChar = nickname.substring(0, 1).toUpperCase();
-            binding.avatarPlaceholder.setText(firstChar);
+        // Load avatar
+        String avatar = sessionManager.getAvatar();
+        if (avatar != null && !avatar.isEmpty()) {
+            try {
+                byte[] decodedBytes = Base64.decode(avatar, Base64.DEFAULT);
+                Bitmap bitmap = BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.length);
+                binding.avatarImage.setImageBitmap(bitmap);
+                binding.avatarImage.setVisibility(View.VISIBLE);
+                binding.avatarPlaceholder.setVisibility(View.GONE);
+            } catch (Exception e) {
+                // Show default avatar
+                binding.avatarPlaceholder.setText(String.valueOf(nickname.charAt(0)).toUpperCase());
+                binding.avatarImage.setVisibility(View.GONE);
+                binding.avatarPlaceholder.setVisibility(View.VISIBLE);
+            }
         } else {
-            binding.avatarPlaceholder.setText("U");
+            // Set avatar placeholder with first character
+            if (nickname.length() > 0) {
+                String firstChar = nickname.substring(0, 1).toUpperCase();
+                binding.avatarPlaceholder.setText(firstChar);
+            } else {
+                binding.avatarPlaceholder.setText("U");
+            }
+            binding.avatarImage.setVisibility(View.GONE);
+            binding.avatarPlaceholder.setVisibility(View.VISIBLE);
         }
 
         // Set level
         binding.levelBadge.setText("LV" + sessionManager.getLevel());
+
+        // Load statistics from WorkoutRecordManager
+        loadStatistics();
 
         // Get VIP status
         boolean isVip = sessionManager.isVip();
@@ -155,46 +190,62 @@ public class ProfileFragment extends Fragment {
         }
     }
 
+    private void loadStatistics() {
+        // Load total workouts count
+        int totalWorkouts = workoutRecordManager.getTotalWorkouts();
+        binding.totalWorkouts.setText(String.valueOf(totalWorkouts));
+
+        // Load consecutive days
+        int consecutiveDays = workoutRecordManager.getConsecutiveDays();
+        binding.totalDays.setText(String.valueOf(consecutiveDays));
+
+        // Load total calories
+        float totalCalories = workoutRecordManager.getTotalCalories();
+        binding.totalCalories.setText(String.format("%.1f", totalCalories));
+    }
+
     private void setupListeners() {
-        // 设置按钮
+        // 设置按钮 - 跳转到设置页面
         binding.settingsBtn.setOnClickListener(v -> {
-            Toast.makeText(requireContext(), "设置功能开发中", Toast.LENGTH_SHORT).show();
+            navController.navigate(R.id.action_profile_to_settings);
         });
 
-        // 编辑头像
+        // 编辑头像 - 跳转到个人信息编辑页面
         binding.editAvatarBtn.setOnClickListener(v -> {
-            Toast.makeText(requireContext(), "头像编辑功能开发中", Toast.LENGTH_SHORT).show();
+            navController.navigate(R.id.action_profile_to_profile_edit);
         });
+
+        // 用户卡片点击 - 跳转到个人信息编辑页面
+        View userCard = binding.getRoot().findViewById(R.id.userCardContainer);
+        if (userCard != null) {
+            userCard.setOnClickListener(v -> {
+                navController.navigate(R.id.action_profile_to_profile_edit);
+            });
+        }
 
         // VIP中心
         binding.vipCenterItem.setOnClickListener(v -> {
             navController.navigate(R.id.action_profile_to_vip);
         });
 
-        // 身体数据
+        // 身体数据 - 跳转到进度页面
         binding.bodyDataItem.setOnClickListener(v -> {
-            // 跳转到进度页面
-            Toast.makeText(requireContext(), "身体数据功能开发中", Toast.LENGTH_SHORT).show();
+            navController.navigate(R.id.navigation_progress);
         });
 
         // 训练记录
         binding.workoutRecordItem.setOnClickListener(v -> {
-            Toast.makeText(requireContext(), "训练记录功能开发中", Toast.LENGTH_SHORT).show();
+            navController.navigate(R.id.action_profile_to_workout_history);
         });
 
         // 成就
         binding.achievementsItem.setOnClickListener(v -> {
-            Toast.makeText(requireContext(), "成就功能开发中", Toast.LENGTH_SHORT).show();
+            navController.navigate(R.id.action_profile_to_achievements);
         });
 
         // 徽章墙
         binding.badgeWallItem.setOnClickListener(v -> {
-            Toast.makeText(requireContext(), "徽章墙功能开发中", Toast.LENGTH_SHORT).show();
-        });
-
-        // 设置菜单项
-        binding.settingsItem.setOnClickListener(v -> {
-            Toast.makeText(requireContext(), "设置功能开发中", Toast.LENGTH_SHORT).show();
+            navController.navigate(R.id.action_profile_to_badge_wall);
         });
 
         // 退出登录
