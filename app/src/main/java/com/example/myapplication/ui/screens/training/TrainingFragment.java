@@ -88,8 +88,6 @@ public class TrainingFragment extends Fragment {
         TextView labelView = new TextView(requireContext());
         labelView.setText(dayLabel);
         labelView.setTextSize(12);
-        labelView.setTextColor(ContextCompat.getColor(requireContext(),
-                index == todayIndex ? R.color.primary : R.color.text_secondary));
         labelView.setGravity(Gravity.CENTER);
 
         // Duration/Status text - show task count for this day
@@ -100,21 +98,40 @@ public class TrainingFragment extends Fragment {
         for (TrainingTask task : dayTasks) {
             if (task.isCompleted()) completedCount++;
         }
+
+        // 判断这一天应该如何显示
+        boolean isCompletedDay = taskCount > 0 && completedCount == taskCount; // 全部完成
+        boolean isPartialComplete = taskCount > 0 && completedCount > 0; // 部分完成
+
         if (taskCount > 0) {
             statusView.setText(completedCount + "/" + taskCount);
         } else {
             statusView.setText("--");
         }
         statusView.setTextSize(10);
-        statusView.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_muted));
         statusView.setGravity(Gravity.CENTER);
 
-        // If today, set selected state
+        // 设置颜色
         if (index == todayIndex) {
+            // 今天：显示蓝色
             container.setBackgroundTintList(ContextCompat.getColorStateList(requireContext(), R.color.primary));
             labelView.setTextColor(ContextCompat.getColor(requireContext(), R.color.white));
             statusView.setTextColor(ContextCompat.getColor(requireContext(), R.color.white));
             selectedDayIndex = index;
+        } else if (isCompletedDay) {
+            // 已全部完成：显示绿色
+            container.setBackgroundTintList(ContextCompat.getColorStateList(requireContext(), R.color.success));
+            labelView.setTextColor(ContextCompat.getColor(requireContext(), R.color.white));
+            statusView.setTextColor(ContextCompat.getColor(requireContext(), R.color.white));
+        } else if (isPartialComplete) {
+            // 部分完成：显示黄色/橙色
+            container.setBackgroundTintList(ContextCompat.getColorStateList(requireContext(), R.color.warning));
+            labelView.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_primary));
+            statusView.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_primary));
+        } else {
+            // 没有任务或有任务但未开始：显示默认灰色
+            labelView.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_secondary));
+            statusView.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_muted));
         }
 
         container.addView(labelView);

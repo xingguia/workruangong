@@ -137,6 +137,89 @@
                             android:textColor="@color/text_secondary"
                             android:textSize="@dimen/text_caption" />
                     </LinearLayout>
+
+                    <!-- Badges Display Row -->
+                    <LinearLayout
+                        android:id="@+id/badgesDisplayContainer"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:orientation="horizontal"
+                        android:gravity="center"
+                        android:visibility="gone">
+
+                        <!-- Badge 1 -->
+                        <FrameLayout
+                            android:id="@+id/badgeSlot1"
+                            android:layout_width="44dp"
+                            android:layout_height="44dp"
+                            android:layout_marginEnd="8dp"
+                            android:visibility="gone">
+
+                            <ImageView
+                                android:id="@+id/badgeIcon1"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:src="@drawable/ic_star" />
+
+                            <View
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:background="@drawable/bg_avatar_placeholder"
+                                android:alpha="0.3" />
+                        </FrameLayout>
+
+                        <!-- Badge 2 -->
+                        <FrameLayout
+                            android:id="@+id/badgeSlot2"
+                            android:layout_width="44dp"
+                            android:layout_height="44dp"
+                            android:layout_marginEnd="8dp"
+                            android:visibility="gone">
+
+                            <ImageView
+                                android:id="@+id/badgeIcon2"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:src="@drawable/ic_star" />
+
+                            <View
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:background="@drawable/bg_avatar_placeholder"
+                                android:alpha="0.3" />
+                        </FrameLayout>
+
+                        <!-- Badge 3 -->
+                        <FrameLayout
+                            android:id="@+id/badgeSlot3"
+                            android:layout_width="44dp"
+                            android:layout_height="44dp"
+                            android:visibility="gone">
+
+                            <ImageView
+                                android:id="@+id/badgeIcon3"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:src="@drawable/ic_star" />
+
+                            <View
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:background="@drawable/bg_avatar_placeholder"
+                                android:alpha="0.3" />
+                        </FrameLayout>
+
+                        <!-- Empty State - Tap to add -->
+                        <TextView
+                            android:id="@+id/badgesEmptyHint"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="点击徽章墙设置展示徽章"
+                            android:textColor="@color/text_muted"
+                            android:textSize="12sp"
+                            android:visibility="gone" />
+                    </LinearLayout>
                 </LinearLayout>
             </LinearLayout>
 
@@ -429,12 +512,13 @@
                         android:textSize="@dimen/text_subtitle" />
 
                     <TextView
+                        android:id="@+id/badgeWallCount"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:background="@drawable/bg_stat_icon"
                         android:paddingHorizontal="10dp"
                         android:paddingVertical="4dp"
-                        android:text="5"
+                        android:text="0"
                         android:textColor="@color/primary"
                         android:textSize="@dimen/text_tiny"
                         android:textStyle="bold" />

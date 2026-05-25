@@ -26,6 +26,10 @@ import com.example.myapplication.util.WorkoutRecordManager;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 public class ProfileFragment extends Fragment {
 
     private FragmentProfileBinding binding;
@@ -188,6 +192,9 @@ public class ProfileFragment extends Fragment {
             binding.vipStatusCard.setVisibility(View.GONE);
             binding.vipTag.setVisibility(View.VISIBLE);
         }
+
+        // Load displayed badges
+        loadDisplayedBadges();
     }
 
     private void loadStatistics() {
@@ -202,6 +209,101 @@ public class ProfileFragment extends Fragment {
         // Load total calories
         float totalCalories = workoutRecordManager.getTotalCalories();
         binding.totalCalories.setText(String.format("%.1f", totalCalories));
+
+        // Load badge count
+        loadBadgeCount();
+    }
+
+    private void loadBadgeCount() {
+        com.example.myapplication.util.AchievementManager achievementManager =
+                com.example.myapplication.util.AchievementManager.getInstance(requireContext());
+        int unlockedCount = achievementManager.getUnlockedAchievements().size();
+        binding.badgeWallCount.setText(String.valueOf(unlockedCount));
+    }
+
+    private void loadDisplayedBadges() {
+        com.example.myapplication.util.AchievementManager achievementManager =
+                com.example.myapplication.util.AchievementManager.getInstance(requireContext());
+
+        java.util.List<com.example.myapplication.model.Achievement> displayedBadges =
+                achievementManager.getDisplayedAchievements();
+
+        if (displayedBadges.isEmpty()) {
+            binding.badgesDisplayContainer.setVisibility(View.VISIBLE);
+            binding.badgesEmptyHint.setVisibility(View.VISIBLE);
+            binding.badgeSlot1.setVisibility(View.GONE);
+            binding.badgeSlot2.setVisibility(View.GONE);
+            binding.badgeSlot3.setVisibility(View.GONE);
+        } else {
+            binding.badgesDisplayContainer.setVisibility(View.VISIBLE);
+            binding.badgesEmptyHint.setVisibility(View.GONE);
+
+            // Sort by display position
+            Map<Integer, com.example.myapplication.model.Achievement> badgeMap = new HashMap<>();
+            for (com.example.myapplication.model.Achievement badge : displayedBadges) {
+                badgeMap.put(badge.getDisplayPosition(), badge);
+            }
+
+            // Set badge 1
+            com.example.myapplication.model.Achievement badge1 = badgeMap.get(0);
+            if (badge1 != null) {
+                binding.badgeSlot1.setVisibility(View.VISIBLE);
+                binding.badgeIcon1.setImageResource(getAchievementIcon(badge1.getType()));
+                binding.badgeIcon1.setColorFilter(requireContext().getColor(R.color.vip_gold));
+            } else {
+                binding.badgeSlot1.setVisibility(View.GONE);
+            }
+
+            // Set badge 2
+            com.example.myapplication.model.Achievement badge2 = badgeMap.get(1);
+            if (badge2 != null) {
+                binding.badgeSlot2.setVisibility(View.VISIBLE);
+                binding.badgeIcon2.setImageResource(getAchievementIcon(badge2.getType()));
+                binding.badgeIcon2.setColorFilter(requireContext().getColor(R.color.vip_gold));
+            } else {
+                binding.badgeSlot2.setVisibility(View.GONE);
+            }
+
+            // Set badge 3
+            com.example.myapplication.model.Achievement badge3 = badgeMap.get(2);
+            if (badge3 != null) {
+                binding.badgeSlot3.setVisibility(View.VISIBLE);
+                binding.badgeIcon3.setImageResource(getAchievementIcon(badge3.getType()));
+                binding.badgeIcon3.setColorFilter(requireContext().getColor(R.color.vip_gold));
+            } else {
+                binding.badgeSlot3.setVisibility(View.GONE);
+            }
+        }
+    }
+
+    private int getAchievementIcon(com.example.myapplication.model.Achievement.AchievementType type) {
+        switch (type) {
+            case FIRST_WORKOUT:
+                return R.drawable.ic_training;
+            case STREAK_7_DAYS:
+            case STREAK_30_DAYS:
+            case CHECKIN_7:
+            case CHECKIN_30:
+                return R.drawable.ic_fire;
+            case WORKOUT_100:
+            case WORKOUT_500:
+                return R.drawable.ic_trophy;
+            case BURN_1000_CAL:
+            case BURN_5000_CAL:
+            case BURN_10000_CAL:
+                return R.drawable.ic_flame;
+            case WEIGHT_CHANGE:
+            case TARGET_WEIGHT:
+                return R.drawable.ic_weight;
+            case EARLY_BIRD:
+                return R.drawable.ic_sun;
+            case NIGHT_OWL:
+                return R.drawable.ic_moon;
+            case WEEKEND_WARRIOR:
+                return R.drawable.ic_calendar;
+            default:
+                return R.drawable.ic_star;
+        }
     }
 
     private void setupListeners() {
