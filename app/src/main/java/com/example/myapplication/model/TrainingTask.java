@@ -19,17 +19,37 @@ public class TrainingTask implements Serializable {
         CORE            // 核心训练
     }
 
+    // 六大肌群分类
+    public enum MuscleGroup {
+        CHEST("胸肌"),
+        BACK("背部"),
+        SHOULDERS("肩部"),
+        ARMS("手臂"),
+        LEGS("腿部"),
+        CORE("核心");
+
+        private final String displayName;
+        MuscleGroup(String displayName) {
+            this.displayName = displayName;
+        }
+        public String getDisplayName() {
+            return displayName;
+        }
+    }
+
     private long id;
     private long date; // 日期时间戳
     private String name;
     private String description;
-    private int duration; // 分钟
+    private int duration; // 分钟（不再使用，由组数*次数计算）
     private TaskStatus status;
     private long createdAt;
     private ExerciseType exerciseType;
     private int reps;        // 每组次数
     private int sets;        // 组数
     private float weight;    // 重量（公斤）
+    private MuscleGroup muscleGroup; // 肌群分类
+    private String subMuscle; // 子肌群描述
     private boolean caloriesRecorded; // 是否已记录卡路里（防止重复记录）
 
     // 跑步机专用字段
@@ -43,6 +63,8 @@ public class TrainingTask implements Serializable {
         this.reps = 0;
         this.sets = 0;
         this.weight = 0f;
+        this.muscleGroup = null;
+        this.subMuscle = "";
         this.caloriesRecorded = false;
         this.treadmillSpeed = 0f;
         this.treadmillIncline = 0f;
@@ -169,6 +191,22 @@ public class TrainingTask implements Serializable {
 
     public void setTreadmillIncline(float treadmillIncline) {
         this.treadmillIncline = treadmillIncline;
+    }
+
+    public MuscleGroup getMuscleGroup() {
+        return muscleGroup;
+    }
+
+    public void setMuscleGroup(MuscleGroup muscleGroup) {
+        this.muscleGroup = muscleGroup;
+    }
+
+    public String getSubMuscle() {
+        return subMuscle;
+    }
+
+    public void setSubMuscle(String subMuscle) {
+        this.subMuscle = subMuscle;
     }
 
     public boolean isTreadmillExercise() {

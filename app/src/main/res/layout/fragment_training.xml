@@ -85,7 +85,82 @@
                 android:orientation="horizontal" />
         </HorizontalScrollView>
 
-        <!-- Training Detail -->
+        <!-- Empty State Container -->
+        <LinearLayout
+            android:id="@+id/emptyStateContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="@dimen/margin_normal"
+            android:layout_marginTop="@dimen/margin_large"
+            android:background="@drawable/bg_card"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:padding="32dp"
+            android:visibility="visible">
+
+            <ImageView
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:alpha="0.5"
+                android:src="@drawable/ic_training"
+                app:tint="@color/text_muted" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="今日暂无训练计划"
+                android:textColor="@color/text_secondary"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="点击下方按钮添加训练任务"
+                android:textColor="@color/text_muted"
+                android:textSize="14sp" />
+        </LinearLayout>
+
+        <!-- Tasks Container -->
+        <androidx.core.widget.NestedScrollView
+            android:id="@+id/tasksScrollView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="@dimen/margin_normal"
+            android:layout_marginTop="@dimen/margin_large"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:id="@+id/tasksContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+        </androidx.core.widget.NestedScrollView>
+
+        <!-- Summary Container -->
+        <LinearLayout
+            android:id="@+id/summaryContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="@dimen/margin_normal"
+            android:layout_marginTop="@dimen/margin_medium"
+            android:background="@drawable/bg_card"
+            android:padding="16dp"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/summaryText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="0/0 项已完成"
+                android:textColor="@color/text_secondary"
+                android:textSize="14sp" />
+        </LinearLayout>
+
+        <!-- Training Detail Card -->
         <LinearLayout
             android:id="@+id/trainingDetailCard"
             android:layout_width="match_parent"
@@ -94,7 +169,8 @@
             android:layout_marginTop="@dimen/margin_large"
             android:background="@drawable/bg_card"
             android:orientation="vertical"
-            android:padding="@dimen/margin_large">
+            android:padding="@dimen/margin_large"
+            android:visibility="gone">
 
             <!-- Training Type Badge -->
             <TextView
@@ -206,7 +282,7 @@
 
             <!-- Start Training Button -->
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/startTrainingBtn"
+                android:id="@+id/addTrainingBtn"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/button_height"
                 android:layout_marginTop="@dimen/margin_large"

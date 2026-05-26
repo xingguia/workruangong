@@ -14,6 +14,8 @@ public class WorkoutRecord implements Serializable {
     private float weight;
     private float caloriesBurned;
     private String notes;
+    private String muscleGroup;
+    private float calories; // 实时计算的卡路里
 
     public WorkoutRecord() {
         this.timestamp = System.currentTimeMillis();
@@ -64,6 +66,14 @@ public class WorkoutRecord implements Serializable {
         this.timestamp = timestamp;
     }
 
+    public long getDate() {
+        return timestamp;
+    }
+
+    public void setDate(long date) {
+        this.timestamp = date;
+    }
+
     public int getDuration() {
         return duration;
     }
@@ -104,11 +114,27 @@ public class WorkoutRecord implements Serializable {
         this.caloriesBurned = caloriesBurned;
     }
 
+    public float getCalories() {
+        return calories > 0 ? calories : caloriesBurned;
+    }
+
+    public void setCalories(float calories) {
+        this.calories = calories;
+    }
+
     public String getNotes() {
         return notes;
     }
 
     public void setNotes(String notes) {
         this.notes = notes;
+    }
+
+    public String getMuscleGroup() {
+        return muscleGroup;
+    }
+
+    public void setMuscleGroup(String muscleGroup) {
+        this.muscleGroup = muscleGroup;
     }
 }

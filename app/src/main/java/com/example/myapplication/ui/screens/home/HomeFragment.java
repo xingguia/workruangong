@@ -2,13 +2,17 @@ package com.example.myapplication.ui.screens.home;
 
 import android.app.AlertDialog;
 import android.graphics.Color;
+import android.graphics.Paint;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.CheckBox;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
@@ -31,6 +35,7 @@ import androidx.navigation.Navigation;
 import com.example.myapplication.R;
 import com.example.myapplication.api.AICalorieService;
 import com.example.myapplication.databinding.FragmentHomeBinding;
+import com.example.myapplication.model.ExerciseDatabase;
 import com.example.myapplication.model.ExercisePlan;
 import com.example.myapplication.model.TrainingTask;
 import com.example.myapplication.model.WorkoutRecord;
@@ -686,137 +691,208 @@ public class HomeFragment extends Fragment {
 
     private void showAddTaskDialog() {
         View dialogView = LayoutInflater.from(requireContext())
-                .inflate(R.layout.dialog_add_task, null);
+                .inflate(R.layout.dialog_add_training_v2, null);
 
-        TextInputEditText nameInput = dialogView.findViewById(R.id.taskNameInput);
-        TextInputEditText durationInput = dialogView.findViewById(R.id.taskDurationInput);
-        TextInputEditText descInput = dialogView.findViewById(R.id.taskDescInput);
-        TextInputEditText setsInput = dialogView.findViewById(R.id.taskSetsInput);
-        TextInputEditText repsInput = dialogView.findViewById(R.id.taskRepsInput);
-        TextInputEditText weightInput = dialogView.findViewById(R.id.taskWeightInput);
-        TextInputEditText speedInput = dialogView.findViewById(R.id.taskSpeedInput);
-        TextInputEditText inclineInput = dialogView.findViewById(R.id.taskInclineInput);
-        RadioGroup exerciseTypeGroup = dialogView.findViewById(R.id.exerciseTypeGroup);
-        LinearLayout treadmillSettings = dialogView.findViewById(R.id.treadmillSettings);
+        // 找到控件
+        LinearLayout muscleGroupContainer = dialogView.findViewById(R.id.muscleGroupContainer);
+        TextView step2Label = dialogView.findViewById(R.id.step2Label);
+        androidx.core.widget.NestedScrollView exerciseScrollView = dialogView.findViewById(R.id.exerciseScrollView);
+        LinearLayout exerciseContainer = dialogView.findViewById(R.id.exerciseContainer);
+        LinearLayout paramsContainer = dialogView.findViewById(R.id.paramsContainer);
+        EditText setsInput = dialogView.findViewById(R.id.setsInput);
+        EditText repsInput = dialogView.findViewById(R.id.repsInput);
+        EditText weightInput = dialogView.findViewById(R.id.weightInput);
+        TextView caloriesPreview = dialogView.findViewById(R.id.caloriesPreview);
+        com.google.android.material.button.MaterialButton cancelBtn = dialogView.findViewById(R.id.cancelBtn);
+        com.google.android.material.button.MaterialButton confirmBtn = dialogView.findViewById(R.id.confirmBtn);
 
-        // Listen for exercise type changes to show/hide treadmill settings
-        exerciseTypeGroup.setOnCheckedChangeListener((group, checkedId) -> {
-            // Check if name contains treadmill keywords or if cardio is selected
-            String name = nameInput.getText() != null ? nameInput.getText().toString().toLowerCase() : "";
-            boolean isTreadmill = name.contains("跑步机") || name.contains("treadmill")
-                    || checkedId == R.id.radioCardio;
-            treadmillSettings.setVisibility(isTreadmill ? View.VISIBLE : View.GONE);
+        // 加减按钮
+        dialogView.findViewById(R.id.repsMinusBtn).setOnClickListener(v -> {
+            int current = parseInt(setsInput.getText().toString());
+            if (current > 1) setsInput.setText(String.valueOf(current - 1));
         });
+        dialogView.findViewById(R.id.repsPlusBtn).setOnClickListener(v -> {
+            int current = parseInt(setsInput.getText().toString());
+            if (current < 20) setsInput.setText(String.valueOf(current + 1));
+        });
+        dialogView.findViewById(R.id.repsMinus2Btn).setOnClickListener(v -> {
+            int current = parseInt(repsInput.getText().toString());
+            if (current > 1) repsInput.setText(String.valueOf(current - 1));
+        });
+        dialogView.findViewById(R.id.repsPlus2Btn).setOnClickListener(v -> {
+            int current = parseInt(repsInput.getText().toString());
+            if (current < 30) repsInput.setText(String.valueOf(current + 1));
+        });
+
+        // 选择状态
+        final ExerciseDatabase.MuscleGroup[] selectedGroup = {null};
+        final ExerciseDatabase.Exercise[] selectedExercise = {null};
+
+        // 第一步：显示肌群选择
+        List<ExerciseDatabase.MuscleGroup> muscleGroups = ExerciseDatabase.getAllMuscleGroups();
+        for (ExerciseDatabase.MuscleGroup group : muscleGroups) {
+            TextView chip = new TextView(requireContext());
+            chip.setText(group.getDisplayName());
+            chip.setTextSize(14);
+            chip.setPadding(24, 12, 24, 12);
+            chip.setGravity(Gravity.CENTER);
+            chip.setBackgroundResource(R.drawable.bg_stat_icon);
+            chip.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_primary));
+            LinearLayout.LayoutParams chipParams = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT);
+            chipParams.setMargins(0, 0, 8, 0);
+            chip.setLayoutParams(chipParams);
+
+            chip.setOnClickListener(v -> {
+                // 取消之前的选择
+                for (int i = 0; i < muscleGroupContainer.getChildCount(); i++) {
+                    muscleGroupContainer.getChildAt(i).setBackgroundResource(R.drawable.bg_stat_icon);
+                }
+                // 选中当前
+                chip.setBackgroundResource(R.drawable.bg_stat_icon_selected);
+                selectedGroup[0] = group;
+                selectedExercise[0] = null;
+
+                // 显示第二步
+                step2Label.setVisibility(View.VISIBLE);
+                exerciseScrollView.setVisibility(View.VISIBLE);
+                paramsContainer.setVisibility(View.GONE);
+                confirmBtn.setEnabled(false);
+
+                // 加载该肌群的动作
+                loadExercisesInDialog(group, exerciseContainer, selectedExercise, () -> {
+                    paramsContainer.setVisibility(View.VISIBLE);
+                    confirmBtn.setEnabled(true);
+                    updateCaloriesPreview(caloriesPreview, selectedExercise[0], setsInput, repsInput, weightInput);
+                });
+            });
+            muscleGroupContainer.addView(chip);
+        }
+
+        // 输入变化监听
+        TextWatcher watcher = new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                updateCaloriesPreview(caloriesPreview, selectedExercise[0], setsInput, repsInput, weightInput);
+            }
+        };
+        setsInput.addTextChangedListener(watcher);
+        repsInput.addTextChangedListener(watcher);
+        weightInput.addTextChangedListener(watcher);
 
         AlertDialog dialog = new AlertDialog.Builder(requireContext())
                 .setView(dialogView)
-                .setPositiveButton("添加", null)
-                .setNegativeButton("取消", null)
                 .create();
 
         dialog.setOnShowListener(dialogInterface -> {
             Window window = dialog.getWindow();
             if (window != null) {
                 window.setBackgroundDrawableResource(R.drawable.dialog_background);
-                dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(getResources().getColor(R.color.primary, null));
-                dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(getResources().getColor(R.color.text_muted, null));
             }
         });
 
-        dialog.setOnShowListener(dialogInterface -> {
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
-                String name = nameInput.getText() != null ? nameInput.getText().toString().trim() : "";
-                String durationStr = durationInput.getText() != null ? durationInput.getText().toString().trim() : "30";
-                String desc = descInput.getText() != null ? descInput.getText().toString().trim() : "";
-                String setsStr = setsInput.getText() != null ? setsInput.getText().toString().trim() : "3";
-                String repsStr = repsInput.getText() != null ? repsInput.getText().toString().trim() : "10";
-                String weightStr = weightInput.getText() != null ? weightInput.getText().toString().trim() : "0";
-                String speedStr = speedInput.getText() != null ? speedInput.getText().toString().trim() : "8";
-                String inclineStr = inclineInput.getText() != null ? inclineInput.getText().toString().trim() : "0";
+        cancelBtn.setOnClickListener(v -> dialog.dismiss());
 
-                if (name.isEmpty()) {
-                    nameInput.setError("请输入任务名称");
-                    return;
-                }
-
-                int duration = 30;
-                try {
-                    duration = Integer.parseInt(durationStr);
-                } catch (NumberFormatException e) {
-                    duration = 30;
-                }
-
-                int sets = 3;
-                try {
-                    sets = Integer.parseInt(setsStr);
-                } catch (NumberFormatException e) {
-                    sets = 3;
-                }
-
-                int reps = 10;
-                try {
-                    reps = Integer.parseInt(repsStr);
-                } catch (NumberFormatException e) {
-                    reps = 10;
-                }
-
-                float weight = 0f;
-                try {
-                    weight = Float.parseFloat(weightStr);
-                } catch (NumberFormatException e) {
-                    weight = 0f;
-                }
-
-                float speed = 8f;
-                try {
-                    speed = Float.parseFloat(speedStr);
-                } catch (NumberFormatException e) {
-                    speed = 8f;
-                }
-
-                float incline = 0f;
-                try {
-                    incline = Float.parseFloat(inclineStr);
-                } catch (NumberFormatException e) {
-                    incline = 0f;
-                }
-
-                // Get exercise type
-                TrainingTask.ExerciseType exerciseType = TrainingTask.ExerciseType.STRENGTH;
-                int checkedId = exerciseTypeGroup.getCheckedRadioButtonId();
-                if (checkedId == R.id.radioEquipment) {
-                    exerciseType = TrainingTask.ExerciseType.EQUIPMENT;
-                } else if (checkedId == R.id.radioCardio) {
-                    exerciseType = TrainingTask.ExerciseType.CARDIO;
-                } else if (checkedId == R.id.radioHIIT) {
-                    exerciseType = TrainingTask.ExerciseType.HIIT;
-                } else if (checkedId == R.id.radioFlexibility) {
-                    exerciseType = TrainingTask.ExerciseType.FLEXIBILITY;
-                } else if (checkedId == R.id.radioCore) {
-                    exerciseType = TrainingTask.ExerciseType.CORE;
-                }
-
-                TrainingTask task = new TrainingTask(name, desc, duration);
+        confirmBtn.setOnClickListener(v -> {
+            if (selectedExercise[0] != null) {
+                TrainingTask task = new TrainingTask();
+                task.setName(selectedExercise[0].name);
                 task.setDate(System.currentTimeMillis());
-                task.setExerciseType(exerciseType);
-                task.setSets(sets);
-                task.setReps(reps);
-                task.setWeight(weight);
+                task.setSets(parseInt(setsInput.getText().toString()));
+                task.setReps(parseInt(repsInput.getText().toString()));
+                String weightStr = weightInput.getText().toString();
+                task.setWeight(weightStr.isEmpty() ? 0 : Float.parseFloat(weightStr));
 
-                // Set treadmill parameters if applicable
-                if (name.contains("跑步机") || name.contains("treadmill") || exerciseType == TrainingTask.ExerciseType.CARDIO) {
-                    task.setTreadmillSpeed(speed);
-                    task.setTreadmillIncline(incline);
+                // 设置肌群
+                if (selectedGroup[0] != null) {
+                    task.setMuscleGroup(TrainingTask.MuscleGroup.valueOf(selectedGroup[0].name()));
                 }
 
                 trainingTaskManager.addTask(task);
-
                 dialog.dismiss();
                 setupTrainingTasks();
-            });
+            }
         });
 
         dialog.show();
+    }
+
+    private void loadExercisesInDialog(ExerciseDatabase.MuscleGroup group, LinearLayout container,
+                                       ExerciseDatabase.Exercise[] selectedExercise, Runnable onComplete) {
+        container.removeAllViews();
+        List<ExerciseDatabase.Exercise> exercises = ExerciseDatabase.getExercisesForGroup(group);
+
+        for (ExerciseDatabase.Exercise exercise : exercises) {
+            View itemView = LayoutInflater.from(requireContext())
+                    .inflate(R.layout.item_exercise_choice, container, false);
+
+            TextView nameView = itemView.findViewById(R.id.exerciseName);
+            TextView infoView = itemView.findViewById(R.id.exerciseInfo);
+            ImageView selectedIcon = itemView.findViewById(R.id.selectedIcon);
+
+            nameView.setText(exercise.name);
+            StringBuilder info = new StringBuilder();
+            if (exercise.needsEquipment) {
+                info.append("需要器材");
+            } else {
+                info.append("徒手");
+            }
+            if (!exercise.subMuscles.isEmpty()) {
+                info.append(" · ").append(exercise.subMuscles.get(0).getDisplayName());
+            }
+            infoView.setText(info.toString());
+
+            itemView.setOnClickListener(v -> {
+                // 取消之前的选择
+                for (int i = 0; i < container.getChildCount(); i++) {
+                    View child = container.getChildAt(i);
+                    ImageView icon = child.findViewById(R.id.selectedIcon);
+                    icon.setVisibility(View.GONE);
+                }
+                // 选中当前
+                selectedIcon.setVisibility(View.VISIBLE);
+                selectedExercise[0] = exercise;
+                onComplete.run();
+            });
+
+            container.addView(itemView);
+        }
+    }
+
+    private void updateCaloriesPreview(TextView preview, ExerciseDatabase.Exercise exercise,
+                                      EditText setsInput, EditText repsInput, EditText weightInput) {
+        if (exercise == null) {
+            preview.setText("0 kcal");
+            return;
+        }
+
+        int sets = parseInt(setsInput.getText().toString());
+        int reps = parseInt(repsInput.getText().toString());
+        float weight = weightInput.getText().toString().isEmpty() ? 0 :
+                Float.parseFloat(weightInput.getText().toString());
+
+        // 计算预估卡路里
+        float calories = exercise.baseCaloriesPerRep * sets * reps;
+        if (weight > 0) {
+            calories += weight * 0.05f * sets;
+        }
+
+        preview.setText(String.format("%.0f kcal", calories));
+    }
+
+    private int parseInt(String str) {
+        try {
+            return str.isEmpty() ? 0 : Integer.parseInt(str);
+        } catch (NumberFormatException e) {
+            return 0;
+        }
     }
 
     private void setupListeners() {
