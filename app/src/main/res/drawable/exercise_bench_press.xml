@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="800dp"
+    android:height="600dp"
+    android:viewportWidth="800"
+    android:viewportHeight="600">
+
+    <!-- 背景 -->
+    <path
+        android:fillColor="#252545"
+        android:pathData="M0,0h800v600h-800z"/>
+
+    <!-- 地面 -->
+    <path
+        android:fillColor="#3A3A5E"
+        android:pathData="M100,500h600v20h-600z"/>
+
+    <!-- 卧推凳 -->
+    <path
+        android:fillColor="#4A4A6E"
+        android:pathData="M250,420h300v30h-300z"/>
+    <path
+        android:fillColor="#4A4A6E"
+        android:pathData="M280,450h240v50h-240z"/>
+
+    <!-- 杠铃架 -->
+    <path
+        android:strokeColor="#6A6A8E"
+        android:strokeWidth="8"
+        android:pathData="M200,300v120"/>
+    <path
+        android:strokeColor="#6A6A8E"
+        android:strokeWidth="8"
+        android:pathData="M600,300v120"/>
+
+    <!-- 人物 - 仰卧 -->
+    <!-- 头 -->
+    <path
+        android:fillColor="#FF6B35"
+        android:pathData="M400,290 m-25,0 a25,25 0 1,1 50,0 a25,25 0 1,1 -50,0"/>
+    <!-- 身体 -->
+    <path
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="16"
+        android:strokeLineCap="round"
+        android:pathData="M400,315 L400,400"/>
+    <!-- 腿 -->
+    <path
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="14"
+        android:strokeLineCap="round"
+        android:pathData="M400,400 L350,470"/>
+    <path
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="14"
+        android:strokeLineCap="round"
+        android:pathData="M400,400 L450,470"/>
+    <!-- 手臂 - 向上推 -->
+    <path
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="12"
+        android:strokeLineCap="round"
+        android:pathData="M400,340 L320,280"/>
+    <path
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="12"
+        android:strokeLineCap="round"
+        android:pathData="M400,340 L480,280"/>
+
+    <!-- 杠铃 -->
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M150,250h500v20h-500z"/>
+    <path
+        android:fillColor="#DAA520"
+        android:pathData="M140,240h30v40h-30z"/>
+    <path
+        android:fillColor="#DAA520"
+        android:pathData="M630,240h30v40h-30z"/>
+
+    <!-- 标题 -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M300,550 h200 v30 h-200 z"/>
+</vector>

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="800dp"
+    android:height="600dp"
+    android:viewportWidth="800"
+    android:viewportHeight="600">
+
+    <!-- 背景 -->
+    <path
+        android:fillColor="#252545"
+        android:pathData="M0,0h800v600h-800z"/>
+
+    <!-- 地面 -->
+    <path
+        android:fillColor="#3A3A5E"
+        android:pathData="M100,520h600v20h-600z"/>
+
+    <!-- 长凳 -->
+    <path
+        android:fillColor="#4A4A6E"
+        android:pathData="M450,350h150v25h-150z"/>
+
+    <!-- 人物 - 保加利亚深蹲 -->
+    <!-- 头 -->
+    <path
+        android:fillColor="#FF6B35"
+        android:pathData="M350,200 m-22,0 a22,22 0 1,1 44,0 a22,22 0 1,1 -44,0"/>
+    <!-- 身体 -->
+    <path
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="16"
+        android:strokeLineCap="round"
+        android:pathData="M350,222 L380,320"/>
+    <!-- 前腿 -->
+    <path
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="14"
+        android:strokeLineCap="round"
+        android:pathData="M380,320 L350,480"/>
+    <!-- 后腿 - 放在凳上 -->
+    <path
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="14"
+        android:strokeLineCap="round"
+        android:pathData="M380,320 L500,350 L520,380"/>
+    <!-- 手臂 -->
+    <path
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="12"
+        android:strokeLineCap="round"
+        android:pathData="M355,240 L310,300"/>
+    <path
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="12"
+        android:strokeLineCap="round"
+        android:pathData="M355,240 L400,300"/>
+</vector>

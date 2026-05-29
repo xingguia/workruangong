@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="800dp"
+    android:height="600dp"
+    android:viewportWidth="800"
+    android:viewportHeight="600">
+
+    <!-- 背景 -->
+    <path
+        android:fillColor="#252545"
+        android:pathData="M0,0h800v600h-800z"/>
+
+    <!-- 瑜伽垫 -->
+    <path
+        android:fillColor="#3A5E3A"
+        android:pathData="M200,350h400v20h-400z"/>
+
+    <!-- 人物 - 卷腹 -->
+    <!-- 头 -->
+    <path
+        android:fillColor="#FF6B35"
+        android:pathData="M350,280 m-20,0 a20,20 0 1,1 40,0 a20,20 0 1,1 -40,0"/>
+    <!-- 身体 - 上半身抬起 -->
+    <path
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="18"
+        android:strokeLineCap="round"
+        android:pathData="M350,300 L380,330"/>
+    <!-- 腿 - 弯曲 -->
+    <path
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="14"
+        android:strokeLineCap="round"
+        android:pathData="M380,330 L520,350 L540,330"/>
+    <path
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="14"
+        android:strokeLineCap="round"
+        android:pathData="M380,330 L520,350 L540,330"/>
+    <!-- 手臂 - 放在耳边 -->
+    <path
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="10"
+        android:strokeLineCap="round"
+        android:pathData="M360,305 L340,280"/>
+
+    <!-- 动作指示箭头 -->
+    <path
+        android:strokeColor="#00FF88"
+        android:strokeWidth="3"
+        android:pathData="M380,270 L380,250"/>
+    <path
+        android:fillColor="#00FF88"
+        android:pathData="M375,255 L380,245 L385,255"/>
+
+    <!-- 肌肉发力区域 -->
+    <path
+        android:fillColor="#FF6B35"
+        android:fillAlpha="0.3"
+        android:pathData="M340,290h50v40h-50z"/>
+</vector>

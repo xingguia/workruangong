@@ -137,6 +137,10 @@ public class TrainingTask implements Serializable {
         return status == TaskStatus.COMPLETED;
     }
 
+    public void setCompleted(boolean completed) {
+        this.status = completed ? TaskStatus.COMPLETED : TaskStatus.NOT_STARTED;
+    }
+
     public ExerciseType getExerciseType() {
         return exerciseType;
     }

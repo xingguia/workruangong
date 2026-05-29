@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="800dp"
+    android:height="600dp"
+    android:viewportWidth="800"
+    android:viewportHeight="600">
+
+    <!-- 背景 -->
+    <path
+        android:fillColor="#252545"
+        android:pathData="M0,0h800v600h-800z"/>
+
+    <!-- 地面 -->
+    <path
+        android:fillColor="#3A3A5E"
+        android:pathData="M100,520h600v20h-600z"/>
+
+    <!-- 人物 - 杠铃划船 -->
+    <!-- 头 -->
+    <path
+        android:fillColor="#FF6B35"
+        android:pathData="M350,280 m-22,0 a22,22 0 1,1 44,0 a22,22 0 1,1 -44,0"/>
+    <!-- 身体 - 前倾 -->
+    <path
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="16"
+        android:strokeLineCap="round"
+        android:pathData="M350,302 L400,380"/>
+    <!-- 腿 -->
+    <path
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="14"
+        android:strokeLineCap="round"
+        android:pathData="M400,380 L360,480"/>
+    <path
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="14"
+        android:strokeLineCap="round"
+        android:pathData="M400,380 L440,480"/>
+    <!-- 手臂 - 拉 -->
+    <path
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="12"
+        android:strokeLineCap="round"
+        android:pathData="M365,330 L480,350"/>
+    <!-- 支撑手臂 -->
+    <path
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="10"
+        android:strokeLineCap="round"
+        android:pathData="M355,320 L300,380"/>
+
+    <!-- 杠铃 -->
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M150,340h600v15h-600z"/>
+</vector>

@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:background="@drawable/dialog_background">
+
+    <!-- 标题 -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp">
+
+        <TextView
+            android:id="@+id/guideTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="训练指导"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_primary"
+            android:gravity="center"/>
+
+        <ImageButton
+            android:id="@+id/closeBtn"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_gravity="end|center_vertical"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@android:drawable/ic_menu_close_clear_cancel"
+            android:tint="@color/text_muted"
+            android:contentDescription="关闭"/>
+    </FrameLayout>
+
+    <!-- 当前动作名 -->
+    <TextView
+        android:id="@+id/exerciseName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="平板杠铃卧推"
+        android:textSize="18sp"
+        android:textColor="@color/primary"
+        android:gravity="center"
+        android:layout_marginBottom="16dp"/>
+
+    <!-- 图片区域 - 带左右箭头 -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:layout_marginBottom="16dp">
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="4dp">
+
+            <ImageView
+                android:id="@+id/exerciseImage"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                android:src="@drawable/ic_training"
+                android:background="@color/surface"/>
+
+            <!-- 无图片提示 -->
+            <LinearLayout
+                android:id="@+id/noImageHint"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:background="@color/surface">
+
+                <ImageView
+                    android:layout_width="64dp"
+                    android:layout_height="64dp"
+                    android:src="@drawable/ic_training"
+                    android:alpha="0.5"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="等待配图"
+                    android:textColor="@color/text_muted"
+                    android:layout_marginTop="8dp"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="请员工制作对应动作图片"
+                    android:textColor="@color/text_muted"
+                    android:textSize="12sp"/>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- 左箭头 -->
+        <ImageButton
+            android:id="@+id/prevBtn"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:layout_gravity="start|center_vertical"
+            android:layout_marginStart="4dp"
+            android:background="@drawable/bg_arrow_button"
+            android:src="@android:drawable/ic_media_previous"
+            android:tint="@color/primary"
+            android:scaleType="centerInside"
+            android:padding="12dp"
+            android:elevation="8dp"
+            android:contentDescription="上一个"/>
+
+        <!-- 右箭头 -->
+        <ImageButton
+            android:id="@+id/nextBtn"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:layout_gravity="end|center_vertical"
+            android:layout_marginEnd="4dp"
+            android:background="@drawable/bg_arrow_button"
+            android:src="@android:drawable/ic_media_next"
+            android:tint="@color/primary"
+            android:scaleType="centerInside"
+            android:padding="12dp"
+            android:elevation="8dp"
+            android:contentDescription="下一个"/>
+    </FrameLayout>
+
+    <!-- 动作要点标题 -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="动作要点"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:textColor="@color/text_primary"
+        android:layout_marginBottom="8dp"/>
+
+    <!-- 动作要点内容 -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="120dp"
+        android:layout_marginBottom="16dp">
+        <TextView
+            android:id="@+id/exerciseInstructions"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="14sp"
+            android:textColor="@color/text_secondary"
+            android:lineSpacingExtra="4dp"
+            android:text="【动作要点】\n1. 平躺在卧推凳上\n2. 双手握杠，握距略宽于肩\n3. 控制下放至胸部中段\n4. 发力将杠铃推起"/>
+    </ScrollView>
+
+    <!-- 训练提示 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="12dp"
+        android:background="@drawable/bg_stat_icon"
+        android:layout_marginBottom="16dp">
+
+        <ImageView
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_training"
+            android:layout_marginEnd="12dp"/>
+
+        <TextView
+            android:id="@+id/trainingTips"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textSize="13sp"
+            android:textColor="@color/text_secondary"
+            android:text="建议配图：平板杠铃卧推标准姿势\n所需器材：杠铃、卧推凳"/>
+    </LinearLayout>
+
+    <!-- 当前进度指示 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="16dp">
+
+        <TextView
+            android:id="@+id/progressText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="动作 1 / 3"
+            android:textSize="14sp"
+            android:textColor="@color/text_muted"/>
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1"/>
+
+        <!-- 进度点 -->
+        <LinearLayout
+            android:id="@+id/progressDots"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- 开始训练按钮 -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/startTrainingBtn"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:text="开始训练"
+        android:backgroundTint="@color/primary"
+        app:cornerRadius="24dp"/>
+
+</LinearLayout>

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="800dp"
+    android:height="600dp"
+    android:viewportWidth="800"
+    android:viewportHeight="600">
+
+    <!-- 背景 -->
+    <path
+        android:fillColor="#252545"
+        android:pathData="M0,0h800v600h-800z"/>
+
+    <!-- 地面 -->
+    <path
+        android:fillColor="#3A3A5E"
+        android:pathData="M100,520h600v20h-600z"/>
+
+    <!-- 绳索机 -->
+    <path
+        android:fillColor="#4A4A6E"
+        android:pathData="M550,100h100v400h-100z"/>
+
+    <!-- 人物 - 绳索下压 -->
+    <!-- 头 -->
+    <path
+        android:fillColor="#FF6B35"
+        android:pathData="M350,200 m-22,0 a22,22 0 1,1 44,0 a22,22 0 1,1 -44,0"/>
+    <!-- 身体 -->
+    <path
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="16"
+        android:strokeLineCap="round"
+        android:pathData="M350,222 L380,320"/>
+    <!-- 腿 -->
+    <path
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="14"
+        android:strokeLineCap="round"
+        android:pathData="M380,320 L340,480"/>
+    <path
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="14"
+        android:strokeLineCap="round"
+        android:pathData="M380,320 L420,480"/>
+    <!-- 手臂 - 下压 -->
+    <path
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="12"
+        android:strokeLineCap="round"
+        android:pathData="M360,250 L360,350"/>
+    <path
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="12"
+        android:strokeLineCap="round"
+        android:pathData="M360,250 L480,350"/>
+
+    <!-- 绳索 -->
+    <path
+        android:strokeColor="#8A8AAE"
+        android:strokeWidth="4"
+        android:pathData="M550,250 L480,350"/>
+
+    <!-- 横杆 -->
+    <path
+        android:fillColor="#DAA520"
+        android:pathData="M460,340h50v8"/>
+</vector>

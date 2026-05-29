@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="800dp"
+    android:height="600dp"
+    android:viewportWidth="800"
+    android:viewportHeight="600">
+
+    <!-- 背景 -->
+    <path
+        android:fillColor="#252545"
+        android:pathData="M0,0h800v600h-800z"/>
+
+    <!-- 地面 -->
+    <path
+        android:fillColor="#3A3A5E"
+        android:pathData="M100,520h600v20h-600z"/>
+
+    <!-- 瑜伽垫 -->
+    <path
+        android:fillColor="#3A5E3A"
+        android:pathData="M200,400h400v15h-400z"/>
+
+    <!-- 人物 - 登山跑 -->
+    <!-- 头 -->
+    <path
+        android:fillColor="#FF6B35"
+        android:pathData="M280,280 m-18,0 a18,18 0 1,1 36,0 a18,18 0 1,1 -36,0"/>
+    <!-- 身体 - 倾斜伏地 -->
+    <path
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="16"
+        android:strokeLineCap="round"
+        android:pathData="M298,298 L450,350"/>
+    <!-- 腿 - 跑步姿势 -->
+    <path
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="14"
+        android:strokeLineCap="round"
+        android:pathData="M450,350 L520,380 L550,350"/>
+    <path
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="14"
+        android:strokeLineCap="round"
+        android:pathData="M450,350 L380,420 L350,450"/>
+    <!-- 手臂 -->
+    <path
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="12"
+        android:strokeLineCap="round"
+        android:pathData="M310,320 L280,400"/>
+
+    <!-- 跑步动作指示 -->
+    <path
+        android:strokeColor="#00FF88"
+        android:strokeWidth="3"
+        android:pathData="M560,340 L580,320"/>
+    <path
+        android:fillColor="#00FF88"
+        android:pathData="M575,315 L585,310 L580,325 Z"/>
+</vector>

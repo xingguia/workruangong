@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="800dp"
+    android:height="600dp"
+    android:viewportWidth="800"
+    android:viewportHeight="600">
+
+    <!-- 背景 -->
+    <path
+        android:fillColor="#252545"
+        android:pathData="M0,0h800v600h-800z"/>
+
+    <!-- 地面 -->
+    <path
+        android:fillColor="#3A3A5E"
+        android:pathData="M100,520h600v20h-600z"/>
+
+    <!-- 瑜伽垫 -->
+    <path
+        android:fillColor="#3A5E3A"
+        android:pathData="M250,380h300v12h-300z"/>
+
+    <!-- 人物 - 臀桥 -->
+    <!-- 头 -->
+    <path
+        android:fillColor="#FF6B35"
+        android:pathData="M320,280 m-18,0 a18,18 0 1,1 36,0 a18,18 0 1,1 -36,0"/>
+    <!-- 身体 -->
+    <path
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="16"
+        android:strokeLineCap="round"
+        android:pathData="M320,298 L400,320"/>
+    <!-- 腿 - 弯曲 -->
+    <path
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="14"
+        android:strokeLineCap="round"
+        android:pathData="M400,320 L520,350 L540,320"/>
+    <!-- 手臂 -->
+    <path
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="10"
+        android:strokeLineCap="round"
+        android:pathData="M340,310 L300,350"/>
+
+    <!-- 向上指示 -->
+    <path
+        android:strokeColor="#00FF88"
+        android:strokeWidth="3"
+        android:pathData="M380,280 L380,240"/>
+    <path
+        android:fillColor="#00FF88"
+        android:pathData="M375,245 L380,230 L385,245 Z"/>
+
+    <!-- 臀部发力区域 -->
+    <path
+        android:fillColor="#FF6B35"
+        android:fillAlpha="0.3"
+        android:pathData="M390,310h60v40h-60z"/>
+</vector>

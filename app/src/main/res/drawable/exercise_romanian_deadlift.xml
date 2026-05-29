@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="800dp"
+    android:height="600dp"
+    android:viewportWidth="800"
+    android:viewportHeight="600">
+
+    <!-- 背景 -->
+    <path
+        android:fillColor="#252545"
+        android:pathData="M0,0h800v600h-800z"/>
+
+    <!-- 地面 -->
+    <path
+        android:fillColor="#3A3A5E"
+        android:pathData="M100,520h600v20h-600z"/>
+
+    <!-- 罗马尼亚硬拉 - 人物前倾 -->
+    <!-- 头 -->
+    <path
+        android:fillColor="#FF6B35"
+        android:pathData="M380,260 m-22,0 a22,22 0 1,1 44,0 a22,22 0 1,1 -44,0"/>
+    <!-- 身体 - 前倾 -->
+    <path
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="18"
+        android:strokeLineCap="round"
+        android:pathData="M380,282 L400,350"/>
+    <!-- 腿 -->
+    <path
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="16"
+        android:strokeLineCap="round"
+        android:pathData="M400,350 L360,480"/>
+    <path
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="16"
+        android:strokeLineCap="round"
+        android:pathData="M400,350 L440,480"/>
+    <!-- 手臂 -->
+    <path
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="12"
+        android:strokeLineCap="round"
+        android:pathData="M385,310 L385,420"/>
+
+    <!-- 杠铃 -->
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M150,410h500v16h-500z"/>
+    <path
+        android:fillColor="#DAA520"
+        android:pathData="M130,400h40v30h-40z"/>
+    <path
+        android:fillColor="#DAA520"
+        android:pathData="M630,400h40v30h-40z"/>
+
+    <!-- 动作提示 - 腘绳肌发力 -->
+    <path
+        android:fillColor="#FF6B35"
+        android:fillAlpha="0.2"
+        android:pathData="M350,360h80v80h-80z"/>
+</vector>

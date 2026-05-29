@@ -36,11 +36,9 @@ public class SessionManager {
 
     private static SessionManager instance;
     private SharedPreferences prefs;
-    private SharedPreferences.Editor editor;
 
     private SessionManager(Context context) {
         prefs = context.getApplicationContext().getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
-        editor = prefs.edit();
     }
 
     public static synchronized SessionManager getInstance(Context context) {
@@ -51,55 +49,55 @@ public class SessionManager {
     }
 
     public void saveUserSession(String userId, String nickname, String phone, String token) {
-        editor.putString(KEY_USER_ID, userId)
+        prefs.edit().putString(KEY_USER_ID, userId)
                 .putString(KEY_NICKNAME, nickname)
                 .putString(KEY_PHONE, phone)
                 .putString(KEY_TOKEN, token)
-                .apply();
+                .commit();
     }
 
     public void saveUserInfo(String nickname, String avatar, int height, float weight, boolean isVip, int level) {
-        editor.putString(KEY_NICKNAME, nickname)
+        prefs.edit().putString(KEY_NICKNAME, nickname)
                 .putString(KEY_AVATAR, avatar)
                 .putInt(KEY_HEIGHT, height)
                 .putFloat(KEY_WEIGHT, weight)
                 .putBoolean(KEY_IS_VIP, isVip)
                 .putInt(KEY_LEVEL, level)
-                .apply();
+                .commit();
     }
 
     public void saveVipInfo(boolean isVip, String expireTime) {
-        editor.putBoolean(KEY_IS_VIP, isVip)
+        prefs.edit().putBoolean(KEY_IS_VIP, isVip)
                 .putString(KEY_VIP_EXPIRE_TIME, expireTime)
-                .apply();
+                .commit();
     }
 
     public void saveBodyData(int height, float weight) {
-        editor.putInt(KEY_HEIGHT, height)
+        prefs.edit().putInt(KEY_HEIGHT, height)
                 .putFloat(KEY_WEIGHT, weight)
-                .apply();
+                .commit();
     }
 
     public void saveFullBodyData(int height, float weight, float bodyFat, float waist, float hip) {
-        editor.putInt(KEY_HEIGHT, height)
+        prefs.edit().putInt(KEY_HEIGHT, height)
                 .putFloat(KEY_WEIGHT, weight)
                 .putFloat(KEY_BODY_FAT, bodyFat)
                 .putFloat(KEY_WAIST, waist)
                 .putFloat(KEY_HIP, hip)
-                .apply();
+                .commit();
     }
 
     public void saveInitialBodyData(int height, float weight, float bodyFat, float waist, float hip) {
-        editor.putInt(KEY_INITIAL_HEIGHT, height)
+        prefs.edit().putInt(KEY_INITIAL_HEIGHT, height)
                 .putFloat(KEY_INITIAL_WEIGHT, weight)
                 .putFloat(KEY_INITIAL_BODY_FAT, bodyFat)
                 .putFloat(KEY_INITIAL_WAIST, waist)
                 .putFloat(KEY_INITIAL_HIP, hip)
-                .apply();
+                .commit();
     }
 
     public void markAssessmentCompleted() {
-        editor.putBoolean(KEY_ASSESSMENT_COMPLETED, true).apply();
+        prefs.edit().putBoolean(KEY_ASSESSMENT_COMPLETED, true).commit();
     }
 
     public boolean isAssessmentCompleted() {
@@ -107,7 +105,7 @@ public class SessionManager {
     }
 
     public void markUsernameSet() {
-        editor.putBoolean(KEY_USERNAME_SET, true).apply();
+        prefs.edit().putBoolean(KEY_USERNAME_SET, true).commit();
     }
 
     public boolean isUsernameSet() {
@@ -116,19 +114,31 @@ public class SessionManager {
 
     // Username management
     public void saveNickname(String nickname) {
-        editor.putString(KEY_NICKNAME, nickname).apply();
+        prefs.edit().putString(KEY_NICKNAME, nickname).commit();
     }
 
     public void setNickname(String nickname) {
-        editor.putString(KEY_NICKNAME, nickname).apply();
+        prefs.edit().putString(KEY_NICKNAME, nickname).commit();
     }
 
     public void setHeight(int height) {
-        editor.putInt(KEY_HEIGHT, height).apply();
+        prefs.edit().putInt(KEY_HEIGHT, height).commit();
     }
 
     public void setWeight(float weight) {
-        editor.putFloat(KEY_WEIGHT, weight).apply();
+        prefs.edit().putFloat(KEY_WEIGHT, weight).commit();
+    }
+
+    public void setAvatar(String avatar) {
+        prefs.edit().putString(KEY_AVATAR, avatar).commit();
+    }
+
+    public void setGender(String gender) {
+        prefs.edit().putString(KEY_GENDER, gender).commit();
+    }
+
+    public void setFitnessGoal(String goal) {
+        prefs.edit().putString(KEY_FITNESS_GOAL, goal).commit();
     }
 
     public boolean isNicknameAvailable(String nickname) {
@@ -139,7 +149,7 @@ public class SessionManager {
     public void addUsernameToSet(String username) {
         Set<String> allUsernames = getAllUsernames();
         allUsernames.add(username);
-        editor.putStringSet(KEY_ALL_USERNAMES, allUsernames).apply();
+        prefs.edit().putStringSet(KEY_ALL_USERNAMES, allUsernames).apply();
     }
 
     public Set<String> getAllUsernames() {
@@ -180,10 +190,6 @@ public class SessionManager {
 
     public String getAvatar() {
         return prefs.getString(KEY_AVATAR, null);
-    }
-
-    public void setAvatar(String avatar) {
-        editor.putString(KEY_AVATAR, avatar).apply();
     }
 
     public int getHeight() {
@@ -231,26 +237,18 @@ public class SessionManager {
     }
 
     // Gender
-    public void setGender(String gender) {
-        editor.putString(KEY_GENDER, gender).apply();
-    }
-
     public String getGender() {
         return prefs.getString(KEY_GENDER, null);
     }
 
     // Fitness Goal
-    public void setFitnessGoal(String goal) {
-        editor.putString(KEY_FITNESS_GOAL, goal).apply();
-    }
-
     public String getFitnessGoal() {
         return prefs.getString(KEY_FITNESS_GOAL, null);
     }
 
     // Workout Reminder
     public void setWorkoutReminderEnabled(boolean enabled) {
-        editor.putBoolean(KEY_WORKOUT_REMINDER, enabled).apply();
+        prefs.edit().putBoolean(KEY_WORKOUT_REMINDER, enabled).apply();
     }
 
     public boolean isWorkoutReminderEnabled() {
@@ -259,7 +257,7 @@ public class SessionManager {
 
     // Achievement Notification
     public void setAchievementNotificationEnabled(boolean enabled) {
-        editor.putBoolean(KEY_ACHIEVEMENT_NOTIFICATION, enabled).apply();
+        prefs.edit().putBoolean(KEY_ACHIEVEMENT_NOTIFICATION, enabled).apply();
     }
 
     public boolean isAchievementNotificationEnabled() {

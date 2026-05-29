@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="800dp"
+    android:height="600dp"
+    android:viewportWidth="800"
+    android:viewportHeight="600">
+
+    <!-- 背景 -->
+    <path
+        android:fillColor="#252545"
+        android:pathData="M0,0h800v600h-800z"/>
+
+    <!-- 瑜伽垫 -->
+    <path
+        android:fillColor="#3A5E3A"
+        android:pathData="M200,400h400v15h-400z"/>
+
+    <!-- 人物 - 俯卧撑准备 -->
+    <!-- 头 -->
+    <path
+        android:fillColor="#FF6B35"
+        android:pathData="M300,300 m-18,0 a18,18 0 1,1 36,0 a18,18 0 1,1 -36,0"/>
+    <!-- 身体 - 水平 -->
+    <path
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="16"
+        android:strokeLineCap="round"
+        android:pathData="M318,318 L480,340"/>
+    <!-- 腿 -->
+    <path
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="14"
+        android:strokeLineCap="round"
+        android:pathData="M480,340 L560,400"/>
+    <!-- 手臂 -->
+    <path
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="12"
+        android:strokeLineCap="round"
+        android:pathData="M340,340 L320,400"/>
+
+    <!-- 动作指示 - 下降 -->
+    <path
+        android:strokeColor="#00FF88"
+        android:strokeWidth="3"
+        android:pathData="M300,280 L300,320"/>
+    <path
+        android:fillColor="#00FF88"
+        android:pathData="M295,310 L300,325 L305,310 Z"/>
+
+    <!-- 肌肉发力区域 -->
+    <path
+        android:fillColor="#FF6B35"
+        android:fillAlpha="0.25"
+        android:pathData="M330,310h120v30h-120z"/>
+</vector>

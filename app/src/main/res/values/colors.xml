@@ -59,8 +59,15 @@
     <color name="accent_10">#1A00FF88</color>
     <color name="accent_20">#3300FF88</color>
 
+    <!-- Surface Color -->
+    <color name="surface">#252545</color>
+
     <!-- White with alpha -->
     <color name="white_5">#0DFFFFFF</color>
     <color name="white_10">#1AFFFFFF</color>
     <color name="white_70">#B3FFFFFF</color>
+
+    <!-- Week day selection -->
+    <color name="day_selected">#4D90CDF0</color>
+    <color name="day_bg">#5DADE2</color>
 </resources>

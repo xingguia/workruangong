@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="800dp"
+    android:height="600dp"
+    android:viewportWidth="800"
+    android:viewportHeight="600">
+
+    <!-- 背景 -->
+    <path
+        android:fillColor="#252545"
+        android:pathData="M0,0h800v600h-800z"/>
+
+    <!-- 地面 -->
+    <path
+        android:fillColor="#3A3A5E"
+        android:pathData="M100,520h600v20h-600z"/>
+
+    <!-- 人物 - 硬拉 -->
+    <!-- 头 -->
+    <path
+        android:fillColor="#FF6B35"
+        android:pathData="M380,250 m-22,0 a22,22 0 1,1 44,0 a22,22 0 1,1 -44,0"/>
+    <!-- 身体 - 倾斜 -->
+    <path
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="18"
+        android:strokeLineCap="round"
+        android:pathData="M380,272 L400,350"/>
+    <!-- 腿 -->
+    <path
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="16"
+        android:strokeLineCap="round"
+        android:pathData="M400,350 L350,480"/>
+    <path
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="16"
+        android:strokeLineCap="round"
+        android:pathData="M400,350 L450,480"/>
+    <!-- 手臂 -->
+    <path
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="12"
+        android:strokeLineCap="round"
+        android:pathData="M380,300 L380,420"/>
+
+    <!-- 杠铃 -->
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M150,410h500v18h-500z"/>
+    <path
+        android:fillColor="#DAA520"
+        android:pathData="M130,400h40v35h-40z"/>
+    <path
+        android:fillColor="#DAA520"
+        android:pathData="M630,400h40v35h-40z"/>
+
+    <!-- 背部发力指示 -->
+    <path
+        android:fillColor="#FF6B35"
+        android:fillAlpha="0.3"
+        android:pathData="M360,260h50v100h-50z"/>
+</vector>

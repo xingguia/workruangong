@@ -5,6 +5,7 @@ import java.io.Serializable;
 public class ExercisePlan implements Serializable {
 
     public enum DayStatus {
+        NOT_SET,    // 未设置
         REST,       // 休息日
         WORKOUT,    // 锻炼日
     }
@@ -20,13 +21,13 @@ public class ExercisePlan implements Serializable {
     private CompletionStatus completionStatus;
 
     public ExercisePlan() {
-        this.status = DayStatus.REST;
+        this.status = DayStatus.NOT_SET;
         this.completionStatus = CompletionStatus.NOT_SET;
     }
 
     public ExercisePlan(int dayOfWeek) {
         this.dayOfWeek = dayOfWeek;
-        this.status = DayStatus.REST;
+        this.status = DayStatus.NOT_SET;
         this.completionStatus = CompletionStatus.NOT_SET;
     }
 
@@ -50,8 +51,12 @@ public class ExercisePlan implements Serializable {
 
     public void setStatus(DayStatus status) {
         this.status = status;
-        if (status == DayStatus.WORKOUT && this.completionStatus == CompletionStatus.NOT_SET) {
-            this.completionStatus = CompletionStatus.PENDING;
+        if (status == DayStatus.WORKOUT) {
+            if (this.completionStatus == CompletionStatus.NOT_SET) {
+                this.completionStatus = CompletionStatus.PENDING;
+            }
+        } else if (status == DayStatus.REST) {
+            this.completionStatus = CompletionStatus.NOT_SET;
         }
     }
 
@@ -65,6 +70,14 @@ public class ExercisePlan implements Serializable {
 
     public boolean isWorkoutDay() {
         return status == DayStatus.WORKOUT;
+    }
+
+    public boolean isRestDay() {
+        return status == DayStatus.REST;
+    }
+
+    public boolean isNotSet() {
+        return status == DayStatus.NOT_SET;
     }
 
     public boolean isCompleted() {

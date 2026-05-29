@@ -231,8 +231,13 @@ public class LoginFragment extends Fragment {
         String token = "token_" + System.currentTimeMillis();
         String phone = binding.phoneInput.getText().toString();
 
+        // 保留已有的昵称，仅首次登录时使用默认值
+        String existingNickname = sessionManager.getNickname();
+        String nickname = (existingNickname != null && !existingNickname.isEmpty())
+                ? existingNickname : "健身爱好者";
+
         // Save user session
-        sessionManager.saveUserSession(userId, "健身爱好者", phone, token);
+        sessionManager.saveUserSession(userId, nickname, phone, token);
 
         binding.loginBtn.postDelayed(() -> {
             binding.loginBtn.setEnabled(true);

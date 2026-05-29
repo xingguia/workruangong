@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="800dp"
+    android:height="600dp"
+    android:viewportWidth="800"
+    android:viewportHeight="600">
+
+    <!-- 背景 -->
+    <path
+        android:fillColor="#252545"
+        android:pathData="M0,0h800v600h-800z"/>
+
+    <!-- 瑜伽垫 -->
+    <path
+        android:fillColor="#3A5E3A"
+        android:pathData="M200,380h400v15h-400z"/>
+
+    <!-- 人物 - 仰卧举腿 -->
+    <!-- 头 -->
+    <path
+        android:fillColor="#FF6B35"
+        android:pathData="M250,300 m-18,0 a18,18 0 1,1 36,0 a18,18 0 1,1 -36,0"/>
+    <!-- 身体 -->
+    <path
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="16"
+        android:strokeLineCap="round"
+        android:pathData="M250,318 L400,340"/>
+    <!-- 腿 - 举起 -->
+    <path
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="14"
+        android:strokeLineCap="round"
+        android:pathData="M400,340 L500,200"/>
+    <!-- 手臂 -->
+    <path
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="10"
+        android:strokeLineCap="round"
+        android:pathData="M270,325 L220,360"/>
+
+    <!-- 动作指示箭头 -->
+    <path
+        android:strokeColor="#00FF88"
+        android:strokeWidth="3"
+        android:pathData="M520,220 L540,180"/>
+    <path
+        android:fillColor="#00FF88"
+        android:pathData="M535,175 L545,170 L540,185 Z"/>
+
+    <!-- 肌肉发力区域 -->
+    <path
+        android:fillColor="#FF6B35"
+        android:fillAlpha="0.25"
+        android:pathData="M420,250h80v100h-80z"/>
+</vector>

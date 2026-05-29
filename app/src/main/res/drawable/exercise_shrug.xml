@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="800dp"
+    android:height="600dp"
+    android:viewportWidth="800"
+    android:viewportHeight="600">
+
+    <!-- 背景 -->
+    <path
+        android:fillColor="#252545"
+        android:pathData="M0,0h800v600h-800z"/>
+
+    <!-- 地面 -->
+    <path
+        android:fillColor="#3A3A5E"
+        android:pathData="M100,520h600v20h-600z"/>
+
+    <!-- 人物 - 耸肩 -->
+    <!-- 头 -->
+    <path
+        android:fillColor="#FF6B35"
+        android:pathData="M400,160 m-25,0 a25,25 0 1,1 50,0 a25,25 0 1,1 -50,0"/>
+    <!-- 身体 -->
+    <path
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="18"
+        android:strokeLineCap="round"
+        android:pathData="M400,185 L400,340"/>
+    <!-- 腿 -->
+    <path
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="16"
+        android:strokeLineCap="round"
+        android:pathData="M400,340 L360,480"/>
+    <path
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="16"
+        android:strokeLineCap="round"
+        android:pathData="M400,340 L440,480"/>
+    <!-- 手臂 -->
+    <path
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="12"
+        android:strokeLineCap="round"
+        android:pathData="M400,220 L340,300"/>
+    <path
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="12"
+        android:strokeLineCap="round"
+        android:pathData="M400,220 L460,300"/>
+
+    <!-- 杠铃 -->
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M200,240h400v12h-400z"/>
+    <path
+        android:fillColor="#DAA520"
+        android:pathData="M180,230h40v30h-40z"/>
+    <path
+        android:fillColor="#DAA520"
+        android:pathData="M580,230h40v30h-40z"/>
+
+    <!-- 耸肩指示 -->
+    <path
+        android:strokeColor="#00FF88"
+        android:strokeWidth="3"
+        android:pathData="M340,170 L340,200"/>
+    <path
+        strokeColor="#00FF88"
+        android:strokeWidth="3"
+        android:pathData="M460,170 L460,200"/>
+
+    <!-- 斜方肌发力区域 -->
+    <path
+        android:fillColor="#FF6B35"
+        android:fillAlpha="0.25"
+        android:pathData="M360,180h80v40h-80z"/>
+</vector>

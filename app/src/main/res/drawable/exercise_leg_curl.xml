@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="800dp"
+    android:height="600dp"
+    android:viewportWidth="800"
+    android:viewportHeight="600">
+
+    <!-- 背景 -->
+    <path
+        android:fillColor="#252545"
+        android:pathData="M0,0h800v600h-800z"/>
+
+    <!-- 地面 -->
+    <path
+        android:fillColor="#3A3A5E"
+        android:pathData="M100,520h600v20h-600z"/>
+
+    <!-- 腿弯举机 -->
+    <path
+        android:fillColor="#4A4A6E"
+        android:pathData="M450,300h150v150h-150z"/>
+
+    <!-- 人物 - 俯卧腿弯举 -->
+    <!-- 头 -->
+    <path
+        android:fillColor="#FF6B35"
+        android:pathData="M250,280 m-22,0 a22,22 0 1,1 44,0 a22,22 0 1,1 -44,0"/>
+    <!-- 身体 - 俯卧 -->
+    <path
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="16"
+        android:strokeLineCap="round"
+        android:pathData="M250,302 L400,350"/>
+    <!-- 腿 - 弯曲 -->
+    <path
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="14"
+        android:strokeLineCap="round"
+        android:pathData="M400,350 L450,280"/>
+    <!-- 手臂 -->
+    <path
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="10"
+        android:strokeLineCap="round"
+        android:pathData="M280,320 L220,350"/>
+    <path
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="10"
+        android:strokeLineCap="round"
+        android:pathData="M280,320 L220,350"/>
+
+    <!-- 垫子 -->
+    <path
+        android:fillColor="#3A5E3A"
+        android:pathData="M200,340h300v15h-300z"/>
+</vector>

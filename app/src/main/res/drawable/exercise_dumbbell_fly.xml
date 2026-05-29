@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="800dp"
+    android:height="600dp"
+    android:viewportWidth="800"
+    android:viewportHeight="600">
+
+    <!-- 背景 -->
+    <path
+        android:fillColor="#252545"
+        android:pathData="M0,0h800v600h-800z"/>
+
+    <!-- 地面 -->
+    <path
+        android:fillColor="#3A3A5E"
+        android:pathData="M100,520h600v20h-600z"/>
+
+    <!-- 瑜伽垫 -->
+    <path
+        android:fillColor="#3A5E3A"
+        android:pathData="M200,380h400v15h-400z"/>
+
+    <!-- 人物 - 哑铃飞鸟 -->
+    <!-- 头 -->
+    <path
+        android:fillColor="#FF6B35"
+        android:pathData="M400,280 m-20,0 a20,20 0 1,1 40,0 a20,20 0 1,1 -40,0"/>
+    <!-- 身体 -->
+    <path
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="16"
+        android:strokeLineCap="round"
+        android:pathData="M400,300 L400,380"/>
+    <!-- 腿 -->
+    <path
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="14"
+        android:strokeLineCap="round"
+        android:pathData="M400,380 L360,480"/>
+    <path
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="14"
+        android:strokeLineCap="round"
+        android:pathData="M400,380 L440,480"/>
+    <!-- 手臂 - 张开 -->
+    <path
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="12"
+        android:strokeLineCap="round"
+        android:pathData="M400,330 L280,260"/>
+    <path
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="12"
+        android:strokeLineCap="round"
+        android:pathData="M400,330 L520,260"/>
+
+    <!-- 哑铃 -->
+    <path
+        android:fillColor="#6A6A8E"
+        android:pathData="M250,240h30v15h-30z"/>
+    <path
+        android:fillColor="#8A8AAE"
+        android:pathData="M245,235h10v20h-10z"/>
+
+    <path
+        android:fillColor="#6A6A8E"
+        android:pathData="M520,240h30v15h-30z"/>
+    <path
+        android:fillColor="#8A8AAE"
+        android:pathData="M545,235h10v20h-10z"/>
+
+    <!-- 张开指示 -->
+    <path
+        android:strokeColor="#00FF88"
+        android:strokeWidth="2"
+        android:pathData="M320,240 L280,200"/>
+    <path
+        android:strokeColor="#00FF88"
+        android:strokeWidth="2"
+        android:pathData="M480,240 L520,200"/>
+</vector>

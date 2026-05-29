@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="800dp"
+    android:height="600dp"
+    android:viewportWidth="800"
+    android:viewportHeight="600">
+
+    <!-- 背景 -->
+    <path
+        android:fillColor="#252545"
+        android:pathData="M0,0h800v600h-800z"/>
+
+    <!-- 地面 -->
+    <path
+        android:fillColor="#3A3A5E"
+        android:pathData="M100,520h600v20h-600z"/>
+
+    <!-- 人物 - 侧平举 -->
+    <!-- 头 -->
+    <path
+        android:fillColor="#FF6B35"
+        android:pathData="M400,150 m-25,0 a25,25 0 1,1 50,0 a25,25 0 1,1 -50,0"/>
+    <!-- 身体 -->
+    <path
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="18"
+        android:strokeLineCap="round"
+        android:pathData="M400,175 L400,320"/>
+    <!-- 腿 -->
+    <path
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="16"
+        android:strokeLineCap="round"
+        android:pathData="M400,320 L360,480"/>
+    <path
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="16"
+        android:strokeLineCap="round"
+        android:pathData="M400,320 L440,480"/>
+
+    <!-- 手臂 - 侧平举 -->
+    <path
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="12"
+        android:strokeLineCap="round"
+        android:pathData="M400,210 L280,180"/>
+    <path
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="12"
+        android:strokeLineCap="round"
+        android:pathData="M400,210 L520,180"/>
+
+    <!-- 哑铃 -->
+    <path
+        android:fillColor="#6A6A8E"
+        android:pathData="M250,165h30v15h-30z"/>
+    <path
+        android:fillColor="#8A8AAE"
+        android:pathData="M240,160h12v25h-12z"/>
+
+    <path
+        android:fillColor="#6A6A8E"
+        android:pathData="M520,165h30v15h-30z"/>
+    <path
+        android:fillColor="#8A8AAE"
+        android:pathData="M548,160h12v25h-12z"/>
+
+    <!-- 动作指示线 -->
+    <path
+        android:strokeColor="#00FF88"
+        android:strokeWidth="2"
+        android:pathData="M400,200 L400,100"/>
+    <path
+        android:fillColor="#00FF88"
+        android:pathData="M400,90 L395,105 L405,105 Z"/>
+</vector>

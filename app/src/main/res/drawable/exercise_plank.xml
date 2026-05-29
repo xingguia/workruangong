@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="800dp"
+    android:height="600dp"
+    android:viewportWidth="800"
+    android:viewportHeight="600">
+
+    <!-- 背景 -->
+    <path
+        android:fillColor="#252545"
+        android:pathData="M0,0h800v600h-800z"/>
+
+    <!-- 瑜伽垫 -->
+    <path
+        android:fillColor="#3A5E3A"
+        android:pathData="M200,400h400v20h-400z"/>
+
+    <!-- 人物 - 平板支撑 -->
+    <!-- 头 -->
+    <path
+        android:fillColor="#FF6B35"
+        android:pathData="M280,320 m-20,0 a20,20 0 1,1 40,0 a20,20 0 1,1 -40,0"/>
+    <!-- 身体 - 水平 -->
+    <path
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="18"
+        android:strokeLineCap="round"
+        android:pathData="M300,340 L500,340"/>
+    <!-- 腿 -->
+    <path
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="14"
+        android:strokeLineCap="round"
+        android:pathData="M500,340 L580,400"/>
+    <!-- 手臂 -->
+    <path
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="12"
+        android:strokeLineCap="round"
+        android:pathData="M320,340 L300,400"/>
+
+    <!-- 身体直线指示 -->
+    <path
+        android:strokeColor="#00FF88"
+        android:strokeWidth="2"
+        android:pathData="M260,300 L600,300"/>
+
+    <!-- 箭头 - 保持直线 -->
+    <path
+        android:fillColor="#00FF88"
+        android:pathData="M580,290 L600,300 L580,310"/>
+
+    <!-- 肌肉区域高亮 -->
+    <path
+        android:fillColor="#FF6B35"
+        android:fillAlpha="0.2"
+        android:pathData="M310,330h180v25h-180z"/>
+</vector>

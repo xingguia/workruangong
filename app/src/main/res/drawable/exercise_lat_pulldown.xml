@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="800dp"
+    android:height="600dp"
+    android:viewportWidth="800"
+    android:viewportHeight="600">
+
+    <!-- 背景 -->
+    <path
+        android:fillColor="#252545"
+        android:pathData="M0,0h800v600h-800z"/>
+
+    <!-- 高位下拉机 -->
+    <path
+        android:strokeColor="#6A6A8E"
+        android:strokeWidth="10"
+        android:pathData="M200,100h400v10"/>
+    <path
+        android:strokeColor="#6A6A8E"
+        android:strokeWidth="8"
+        android:pathData="M300,110 L300,300"/>
+    <path
+        android:strokeColor="#6A6A8E"
+        android:strokeWidth="8"
+        android:pathData="M500,110 L500,300"/>
+    <!-- 座位 -->
+    <path
+        android:fillColor="#4A4A6E"
+        android:pathData="M320,400h160v30h-160z"/>
+
+    <!-- 人物 -->
+    <!-- 头 -->
+    <path
+        android:fillColor="#FF6B35"
+        android:pathData="M400,200 m-22,0 a22,22 0 1,1 44,0 a22,22 0 1,1 -44,0"/>
+    <!-- 身体 -->
+    <path
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="16"
+        android:strokeLineCap="round"
+        android:pathData="M400,222 L400,340"/>
+    <!-- 腿 -->
+    <path
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="14"
+        android:strokeLineCap="round"
+        android:pathData="M400,340 L360,420"/>
+    <path
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="14"
+        android:strokeLineCap="round"
+        android:pathData="M400,340 L440,420"/>
+    <!-- 手臂 - 向下拉 -->
+    <path
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="12"
+        android:strokeLineCap="round"
+        android:pathData="M400,240 L320,300"/>
+    <path
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="12"
+        android:strokeLineCap="round"
+        android:pathData="M400,240 L480,300"/>
+
+    <!-- 拉杆 -->
+    <path
+        android:fillColor="#DAA520"
+        android:pathData="M280,300h240v8"/>
+    <!-- 绳索 -->
+    <path
+        android:strokeColor="#8A8AAE"
+        android:strokeWidth="4"
+        android:pathData="M320,160 L320,300"/>
+    <path
+        android:strokeColor="#8A8AAE"
+        android:strokeWidth="4"
+        android:pathData="M480,160 L480,300"/>
+</vector>

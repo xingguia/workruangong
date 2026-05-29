@@ -2,7 +2,6 @@ package com.example.myapplication.ui.screens.home;
 
 import android.app.AlertDialog;
 import android.graphics.Color;
-import android.graphics.Paint;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -13,6 +12,7 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
@@ -21,11 +21,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.core.content.ContextCompat;
-import androidx.fragment.app.Fragment;
-
-import com.example.myapplication.R;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
@@ -44,7 +39,6 @@ import com.example.myapplication.util.RecordManager;
 import com.example.myapplication.util.SessionManager;
 import com.example.myapplication.util.TrainingTaskManager;
 import com.example.myapplication.util.WorkoutRecordManager;
-import com.google.android.material.textfield.TextInputEditText;
 
 import java.util.Calendar;
 import java.util.List;
@@ -132,12 +126,14 @@ public class HomeFragment extends Fragment {
     }
 
     private View createDayView(String dayLabel, int index, int todayIndex, ExercisePlan plan) {
-        boolean isToday = (index == todayIndex);
+        boolean isNotSet = plan.isNotSet();
+        boolean isRestDay = plan.isRestDay();
+        boolean isWorkoutDay = plan.isWorkoutDay();
 
         LinearLayout container = new LinearLayout(requireContext());
         container.setOrientation(LinearLayout.VERTICAL);
         container.setGravity(Gravity.CENTER);
-        container.setBackgroundResource(R.drawable.bg_card);
+        container.setBackgroundResource(R.drawable.bg_day_item);
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
                 0, LinearLayout.LayoutParams.WRAP_CONTENT, 1.0f);
         int margin = (int) (4 * getResources().getDisplayMetrics().density);
@@ -145,15 +141,18 @@ public class HomeFragment extends Fragment {
         container.setLayoutParams(params);
         container.setPadding(8, 12, 8, 12);
 
-        // Day label
+        // Day label - 默认显示周一到周日，选择休息日后显示"休"
         TextView labelView = new TextView(requireContext());
-        labelView.setText(dayLabel);
+        if (isRestDay) {
+            labelView.setText("休");
+        } else {
+            labelView.setText(dayLabel);
+        }
         labelView.setTextSize(12);
         labelView.setGravity(Gravity.CENTER);
-        labelView.setTextColor(ContextCompat.getColor(requireContext(),
-                isToday ? R.color.white : R.color.text_muted));
+        labelView.setTextColor(ContextCompat.getColor(requireContext(), R.color.white));
 
-        // Status indicator
+        // Status indicator - 绿色圆点（已完成）或橙色圆点（未完成）
         View statusIndicator = new View(requireContext());
         int indicatorSize = (int) (8 * getResources().getDisplayMetrics().density);
         LinearLayout.LayoutParams indicatorParams = new LinearLayout.LayoutParams(indicatorSize, indicatorSize);
@@ -161,34 +160,21 @@ public class HomeFragment extends Fragment {
         indicatorParams.gravity = Gravity.CENTER_HORIZONTAL;
         statusIndicator.setLayoutParams(indicatorParams);
 
-        // Set indicator color based on status
-        if (isToday) {
-            if (plan.isWorkoutDay()) {
-                if (plan.isCompleted()) {
-                    statusIndicator.setBackgroundTintList(ContextCompat.getColorStateList(requireContext(), R.color.success));
-                    container.setBackgroundTintList(ContextCompat.getColorStateList(requireContext(), R.color.success));
-                } else {
-                    statusIndicator.setBackgroundTintList(ContextCompat.getColorStateList(requireContext(), R.color.warning));
-                    container.setBackgroundTintList(ContextCompat.getColorStateList(requireContext(), R.color.warning));
-                }
-                labelView.setTextColor(ContextCompat.getColor(requireContext(), R.color.white));
-            } else {
-                statusIndicator.setBackgroundTintList(ContextCompat.getColorStateList(requireContext(), R.color.text_muted));
-            }
+        if (isWorkoutDay) {
+            // 锻炼日：显示圆点
+            int dotColor = plan.isCompleted() ? R.color.success : R.color.warning;
+            android.graphics.drawable.GradientDrawable dotDrawable = new android.graphics.drawable.GradientDrawable();
+            dotDrawable.setShape(android.graphics.drawable.GradientDrawable.OVAL);
+            dotDrawable.setColor(ContextCompat.getColor(requireContext(), dotColor));
+            dotDrawable.setSize(indicatorSize, indicatorSize);
+            statusIndicator.setBackground(dotDrawable);
         } else {
-            if (plan.isWorkoutDay()) {
-                if (plan.isCompleted()) {
-                    statusIndicator.setBackgroundTintList(ContextCompat.getColorStateList(requireContext(), R.color.success));
-                } else {
-                    statusIndicator.setBackgroundTintList(ContextCompat.getColorStateList(requireContext(), R.color.warning));
-                }
-            } else {
-                statusIndicator.setVisibility(View.INVISIBLE);
-            }
+            // 未设置或休息日：不显示圆点
+            statusIndicator.setVisibility(View.GONE);
         }
 
-        container.addView(statusIndicator);
         container.addView(labelView);
+        container.addView(statusIndicator);
 
         return container;
     }
@@ -215,16 +201,22 @@ public class HomeFragment extends Fragment {
             } else {
                 radioPending.setChecked(true);
             }
-        } else {
+        } else if (plan.isRestDay()) {
             radioRest.setChecked(true);
+            completionContainer.setVisibility(View.GONE);
+        } else {
+            // NOT_SET: no radio checked by default, clear the group
+            statusRadio.clearCheck();
             completionContainer.setVisibility(View.GONE);
         }
 
         statusRadio.setOnCheckedChangeListener((group, checkedId) -> {
             if (checkedId == R.id.radioWorkout) {
                 completionContainer.setVisibility(View.VISIBLE);
-                radioPending.setChecked(true);
-            } else {
+                if (completionRadio.getCheckedRadioButtonId() == -1) {
+                    radioPending.setChecked(true);
+                }
+            } else if (checkedId == R.id.radioRest) {
                 completionContainer.setVisibility(View.GONE);
             }
         });
@@ -247,9 +239,15 @@ public class HomeFragment extends Fragment {
 
         dialog.setOnShowListener(dialogInterface -> {
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
+                int checkedId = statusRadio.getCheckedRadioButtonId();
+                if (checkedId == -1) {
+                    Toast.makeText(requireContext(), "请选择休息日或锻炼日", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
                 ExercisePlan newPlan = new ExercisePlan(dayIndex + 1);
 
-                if (statusRadio.getCheckedRadioButtonId() == R.id.radioWorkout) {
+                if (checkedId == R.id.radioWorkout) {
                     newPlan.setStatus(ExercisePlan.DayStatus.WORKOUT);
                     if (completionRadio.getCheckedRadioButtonId() == R.id.radioCompleted) {
                         newPlan.setCompletionStatus(ExercisePlan.CompletionStatus.COMPLETED);
@@ -898,9 +896,214 @@ public class HomeFragment extends Fragment {
     private void setupListeners() {
         binding.addTaskBtn.setOnClickListener(v -> showAddTaskDialog());
 
-        binding.startTrainingBtn.setOnClickListener(v -> {
-            // Start training
+        binding.startTrainingBtn.setOnClickListener(v -> showTrainingGuideDialog());
+    }
+
+    /**
+     * 显示训练指导对话框
+     */
+    private void showTrainingGuideDialog() {
+        // 获取今日的训练任务
+        List<TrainingTask> tasks = trainingTaskManager.getTasksForToday();
+
+        if (tasks == null || tasks.isEmpty()) {
+            Toast.makeText(requireContext(), "请先添加训练任务", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        boolean isSingleTask = tasks.size() == 1;
+
+        View dialogView = LayoutInflater.from(requireContext())
+                .inflate(R.layout.dialog_training_guide, null);
+
+        TextView titleView = dialogView.findViewById(R.id.exerciseName);
+        ImageView imageView = dialogView.findViewById(R.id.exerciseImage);
+        View noImageHint = dialogView.findViewById(R.id.noImageHint);
+        TextView instructionsView = dialogView.findViewById(R.id.exerciseInstructions);
+        TextView tipsView = dialogView.findViewById(R.id.trainingTips);
+        TextView progressText = dialogView.findViewById(R.id.progressText);
+        LinearLayout progressDots = dialogView.findViewById(R.id.progressDots);
+        ImageButton prevBtn = dialogView.findViewById(R.id.prevBtn);
+        ImageButton nextBtn = dialogView.findViewById(R.id.nextBtn);
+        com.google.android.material.button.MaterialButton startBtn = dialogView.findViewById(R.id.startTrainingBtn);
+        ImageButton closeBtn = dialogView.findViewById(R.id.closeBtn);
+
+        // 找到第一个未完成的任务作为起始位置
+        int startIndex = 0;
+        for (int i = 0; i < tasks.size(); i++) {
+            if (!tasks.get(i).isCompleted()) {
+                startIndex = i;
+                break;
+            }
+        }
+
+        // 根据任务数量控制箭头显示
+        if (isSingleTask) {
+            // 单任务：隐藏箭头和进度指示
+            prevBtn.setVisibility(View.INVISIBLE);
+            nextBtn.setVisibility(View.INVISIBLE);
+            progressText.setVisibility(View.GONE);
+            progressDots.setVisibility(View.GONE);
+        } else {
+            // 多任务：显示箭头
+            prevBtn.setVisibility(View.VISIBLE);
+            nextBtn.setVisibility(View.VISIBLE);
+            progressText.setVisibility(View.VISIBLE);
+            progressDots.setVisibility(View.VISIBLE);
+
+            // 创建进度点
+            for (int i = 0; i < tasks.size(); i++) {
+                View dot = new View(requireContext());
+                LinearLayout.LayoutParams dotParams = new LinearLayout.LayoutParams(8, 8);
+                dotParams.setMargins(4, 0, 4, 0);
+                dot.setLayoutParams(dotParams);
+                dot.setBackgroundResource(R.drawable.bg_progress_dot);
+                progressDots.addView(dot);
+            }
+        }
+
+        // 当前索引
+        final int[] currentIndex = {startIndex};
+
+        // 更新显示
+        Runnable updateDisplay = () -> {
+            TrainingTask task = tasks.get(currentIndex[0]);
+
+            // 查找对应的动作信息
+            ExerciseDatabase.Exercise exercise = findExerciseByName(task.getName());
+
+            titleView.setText(task.getName());
+
+            // 根据任务数量更新按钮文本
+            if (isSingleTask) {
+                startBtn.setText("开始训练");
+            } else {
+                if (task.isCompleted()) {
+                    startBtn.setText("已完成");
+                } else {
+                    startBtn.setText("完成 " + task.getName());
+                }
+            }
+
+            if (exercise != null) {
+                instructionsView.setText(exercise.getInstructions());
+                tipsView.setText(exercise.getTips());
+
+                // 尝试加载图片
+                if (exercise.imageResName != null) {
+                    int resId = getResources().getIdentifier(
+                            exercise.imageResName, "drawable", requireContext().getPackageName());
+                    if (resId != 0) {
+                        imageView.setImageResource(resId);
+                        noImageHint.setVisibility(View.GONE);
+                        imageView.setVisibility(View.VISIBLE);
+                    } else {
+                        showNoImage(imageView, noImageHint);
+                    }
+                } else {
+                    showNoImage(imageView, noImageHint);
+                }
+            } else {
+                instructionsView.setText("【动作要点】\n请参考标准健身动作教程\n或咨询教练指导");
+                tipsView.setText("动作名称：" + task.getName() + "\n所需器材：待定\n请员工制作对应图片");
+                showNoImage(imageView, noImageHint);
+            }
+
+            // 更新进度
+            progressText.setText(String.format("动作 %d / %d", currentIndex[0] + 1, tasks.size()));
+
+            // 更新进度点
+            for (int i = 0; i < progressDots.getChildCount(); i++) {
+                progressDots.getChildAt(i).setBackgroundResource(
+                        i == currentIndex[0] ? R.drawable.bg_progress_dot_active : R.drawable.bg_progress_dot);
+            }
+
+            // 更新箭头状态
+            if (!isSingleTask) {
+                prevBtn.setAlpha(currentIndex[0] > 0 ? 1.0f : 0.3f);
+                nextBtn.setAlpha(currentIndex[0] < tasks.size() - 1 ? 1.0f : 0.3f);
+            }
+        };
+
+        AlertDialog dialog = new AlertDialog.Builder(requireContext())
+                .setView(dialogView)
+                .setCancelable(true)
+                .create();
+
+        // 关闭按钮
+        closeBtn.setOnClickListener(v -> dialog.dismiss());
+
+        // 开始训练按钮 - 完成当前任务
+        startBtn.setOnClickListener(v -> {
+            TrainingTask currentTask = tasks.get(currentIndex[0]);
+            currentTask.setCompleted(true);
+            trainingTaskManager.updateTask(currentTask);
+
+            // 更新首页显示
+            setupTrainingTasks();
+
+            if (isSingleTask) {
+                // 单任务：直接关闭对话框
+                dialog.dismiss();
+                Toast.makeText(requireContext(), "完成训练！", Toast.LENGTH_SHORT).show();
+            } else {
+                // 多任务：跳转到下一个未完成任务
+                if (currentIndex[0] < tasks.size() - 1) {
+                    currentIndex[0]++;
+                    updateDisplay.run();
+                    Toast.makeText(requireContext(), "已完成 " + currentTask.getName(), Toast.LENGTH_SHORT).show();
+                } else {
+                    // 所有任务都已完成
+                    dialog.dismiss();
+                    Toast.makeText(requireContext(), "恭喜完成所有训练！", Toast.LENGTH_LONG).show();
+                }
+            }
         });
+
+        // 上一个按钮
+        prevBtn.setOnClickListener(v -> {
+            if (currentIndex[0] > 0) {
+                currentIndex[0]--;
+                updateDisplay.run();
+            }
+        });
+
+        // 下一个按钮
+        nextBtn.setOnClickListener(v -> {
+            if (currentIndex[0] < tasks.size() - 1) {
+                currentIndex[0]++;
+                updateDisplay.run();
+            }
+        });
+
+        dialog.setOnShowListener(dialogInterface -> {
+            Window window = dialog.getWindow();
+            if (window != null) {
+                window.setBackgroundDrawableResource(R.drawable.dialog_background);
+            }
+            updateDisplay.run();
+        });
+
+        dialog.show();
+    }
+
+    private void showNoImage(ImageView imageView, View noImageHint) {
+        imageView.setVisibility(View.GONE);
+        noImageHint.setVisibility(View.VISIBLE);
+    }
+
+    private ExerciseDatabase.Exercise findExerciseByName(String name) {
+        List<ExerciseDatabase.Exercise> all = ExerciseDatabase.getAllExercises();
+        for (ExerciseDatabase.Exercise ex : all) {
+            if (ex.name.equals(name)) {
+                return ex;
+            }
+        }
+        return null;
+    }
+
+    private void recordTrainingComplete(List<TrainingTask> tasks) {
+        // 记录训练完成，可扩展为保存到数据库
     }
 
     @Override
