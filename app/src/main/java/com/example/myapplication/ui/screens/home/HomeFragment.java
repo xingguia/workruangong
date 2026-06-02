@@ -34,6 +34,7 @@ import com.example.myapplication.model.ExerciseDatabase;
 import com.example.myapplication.model.ExercisePlan;
 import com.example.myapplication.model.TrainingTask;
 import com.example.myapplication.model.WorkoutRecord;
+import com.example.myapplication.util.AchievementManager;
 import com.example.myapplication.util.ExercisePlanManager;
 import com.example.myapplication.util.RecordManager;
 import com.example.myapplication.util.SessionManager;
@@ -52,6 +53,7 @@ public class HomeFragment extends Fragment {
     private TrainingTaskManager trainingTaskManager;
     private RecordManager recordManager;
     private WorkoutRecordManager workoutRecordManager;
+    private AchievementManager achievementManager;
     private AICalorieService aiCalorieService;
 
     private int selectedDayIndex = -1;
@@ -71,6 +73,7 @@ public class HomeFragment extends Fragment {
         trainingTaskManager = TrainingTaskManager.getInstance(requireContext());
         recordManager = RecordManager.getInstance(requireContext());
         workoutRecordManager = WorkoutRecordManager.getInstance(requireContext());
+        achievementManager = AchievementManager.getInstance(requireContext());
         aiCalorieService = AICalorieService.getInstance();
 
         setupHeader();
@@ -177,6 +180,45 @@ public class HomeFragment extends Fragment {
         container.addView(statusIndicator);
 
         return container;
+    }
+
+    private void syncTodayExercisePlan() {
+        Calendar cal = Calendar.getInstance();
+        int dayOfWeek = cal.get(Calendar.DAY_OF_WEEK);
+        int dayIndex = (dayOfWeek + 5) % 7; // Monday=0, Sunday=6
+
+        List<TrainingTask> todayTasks = trainingTaskManager.getTasksForToday();
+
+        if (todayTasks.isEmpty()) {
+            // 没有任务时恢复为未设置状态
+            ExercisePlan existingPlan = exercisePlanManager.getPlan(dayIndex + 1);
+            if (!existingPlan.isNotSet()) {
+                ExercisePlan resetPlan = new ExercisePlan(dayIndex + 1);
+                resetPlan.setStatus(ExercisePlan.DayStatus.NOT_SET);
+                exercisePlanManager.savePlan(resetPlan);
+            }
+            return;
+        }
+
+        ExercisePlan plan = new ExercisePlan(dayIndex + 1);
+        plan.setStatus(ExercisePlan.DayStatus.WORKOUT);
+
+        boolean allCompleted = true;
+        for (TrainingTask task : todayTasks) {
+            if (!task.isCompleted()) {
+                allCompleted = false;
+                break;
+            }
+        }
+
+        if (allCompleted) {
+            plan.setCompletionStatus(ExercisePlan.CompletionStatus.COMPLETED);
+        } else {
+            plan.setCompletionStatus(ExercisePlan.CompletionStatus.PENDING);
+        }
+
+        exercisePlanManager.savePlan(plan);
+        setupWeekDays();
     }
 
     private void showDayPlanDialog(int dayIndex, String dayName) {
@@ -364,6 +406,7 @@ public class HomeFragment extends Fragment {
                 task.setStatus(TrainingTask.TaskStatus.COMPLETED);
                 nameView.setTextColor(Color.parseColor("#2ED573"));
                 calculateAndSaveCalories(task);
+                achievementManager.recordWorkoutCompletion(requireContext());
             } else if (!isChecked) {
                 task.setStatus(TrainingTask.TaskStatus.NOT_STARTED);
                 task.setCaloriesRecorded(false); // Reset flag when unchecking
@@ -374,6 +417,7 @@ public class HomeFragment extends Fragment {
             }
             trainingTaskManager.updateTask(task);
             setupTrainingTasks();
+            syncTodayExercisePlan();
         });
 
         deleteBtn.setOnClickListener(v -> {
@@ -387,6 +431,7 @@ public class HomeFragment extends Fragment {
                         trainingTaskManager.deleteTask(task.getId());
                         setupTrainingTasks();
                         updateTodayProgress();
+                        syncTodayExercisePlan();
                     })
                     .setNegativeButton("取消", null)
                     .show();
@@ -564,8 +609,10 @@ public class HomeFragment extends Fragment {
 
         workoutRecordManager.addRecord(record);
 
-        // Update the progress card
-        updateTodayProgress();
+        // Update the progress card (guard against async callback after view destroyed)
+        if (binding != null) {
+            updateTodayProgress();
+        }
     }
 
     private int[] parseExerciseDataFromDescription(String description) {
@@ -672,6 +719,8 @@ public class HomeFragment extends Fragment {
     }
 
     private void updateTodayProgress() {
+        if (binding == null) return;
+
         int todayCount = workoutRecordManager.getWorkoutCountForToday();
         float todayCalories = workoutRecordManager.getCaloriesForToday();
         int todayMinutes = workoutRecordManager.getTotalMinutesForToday();
@@ -816,6 +865,7 @@ public class HomeFragment extends Fragment {
                 trainingTaskManager.addTask(task);
                 dialog.dismiss();
                 setupTrainingTasks();
+                syncTodayExercisePlan();
             }
         });
 
@@ -1111,6 +1161,7 @@ public class HomeFragment extends Fragment {
         super.onResume();
         setupBodyData();
         setupTrainingTasks();
+        syncTodayExercisePlan();
     }
 
     @Override

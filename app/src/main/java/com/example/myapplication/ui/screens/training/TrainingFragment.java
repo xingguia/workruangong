@@ -22,8 +22,11 @@ import androidx.fragment.app.Fragment;
 import com.example.myapplication.R;
 import com.example.myapplication.databinding.FragmentTrainingBinding;
 import com.example.myapplication.model.ExerciseDatabase;
+import com.example.myapplication.model.ExercisePlan;
 import com.example.myapplication.model.TrainingTask;
 import com.example.myapplication.model.WorkoutRecord;
+import com.example.myapplication.util.AchievementManager;
+import com.example.myapplication.util.ExercisePlanManager;
 import com.example.myapplication.util.TrainingTaskManager;
 import com.example.myapplication.util.WorkoutRecordManager;
 
@@ -35,6 +38,8 @@ public class TrainingFragment extends Fragment {
     private FragmentTrainingBinding binding;
     private TrainingTaskManager trainingTaskManager;
     private WorkoutRecordManager workoutRecordManager;
+    private ExercisePlanManager exercisePlanManager;
+    private AchievementManager achievementManager;
     private int currentWeek = 1;
     private int selectedDayIndex = 0;
 
@@ -43,6 +48,8 @@ public class TrainingFragment extends Fragment {
         super.onCreate(savedInstanceState);
         trainingTaskManager = TrainingTaskManager.getInstance(requireContext());
         workoutRecordManager = WorkoutRecordManager.getInstance(requireContext());
+        exercisePlanManager = ExercisePlanManager.getInstance(requireContext());
+        achievementManager = AchievementManager.getInstance(requireContext());
     }
 
     @Override
@@ -59,6 +66,7 @@ public class TrainingFragment extends Fragment {
         setupListeners();
         updateWeekLabel();
         updateTrainingDetail();
+        updateWeekProgress();
     }
 
     private void setupWeekCalendar() {
@@ -316,10 +324,13 @@ public class TrainingFragment extends Fragment {
         // 如果完成，保存训练记录
         if (task.getStatus() == TrainingTask.TaskStatus.COMPLETED) {
             saveWorkoutRecord(task);
+            achievementManager.recordWorkoutCompletion(requireContext());
         }
 
+        syncTodayExercisePlan();
         updateTrainingDetail();
         setupWeekCalendar();
+        updateWeekProgress();
     }
 
     private void deleteTask(TrainingTask task) {
@@ -328,8 +339,10 @@ public class TrainingFragment extends Fragment {
                 .setMessage("确定要删除这个训练任务吗？")
                 .setPositiveButton("删除", (d, w) -> {
                     trainingTaskManager.deleteTask(task.getId());
+                    syncTodayExercisePlan();
                     updateTrainingDetail();
                     setupWeekCalendar();
+                    updateWeekProgress();
                 })
                 .setNegativeButton("取消", null)
                 .show();
@@ -504,8 +517,10 @@ public class TrainingFragment extends Fragment {
 
                 trainingTaskManager.addTask(task);
                 dialog.dismiss();
+                syncTodayExercisePlan();
                 updateTrainingDetail();
                 setupWeekCalendar();
+                updateWeekProgress();
             }
         });
 
@@ -601,11 +616,105 @@ public class TrainingFragment extends Fragment {
         binding.weekLabel.setText("第" + currentWeek + "周");
     }
 
+    private void syncTodayExercisePlan() {
+        Calendar cal = Calendar.getInstance();
+        int dayOfWeek = cal.get(Calendar.DAY_OF_WEEK);
+        int dayIndex = (dayOfWeek + 5) % 7;
+
+        List<TrainingTask> todayTasks = trainingTaskManager.getTasksForToday();
+
+        if (todayTasks.isEmpty()) {
+            ExercisePlan existingPlan = exercisePlanManager.getPlan(dayIndex + 1);
+            if (!existingPlan.isNotSet()) {
+                ExercisePlan resetPlan = new ExercisePlan(dayIndex + 1);
+                resetPlan.setStatus(ExercisePlan.DayStatus.NOT_SET);
+                exercisePlanManager.savePlan(resetPlan);
+            }
+            return;
+        }
+
+        ExercisePlan plan = new ExercisePlan(dayIndex + 1);
+        plan.setStatus(ExercisePlan.DayStatus.WORKOUT);
+
+        boolean allCompleted = true;
+        for (TrainingTask task : todayTasks) {
+            if (!task.isCompleted()) {
+                allCompleted = false;
+                break;
+            }
+        }
+
+        if (allCompleted) {
+            plan.setCompletionStatus(ExercisePlan.CompletionStatus.COMPLETED);
+        } else {
+            plan.setCompletionStatus(ExercisePlan.CompletionStatus.PENDING);
+        }
+
+        exercisePlanManager.savePlan(plan);
+    }
+
+    private void updateWeekProgress() {
+        // 获取本周的训练数据
+        Calendar cal = Calendar.getInstance();
+        cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
+        cal.set(Calendar.HOUR_OF_DAY, 0);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+        long weekStart = cal.getTimeInMillis();
+
+        cal.add(Calendar.DAY_OF_MONTH, 7);
+        long weekEnd = cal.getTimeInMillis();
+
+        List<TrainingTask> allTasks = trainingTaskManager.getTasks();
+        int totalDaysWithTasks = 0;
+        int completedDays = 0;
+
+        // 遍历本周7天
+        Calendar dayCal = Calendar.getInstance();
+        dayCal.setTimeInMillis(weekStart);
+        for (int d = 0; d < 7; d++) {
+            // 判断这一天是否有任务
+            boolean hasTask = false;
+            boolean allDone = true;
+            for (TrainingTask task : allTasks) {
+                Calendar taskDay = Calendar.getInstance();
+                taskDay.setTimeInMillis(task.getDate());
+                if (taskDay.get(Calendar.DAY_OF_YEAR) == dayCal.get(Calendar.DAY_OF_YEAR) &&
+                    taskDay.get(Calendar.YEAR) == dayCal.get(Calendar.YEAR)) {
+                    hasTask = true;
+                    if (!task.isCompleted()) {
+                        allDone = false;
+                    }
+                }
+            }
+            if (hasTask) {
+                totalDaysWithTasks++;
+                if (allDone) {
+                    completedDays++;
+                }
+            }
+            dayCal.add(Calendar.DAY_OF_MONTH, 1);
+        }
+
+        int remainingDays = totalDaysWithTasks - completedDays;
+
+        binding.completedDays.setText(String.valueOf(completedDays));
+        binding.remainingDays.setText(String.valueOf(Math.max(0, remainingDays)));
+
+        int completionRate = totalDaysWithTasks > 0
+                ? (completedDays * 100) / totalDaysWithTasks : 0;
+        binding.completionRate.setText(completionRate + "%");
+        binding.progressBar.setProgress(completionRate);
+    }
+
     @Override
     public void onResume() {
         super.onResume();
+        syncTodayExercisePlan();
         setupWeekCalendar();
         updateTrainingDetail();
+        updateWeekProgress();
     }
 
     @Override
