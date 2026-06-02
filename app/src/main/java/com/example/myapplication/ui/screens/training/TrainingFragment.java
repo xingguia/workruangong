@@ -365,12 +365,35 @@ public class TrainingFragment extends Fragment {
     }
 
     private float calculateCalories(TrainingTask task) {
-        // 基础卡路里公式：重量 * 组数 * 次数 * 系数
-        float baseCalories = 0.5f; // 基础代谢消耗
-        float weightCalories = task.getWeight() * 0.1f; // 重量相关
-        float volumeCalories = task.getSets() * task.getReps() * 0.05f; // 容量相关
+        // 优先查找动作数据库中的基础卡路里系数
+        List<ExerciseDatabase.Exercise> allExercises = ExerciseDatabase.getAllExercises();
+        for (ExerciseDatabase.Exercise ex : allExercises) {
+            if (ex.name.equals(task.getName())) {
+                float calories = ex.baseCaloriesPerRep * task.getSets() * task.getReps();
+                if (task.getWeight() > 0) {
+                    calories += task.getWeight() * 0.05f * task.getSets();
+                }
+                return Math.max(calories, 1f);
+            }
+        }
 
-        return baseCalories + weightCalories + volumeCalories;
+        // 数据库中找不到则根据训练类型估算
+        float baseCaloriesPerRep;
+        switch (task.getExerciseType()) {
+            case CARDIO:      baseCaloriesPerRep = 8f;  break;
+            case HIIT:        baseCaloriesPerRep = 10f; break;
+            case STRENGTH:    baseCaloriesPerRep = 5f;  break;
+            case EQUIPMENT:   baseCaloriesPerRep = 6f;  break;
+            case CORE:        baseCaloriesPerRep = 4f;  break;
+            case FLEXIBILITY: baseCaloriesPerRep = 3f;  break;
+            default:          baseCaloriesPerRep = 5f;  break;
+        }
+
+        float calories = baseCaloriesPerRep * task.getSets() * task.getReps();
+        if (task.getWeight() > 0) {
+            calories += task.getWeight() * 0.05f * task.getSets();
+        }
+        return Math.max(calories, 1f);
     }
 
     private void setupListeners() {

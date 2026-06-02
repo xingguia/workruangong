@@ -566,15 +566,11 @@ public class HomeFragment extends Fragment {
 
                     @Override
                     public void onError(String error) {
-                        // Fallback: use estimated calories based on exercise type
-                        float estimatedCalories = estimateCaloriesWithType(
-                                task.getName(),
-                                task.getExerciseType(),
-                                task.getDuration(),
-                                totalReps,
-                                task.getWeight(),
-                                userWeight
-                        );
+                        // Fallback: look up exercise database, same formula as preview
+                        float estimatedCalories = calculateCaloriesFromDatabase(task);
+                        if (estimatedCalories > 0 && userWeight > 0) {
+                            estimatedCalories *= userWeight / 70.0f;
+                        }
                         saveWorkoutRecord(task, estimatedCalories);
                     }
                 }
@@ -640,6 +636,41 @@ public class HomeFragment extends Fragment {
             // Ignore parsing errors
         }
         return result;
+    }
+
+    private float calculateCaloriesFromDatabase(TrainingTask task) {
+        int reps = task.getReps();
+        int sets = task.getSets();
+        float weight = task.getWeight();
+
+        // 查找动作数据库，使用与预览一致的公式
+        for (ExerciseDatabase.Exercise ex : ExerciseDatabase.getAllExercises()) {
+            if (ex.name.equals(task.getName())) {
+                float calories = ex.baseCaloriesPerRep * sets * reps;
+                if (weight > 0) {
+                    calories += weight * 0.05f * sets;
+                }
+                return Math.max(calories, 1f);
+            }
+        }
+
+        // 数据库找不到则根据训练类型估算
+        float baseCaloriesPerRep;
+        switch (task.getExerciseType()) {
+            case CARDIO:      baseCaloriesPerRep = 8f;  break;
+            case HIIT:        baseCaloriesPerRep = 10f; break;
+            case STRENGTH:    baseCaloriesPerRep = 5f;  break;
+            case EQUIPMENT:   baseCaloriesPerRep = 6f;  break;
+            case CORE:        baseCaloriesPerRep = 4f;  break;
+            case FLEXIBILITY: baseCaloriesPerRep = 3f;  break;
+            default:          baseCaloriesPerRep = 5f;  break;
+        }
+
+        float calories = baseCaloriesPerRep * sets * reps;
+        if (weight > 0) {
+            calories += weight * 0.05f * sets;
+        }
+        return Math.max(calories, 1f);
     }
 
     private float estimateCaloriesFallback(String exerciseName, int duration) {
