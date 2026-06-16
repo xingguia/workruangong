@@ -1,4 +1,20 @@
 from database import get_connection
+from auth import hash_password
+
+def _seed_admin():
+    """Create default admin account if none exists."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM admins")
+    if cursor.fetchone()[0] == 0:
+        cursor.execute(
+            "INSERT INTO admins (username, password_hash, role) VALUES (%s, %s, %s)",
+            ("admin", hash_password("admin123"), "super")
+        )
+        conn.commit()
+        print("Default admin account created: admin / admin123")
+    cursor.close()
+    conn.close()
 
 def init_db():
     conn = get_connection()
@@ -24,6 +40,7 @@ def init_db():
             workout_reminder TINYINT(1) DEFAULT 1,
             achievement_notification TINYINT(1) DEFAULT 1,
             assessment_completed TINYINT(1) DEFAULT 0,
+            is_active TINYINT(1) DEFAULT 1,
             username_set TINYINT(1) DEFAULT 0,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -115,15 +132,54 @@ def init_db():
     """)
 
     cursor.execute("""
+        CREATE TABLE IF NOT EXISTS admins (
+            id BIGINT AUTO_INCREMENT PRIMARY KEY,
+            username VARCHAR(50) NOT NULL UNIQUE,
+            password_hash VARCHAR(255) NOT NULL,
+            role VARCHAR(20) DEFAULT 'normal',
+            is_active TINYINT(1) DEFAULT 1,
+            last_login DATETIME DEFAULT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """)
+
+    cursor.execute("""
         CREATE TABLE IF NOT EXISTS usernames (
             id BIGINT AUTO_INCREMENT PRIMARY KEY,
             username VARCHAR(50) NOT NULL UNIQUE
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     """)
 
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS exercises (
+            id BIGINT AUTO_INCREMENT PRIMARY KEY,
+            name VARCHAR(100) NOT NULL,
+            muscle_group VARCHAR(50) DEFAULT NULL,
+            exercise_type VARCHAR(30) DEFAULT 'STRENGTH',
+            cal_per_rep FLOAT DEFAULT 0,
+            description TEXT DEFAULT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """)
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS announcements (
+            id BIGINT AUTO_INCREMENT PRIMARY KEY,
+            title VARCHAR(200) NOT NULL,
+            content TEXT DEFAULT NULL,
+            is_active TINYINT(1) DEFAULT 1,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """)
+
     conn.commit()
     cursor.close()
     conn.close()
+
+    # Seed default admin account
+    _seed_admin()
     print("Database tables created successfully!")
 
 if __name__ == "__main__":

@@ -1,0 +1,1581 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>燃动时刻 - 管理后台</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --primary:#FF6B35;--primary-dark:#E55A25;--sidebar-bg:#1A1A2E;
+  --body-bg:#F0F2F5;--card-bg:#FFFFFF;--text-primary:#1A1A2E;
+  --text-secondary:#666666;--text-muted:#999999;--border:#E8E8E8;
+  --success:#2ED573;--warning:#FFA502;--danger:#FF4757;--info:#4A90D9;
+  --vip-gold:#D4A843;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--body-bg);display:flex;min-height:100vh;width:100%;min-width:0}
+a{color:var(--primary);text-decoration:none}
+
+/* ===== Sidebar ===== */
+.sidebar{width:240px;background:var(--sidebar-bg);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;overflow-y:auto}
+.sidebar-logo{display:flex;align-items:center;gap:10px;padding:22px 20px;border-bottom:1px solid rgba(255,255,255,0.06)}
+.sidebar-logo .logo-icon{width:34px;height:34px;background:var(--primary);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff}
+.sidebar-logo .logo-text{color:#fff;font-size:17px;font-weight:700;letter-spacing:1px}
+.sidebar-nav{flex:1;padding:12px 0}
+.nav-item{display:flex;align-items:center;gap:10px;padding:12px 20px;color:rgba(255,255,255,0.55);cursor:pointer;transition:all 0.2s;font-size:14px;border-left:3px solid transparent;margin:2px 0}
+.nav-item:hover{color:#fff;background:rgba(255,255,255,0.05)}
+.nav-item.active{color:#fff;background:rgba(255,107,53,0.15);border-left-color:var(--primary)}
+.nav-item svg{width:18px;height:18px;flex-shrink:0}
+
+/* ===== Main Content ===== */
+.main-content{flex:1;margin-left:240px;display:flex;flex-direction:column;min-height:100vh}
+.header{height:56px;background:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 24px;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50}
+.header-left{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--text-secondary)}
+.header-left .breadcrumb{color:var(--text-primary);font-weight:500}
+.header-right{display:flex;align-items:center;gap:16px}
+.header-right .icon-btn{width:36px;height:36px;border-radius:8px;border:1px solid var(--border);background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;position:relative}
+.header-right .icon-btn:hover{background:var(--body-bg)}
+.header-right .icon-btn .badge{position:absolute;top:-2px;right:-2px;width:16px;height:16px;background:var(--danger);border-radius:50%;font-size:10px;color:#fff;display:flex;align-items:center;justify-content:center}
+.admin-info{display:flex;align-items:center;gap:8px;cursor:pointer;padding:4px 8px;border-radius:8px;transition:all 0.2s}
+.admin-info:hover{background:var(--body-bg)}
+.admin-avatar{width:32px;height:32px;background:var(--primary);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:600}
+.admin-info .admin-name{font-size:14px;color:var(--text-primary);font-weight:500}
+.admin-info svg{width:14px;height:14px;color:var(--text-muted)}
+
+/* ===== Page Content ===== */
+.page-content{flex:1;padding:20px 24px;overflow-y:auto;display:flex;flex-direction:column;min-width:0}
+.page{display:none}
+.page.active{display:block}
+
+/* ===== Cards ===== */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px}
+.stat-card{background:#fff;border-radius:12px;padding:20px;display:flex;align-items:center;gap:16px;box-shadow:0 1px 3px rgba(0,0,0,0.04);min-width:0}
+.stat-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.stat-icon svg{width:22px;height:22px;color:#fff}
+.stat-icon.blue{background:linear-gradient(135deg,#4A90D9,#357ABD)}
+.stat-icon.green{background:linear-gradient(135deg,#2ED573,#1ABC9C)}
+.stat-icon.purple{background:linear-gradient(135deg,#A55EEA,#8854D0)}
+.stat-icon.orange{background:linear-gradient(135deg,#FF6B35,#FF8F66)}
+.stat-value{font-size:24px;font-weight:700;color:var(--text-primary);line-height:1.2}
+.stat-label{font-size:13px;color:var(--text-muted);margin-top:2px}
+.stat-change{font-size:12px;margin-top:2px}
+.stat-change.up{color:var(--success)}
+.stat-change.down{color:var(--danger)}
+
+.charts-row{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:20px}
+.chart-card{background:#fff;border-radius:12px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,0.04);min-width:0;overflow:hidden}
+.chart-title{font-size:15px;font-weight:600;color:var(--text-primary);margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
+.chart-tabs{display:flex;gap:4px;background:var(--body-bg);border-radius:6px;padding:2px}
+.chart-tab{padding:5px 12px;border-radius:5px;font-size:12px;color:var(--text-secondary);cursor:pointer;transition:all 0.2s;border:none;background:none}
+.chart-tab.active{background:#fff;color:var(--primary);box-shadow:0 1px 2px rgba(0,0,0,0.08);font-weight:500}
+
+.tables-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.table-card{background:#fff;border-radius:12px;padding:0;box-shadow:0 1px 3px rgba(0,0,0,0.04);overflow:hidden}
+.table-card .table-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border)}
+.table-card .table-header .title{font-size:15px;font-weight:600;color:var(--text-primary)}
+.table-card .table-header a{font-size:13px;color:var(--primary);cursor:pointer}
+.data-table{width:100%;border-collapse:collapse}
+.data-table th{background:#FAFAFA;padding:10px 16px;text-align:left;font-size:12px;color:var(--text-muted);font-weight:500;border-bottom:1px solid var(--border)}
+.data-table td{padding:10px 16px;font-size:13px;color:var(--text-secondary);border-bottom:1px solid var(--border)}
+.data-table tr:last-child td{border-bottom:none}
+.data-table tr:hover td{background:rgba(255,107,53,0.02)}
+
+.badge{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:500}
+.badge-success{background:rgba(46,213,115,0.1);color:var(--success)}
+.badge-warning{background:rgba(255,165,2,0.1);color:var(--warning)}
+.badge-danger{background:rgba(255,71,87,0.1);color:var(--danger)}
+.badge-info{background:rgba(74,144,217,0.1);color:var(--info)}
+.badge-vip{background:linear-gradient(135deg,rgba(212,168,67,0.15),rgba(212,168,67,0.05));color:var(--vip-gold)}
+
+/* ===== Full Page Tables ===== */
+.page-card{background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,0.04);overflow:hidden}
+.page-card .page-card-header{padding:16px 20px;border-bottom:1px solid var(--border)}
+.page-card .page-card-header .title{font-size:15px;font-weight:600;color:var(--text-primary)}
+.page-card .page-card-body{padding:20px}
+
+.toolbar{display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+.search-input{padding:8px 14px;border:1px solid var(--border);border-radius:8px;font-size:13px;width:220px;outline:none;transition:border 0.2s}
+.search-input:focus{border-color:var(--primary)}
+.filter-select{padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;outline:none;background:#fff;cursor:pointer}
+.btn{padding:8px 16px;border-radius:8px;font-size:13px;cursor:pointer;border:none;font-weight:500;transition:all 0.2s;display:inline-flex;align-items:center;gap:6px}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-primary:hover{background:var(--primary-dark)}
+.btn-outline{border:1px solid var(--border);background:#fff;color:var(--text-secondary)}
+.btn-outline:hover{border-color:var(--primary);color:var(--primary)}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-sm{padding:5px 10px;font-size:12px}
+
+.pagination{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-top:16px}
+.pagination button{padding:6px 12px;border:1px solid var(--border);border-radius:6px;background:#fff;font-size:13px;cursor:pointer;transition:all 0.2s}
+.pagination button:hover{border-color:var(--primary);color:var(--primary)}
+.pagination button.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.pagination span{font-size:13px;color:var(--text-muted)}
+
+/* ===== Tabs ===== */
+.tabs{display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:16px}
+.tab-btn{padding:10px 20px;font-size:14px;color:var(--text-secondary);cursor:pointer;border:none;background:none;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all 0.2s}
+.tab-btn.active{color:var(--primary);border-bottom-color:var(--primary);font-weight:600}
+
+/* ===== Statistics ===== */
+.stat-section{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.stat-section .chart-card{grid-column:span 1}
+
+/* ===== Settings ===== */
+.settings-form{max-width:600px}
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-size:13px;color:var(--text-secondary);margin-bottom:6px;font-weight:500}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-size:14px;outline:none;transition:border 0.2s;font-family:inherit}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--primary)}
+.form-group textarea{min-height:80px;resize:vertical}
+
+/* ===== Modal ===== */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:999;align-items:center;justify-content:center}
+.modal-overlay.show{display:flex}
+.modal{background:#fff;border-radius:12px;width:480px;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 8px 32px rgba(0,0,0,0.15)}
+.modal-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.modal-header .title{font-size:15px;font-weight:600}
+.modal-body{padding:20px;overflow-y:auto;flex:1;min-height:0}
+.modal-footer{padding:12px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;flex-shrink:0}
+
+/* ===== Login ===== */
+.login-page{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,var(--sidebar-bg) 0%,#16213E 100%);position:fixed;inset:0;z-index:9999}
+.login-card{background:#fff;border-radius:16px;padding:40px;width:380px;box-shadow:0 16px 48px rgba(0,0,0,0.2)}
+.login-logo{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:8px}
+.login-logo .icon{width:40px;height:40px;background:var(--primary);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;color:#fff}
+.login-logo .text{font-size:22px;font-weight:700;color:var(--text-primary)}
+.login-subtitle{text-align:center;color:var(--text-muted);font-size:14px;margin-bottom:28px}
+.login-error{background:rgba(255,71,87,0.08);color:var(--danger);padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:16px;display:none}
+
+/* Toast */
+.toast{position:fixed;top:20px;right:20px;z-index:9999;padding:12px 20px;border-radius:8px;color:#fff;font-size:14px;animation:slideIn 0.3s ease;box-shadow:0 4px 12px rgba(0,0,0,0.15)}
+.toast-success{background:var(--success)}
+.toast-error{background:var(--danger)}
+@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+
+/* Empty state */
+.empty-state{text-align:center;padding:40px;color:var(--text-muted)}
+.empty-state svg{width:60px;height:60px;margin-bottom:12px;opacity:0.3}
+.empty-state p{margin-top:8px;font-size:14px}
+
+/* Summary cards in training */
+.summary-row{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:16px}
+.summary-card{background:#fff;border-radius:10px;padding:16px;text-align:center}
+.summary-card .value{font-size:22px;font-weight:700;color:var(--primary)}
+
+.summary-card .label{font-size:12px;color:var(--text-muted);margin-top:4px}
+
+/* ===== Responsive ===== */
+@media (max-width: 1400px) {
+  .stats-row{grid-template-columns:repeat(2,1fr)}
+  .charts-row{grid-template-columns:1fr}
+  .tables-row{grid-template-columns:1fr}
+  .summary-row{grid-template-columns:repeat(2,1fr)}
+  .quick-actions{grid-template-columns:repeat(2,1fr)}
+  .exercise-grid{grid-template-columns:repeat(2,1fr)}
+  .badge-grid{grid-template-columns:repeat(2,1fr)}
+}
+@media (max-width: 1100px) {
+  .sidebar{width:64px}
+  .sidebar .nav-item span,.sidebar .logo-text{display:none}
+  .sidebar .nav-item{justify-content:center;padding:12px}
+  .sidebar-logo{justify-content:center}
+  .main-content{margin-left:64px}
+  .stats-row{grid-template-columns:1fr}
+  .page-content{padding:16px}
+}
+@media (max-width: 768px) {
+  body{flex-direction:column}
+  .sidebar{position:relative;width:100%;flex-direction:row;overflow-x:auto;bottom:auto;padding:0}
+  .sidebar-nav{display:flex;flex:1;padding:0}
+  .sidebar-logo{display:none}
+  .nav-item{border-left:none;border-bottom:3px solid transparent;white-space:nowrap;flex-shrink:0}
+  .nav-item.active{border-left:none;border-bottom-color:var(--primary)}
+  .main-content{margin-left:0}
+  .header{padding:0 12px}
+  .page-content{padding:12px}
+  .stats-row{grid-template-columns:1fr 1fr}
+  .charts-row,.tables-row,.summary-row{grid-template-columns:1fr}
+  .quick-actions{grid-template-columns:1fr}
+  .exercise-grid,.badge-grid{grid-template-columns:1fr}
+  .stat-tabs{width:100%;flex-direction:row;overflow-x:auto}
+  .data-table th,.data-table td{padding:8px 6px;font-size:11px}
+  .header .breadcrumb{display:none}
+}
+
+/* Chart fallback empty state */
+.chart-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:200px;color:var(--text-muted);font-size:14px;background:var(--body-bg);border-radius:8px}
+.chart-empty .icon{font-size:36px;margin-bottom:8px;opacity:0.4}
+.chart-empty .hint{font-size:12px;margin-top:4px;opacity:0.6}
+
+/* ===== Quick Actions ===== */
+.quick-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px}
+.action-card{background:#fff;border-radius:12px;padding:20px;cursor:pointer;transition:all 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.04);border:1px solid var(--border)}
+.action-card:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,0.1);border-color:var(--primary)}
+.action-icon{font-size:28px;margin-bottom:10px}
+.action-text{font-size:14px;font-weight:600;color:var(--text-primary);margin-bottom:4px}
+.action-desc{font-size:12px;color:var(--text-muted)}
+
+/* ===== Content Management ===== */
+.content-tabs{display:flex;gap:0;margin-bottom:16px;border-bottom:2px solid var(--border)}
+.content-tab{padding:10px 20px;font-size:14px;color:var(--text-secondary);cursor:pointer;border:none;background:none;transition:all 0.2s;border-bottom:2px solid transparent;margin-bottom:-2px}
+.content-tab:hover{color:var(--primary)}
+.content-tab.active{color:var(--primary);border-bottom-color:var(--primary);font-weight:600}
+
+/* Exercise Cards Grid */
+.exercise-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
+.exercise-card{background:var(--body-bg);border-radius:10px;padding:14px;border:1px solid var(--border);transition:all 0.2s}
+.exercise-card:hover{border-color:var(--primary);box-shadow:0 2px 8px rgba(0,0,0,0.06)}
+.exercise-card .ex-name{font-size:14px;font-weight:600;color:var(--text-primary);margin-bottom:6px}
+.exercise-card .ex-meta{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.exercise-card .ex-tag{font-size:11px;padding:2px 8px;border-radius:4px;background:rgba(255,107,53,0.1);color:var(--primary)}
+.exercise-card .ex-actions{display:flex;gap:6px;margin-top:8px}
+
+/* Badge Cards Grid */
+.badge-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.badge-card{background:var(--body-bg);border-radius:10px;padding:16px;border:1px solid var(--border);text-align:center;transition:all 0.2s}
+.badge-card:hover{border-color:var(--primary);box-shadow:0 2px 8px rgba(0,0,0,0.06)}
+.badge-card .badge-icon{font-size:36px;margin-bottom:8px}
+.badge-card .badge-name{font-size:14px;font-weight:600;color:var(--text-primary);margin-bottom:4px}
+.badge-card .badge-desc{font-size:12px;color:var(--text-muted);margin-bottom:6px}
+.badge-card .badge-count{font-size:12px;color:var(--primary);font-weight:500}
+
+
+/* ===== Statistics Tabs ===== */
+.stat-tabs{width:160px;flex-shrink:0;display:flex;flex-direction:column;gap:4px}
+.stat-tab{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:8px;font-size:13px;color:var(--text-secondary);cursor:pointer;transition:all 0.2s;background:#fff;border:1px solid var(--border)}
+.stat-tab:hover{color:var(--primary);border-color:var(--primary)}
+.stat-tab.active{color:#fff;background:var(--primary);border-color:var(--primary)}
+.stat-tab-icon{font-size:16px}
+
+
+/* ===== Design Polish ===== */
+.sidebar-logo{padding:24px 20px}
+.nav-item{border-radius:0 6px 6px 0;margin:2px 8px 2px 0;padding:12px 16px}
+.header{box-shadow:0 1px 4px rgba(0,0,0,0.04)}
+.stat-card{transition:all 0.2s}
+.stat-card:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,0.08)}
+.chart-card{transition:all 0.2s;min-width:0;overflow:hidden}
+.table-card{transition:all 0.2s}
+.table-card:hover{box-shadow:0 2px 8px rgba(0,0,0,0.06)}
+.page-card{border-radius:12px;overflow:hidden}
+.btn{transition:all 0.2s}
+.btn:hover{transform:translateY(-1px)}
+.data-table th{background:var(--body-bg);font-weight:600;text-transform:none}
+.toast{border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.15);font-size:13px;padding:12px 20px}
+
+
+/* ===== Dashboard Full-Height Layout ===== */
+.dashboard-container{flex:1;display:flex;flex-direction:column;gap:16px;min-height:0;min-width:0}
+.dashboard-container .stats-row{flex-shrink:0}
+.dashboard-container .charts-row{flex:1;min-height:0}
+.dashboard-container .charts-row .chart-card{display:flex;flex-direction:column}
+.dashboard-container .charts-row .chart-card > div:last-child{flex:1;min-height:0}
+.dashboard-container .quick-actions{flex-shrink:0}
+.dashboard-container .tables-row{flex-shrink:0}
+
+
+/* Page card full-height for non-dashboard pages */
+.page-content > .page-card{flex:1;display:flex;flex-direction:column;min-height:0}
+.page-content > .page-card > .page-card-body{flex:1;overflow-y:auto}
+.page-content > .stat-section{flex:1;display:flex;min-height:0;overflow-y:auto}
+
+
+/* ===== Horizontal Fill Fix ===== */
+#mainLayout{width:100%;min-width:0}
+.main-content{width:calc(100% - 240px);min-width:0}
+.page-content{width:100%;min-width:0}
+.page-content > *{width:100%;min-width:0}
+.header{width:100%}
+.dashboard-container{width:100%}
+.stats-row{width:100%}
+.charts-row{width:100%}
+.quick-actions{width:100%}
+.tables-row{width:100%}
+
+</style>
+</head>
+<body>
+<!-- ===== Login Page ===== -->
+<div id="loginPage" class="login-page">
+  <form class="login-card" onsubmit="doLogin();return false;" autocomplete="off">
+    <div class="login-logo">
+      <div class="icon">🔥</div>
+      <div class="text">燃动时刻</div>
+    </div>
+    <div class="login-subtitle">管理后台</div>
+    <div id="loginError" class="login-error"></div>
+    <div class="form-group">
+      <label>用户名</label>
+      <input type="text" id="loginUsername" placeholder="请输入管理员用户名" autocomplete="off">
+    </div>
+    <div class="form-group">
+      <label>密码</label>
+      <input type="password" id="loginPassword" placeholder="请输入密码" autocomplete="off">
+    </div>
+    <button type="submit" class="btn btn-primary" id="loginBtn" style="width:100%;justify-content:center;padding:12px">
+      登 录
+    </button>
+    <div style="text-align:center;margin-top:16px;font-size:12px;color:var(--text-muted)">
+      默认账号: admin / admin123
+    </div>
+  </form>
+</div>
+
+<!-- ===== Main Layout ===== -->
+<div id="mainLayout" style="display:none">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">🔥</div>
+      <div class="logo-text">燃动</div>
+    </div>
+    <nav class="sidebar-nav" id="sidebarNav">
+      <!-- filled by JS -->
+    </nav>
+  </aside>
+
+  <!-- Main -->
+  <div class="main-content">
+    <header class="header">
+      <div class="header-left">
+        <span style="color:var(--text-muted)">首页</span>
+        <span style="color:var(--text-muted)">/</span>
+        <span class="breadcrumb" id="pageTitle">仪表盘</span>
+      </div>
+      <div class="header-right">
+        <button class="icon-btn" title="通知">
+          🔔<span class="badge">3</span>
+        </button>
+        <div class="admin-info" id="adminInfo" onclick="doLogout()">
+          <div class="admin-avatar" id="adminAvatar">A</div>
+          <span class="admin-name" id="adminName">Admin</span>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 10l5 5 5-5z"/></svg>
+        </div>
+      </div>
+    </header>
+
+    <div class="page-content" id="pageContent">
+      <!-- Pages rendered by JS -->
+    </div>
+  </div>
+</div>
+
+<!-- ===== Modal ===== -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="modalBox"></div>
+</div>
+
+<script>
+// ============ API ============
+const API_BASE = '/api/v1/admin';
+let token = '';
+let echartsReady = false;
+let echartsLoading = false;
+
+function loadEcharts() {
+  return new Promise((resolve) => {
+    if (window.echarts) { echartsReady = true; resolve(); return; }
+    if (echartsLoading) {
+      // Wait for existing load to finish
+      const check = setInterval(() => { if (echartsReady) { clearInterval(check); resolve(); } }, 100);
+      return;
+    }
+    echartsLoading = true;
+    const urls = [
+      'https://cdn.bootcdn.net/ajax/libs/echarts/5.5.0/echarts.min.js',
+      'https://unpkg.com/echarts@5.5.0/dist/echarts.min.js',
+      'https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js'
+    ];
+    (function tryLoad(idx) {
+      if (idx >= urls.length) { echartsLoading = false; resolve(); return; }
+      const script = document.createElement('script');
+      script.src = urls[idx];
+      script.onload = () => { echartsReady = true; echartsLoading = false; resolve(); };
+      script.onerror = () => tryLoad(idx + 1);
+      document.head.appendChild(script);
+    })(0);
+  });
+}
+
+function api(path, opts={}) {
+  const headers = {};
+  if(token) headers['Authorization'] = 'Bearer '+token;
+  if(opts.body) headers['Content-Type'] = 'application/json';
+  const url = opts.body ? API_BASE+path :
+    API_BASE+path+(opts.params ? '?'+new URLSearchParams(opts.params) : '');
+  const fetchOpts = {headers, method:opts.method||'GET'};
+  if(opts.body) fetchOpts.body = JSON.stringify(opts.body);
+  return fetch(url, fetchOpts)
+    .then(r => { if(!r.ok) return r.json().then(e=>{throw new Error(e.detail||'Request failed')}); return r.json(); });
+}
+
+function apiPost(path, data) {
+  const headers = {'Content-Type':'application/json'};
+  if(token) headers['Authorization'] = 'Bearer '+token;
+  return fetch(API_BASE+path, {headers, method:'POST', body:JSON.stringify(data)})
+    .then(r => { if(!r.ok) return r.json().then(e=>{throw new Error(e.detail||'Request failed')}); return r.json(); });
+}
+
+function apiFormPost(path, formData) {
+  const headers = {};
+  if(token) headers['Authorization'] = 'Bearer '+token;
+  return fetch(API_BASE+path+'?'+new URLSearchParams(formData), {headers, method:'POST'})
+    .then(r => { if(!r.ok) return r.json().then(e=>{throw new Error(e.detail||'Request failed')}); return r.json(); });
+}
+
+function apiPut(path, data) {
+  const headers = {'Content-Type':'application/json'};
+  if(token) headers['Authorization'] = 'Bearer '+token;
+  return fetch(API_BASE+path, {headers, method:'PUT', body:JSON.stringify(data)})
+    .then(r => { if(!r.ok) return r.json().then(e=>{throw new Error(e.detail||'Request failed')}); return r.json(); });
+}
+
+function apiPutForm(path, formData) {
+  const headers = {};
+  if(token) headers['Authorization'] = 'Bearer '+token;
+  return fetch(API_BASE+path+'?'+new URLSearchParams(formData), {headers, method:'PUT'})
+    .then(r => { if(!r.ok) return r.json().then(e=>{throw new Error(e.detail||'Request failed')}); return r.json(); });
+}
+
+function apiDelete(path) {
+  const headers = {};
+  if(token) headers['Authorization'] = 'Bearer '+token;
+  return fetch(API_BASE+path, {headers, method:'DELETE'})
+    .then(r => { if(!r.ok) return r.json().then(e=>{throw new Error(e.detail||'Request failed')}); return r.json(); });
+}
+
+// ============ Auth ============
+async function doLogin() {
+  const u = document.getElementById('loginUsername').value.trim();
+  const p = document.getElementById('loginPassword').value.trim();
+  if(!u||!p) return;
+  const loginError = document.getElementById('loginError');
+  const loginBtn = document.getElementById('loginBtn');
+  loginError.style.display = 'none';
+  loginBtn.disabled = true;
+  loginBtn.textContent = '登录中...';
+          try {
+    const res = await fetch(API_BASE+'/login', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({username:u,password:p})
+    });
+    const data = await res.json();
+    if(!res.ok) {
+      loginError.textContent = data.detail || '用户名或密码错误';
+      loginError.style.display = 'block';
+      loginBtn.disabled = false;
+      loginBtn.textContent = '登 录';
+      return;
+    }
+    token = data.access_token;
+    localStorage.setItem('admin_token', token);
+    localStorage.setItem('admin_username', data.username);
+    localStorage.setItem('admin_role', data.role);
+    showMain();
+  } catch(e) {
+    console.error('Login error:', e);
+    loginError.textContent = '网络连接失败，请确认服务器是否运行';
+    loginError.style.display = 'block';
+    loginBtn.disabled = false;
+    loginBtn.textContent = '登 录';
+  }
+}
+
+function doLogout() {
+  if(confirm('确定要退出登录吗？')) {
+    token = '';
+    localStorage.clear();
+    document.getElementById('loginPage').style.display = 'flex';
+    document.getElementById('mainLayout').style.display = 'none';
+  }
+}
+
+function showMain() {
+  document.getElementById('loginPage').style.display = 'none';
+  document.getElementById('mainLayout').style.display = 'flex'; document.getElementById('mainLayout').style.width = '100%';
+  document.getElementById('adminName').textContent = localStorage.getItem('admin_username')||'Admin';
+  document.getElementById('adminAvatar').textContent = (localStorage.getItem('admin_username')||'A')[0].toUpperCase();
+  // Preload ECharts before navigating to dashboard
+  loadEcharts().then(() => navigate('dashboard'));
+}
+
+// ============ Navigation ============
+const pages = ['dashboard','users','training','content','statistics','settings'];
+
+const navItems = [
+  {id:'dashboard',icon:'📊',label:'仪表盘'},
+  {id:'users',icon:'👥',label:'用户管理'},
+  {id:'training',icon:'🏋️',label:'训练数据'},
+  {id:'content',icon:'📝',label:'内容管理'},
+  {id:'statistics',icon:'📈',label:'数据统计'},
+  {id:'settings',icon:'⚙️',label:'系统设置'},
+];
+
+function renderSidebar() {
+  const nav = document.getElementById('sidebarNav');
+  nav.innerHTML = navItems.map(item => `
+    <div class="nav-item" data-page="${item.id}" onclick="navigate('${item.id}')">
+      <span style="font-size:16px">${item.icon}</span>
+      <span>${item.label}</span>
+    </div>
+  `).join('');
+}
+
+function navigate(page) {
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  const navEl = document.querySelector(`.nav-item[data-page="${page}"]`);
+  if(navEl) navEl.classList.add('active');
+
+  const titles = {dashboard:'仪表盘',users:'用户管理',training:'训练数据',content:'内容管理',statistics:'数据统计',settings:'系统设置'};
+  document.getElementById('pageTitle').textContent = titles[page]||'';
+
+  const container = document.getElementById('pageContent');
+  switch(page) {
+    case 'dashboard': container.innerHTML = renderDashboard(); loadDashboard(); break;
+    case 'users': container.innerHTML = renderUsers(); loadUsers(); break;
+    case 'training': container.innerHTML = renderTraining(); loadTrainingRecords(); break;
+    case 'content': container.innerHTML = renderContent(); loadContent(); break;
+    case 'statistics': container.innerHTML = renderStatistics(); loadStatistics(); break;
+    case 'settings': container.innerHTML = renderSettings(); loadAdmins(); loadAnnouncements(); break;
+  }
+}
+
+// ============ Dashboard ============
+function renderDashboard() {
+  return `
+    <div class="dashboard-container">
+    <div class="stats-row" id="statsRow"></div>
+    <div class="charts-row">
+      <div class="chart-card">
+        <div class="chart-title">
+          <span>用户增长趋势</span>
+          <div class="chart-tabs">
+            <button class="chart-tab" data-period="7" onclick="switchTrendTab(7,this)">近7天</button>
+            <button class="chart-tab active" data-period="30" onclick="switchTrendTab(30,this)">近30天</button>
+            <button class="chart-tab" data-period="90" onclick="switchTrendTab(90,this)">近90天</button>
+          </div>
+        </div>
+        <div id="trendChart" style="flex:1;min-height:200px"></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">日活趋势</div>
+        <div id="activeChart" style="flex:1;min-height:200px"></div>
+      </div>
+    </div>
+    <div class="quick-actions">
+      <div class="action-card" onclick="navigate(\'content\')">
+        <div class="action-icon">📝</div>
+        <div class="action-text">内容管理</div>
+        <div class="action-desc">管理动作库与徽章</div>
+      </div>
+      <div class="action-card" onclick="navigate(\'users\')">
+        <div class="action-icon">👤</div>
+        <div class="action-text">查看最新用户</div>
+        <div class="action-desc">浏览最近注册用户</div>
+      </div>
+      <div class="action-card" onclick="navigate(\'statistics\')">
+        <div class="action-icon">📊</div>
+        <div class="action-text">数据报表</div>
+        <div class="action-desc">查看数据统计分析</div>
+      </div>
+    </div>
+    <div class="tables-row">
+      <div class="table-card">
+        <div class="table-header">
+          <span class="title">最近注册用户</span>
+          <a onclick="navigate(\'users\')">查看全部 →</a>
+        </div>
+        <div id="recentUsersTable"></div>
+      </div>
+      <div class="table-card">
+        <div class="table-header">
+          <span class="title">最新训练记录</span>
+          <a onclick="navigate(\'training\')">查看全部 →</a>
+        </div>
+        <div id="latestRecordsTable"></div>
+      </div>
+    </div>
+    </div>
+  `;
+}
+
+let trendPeriod = 30;
+
+function switchTrendTab(period, btn) {
+  trendPeriod = period;
+  document.querySelectorAll('.chart-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  loadDashboard();
+}
+
+function loadDashboard() {
+  api('/dashboard').then(async data => {
+    // Stats
+    document.getElementById('statsRow').innerHTML = `
+      <div class="stat-card">
+        <div class="stat-icon blue">👤</div>
+        <div>
+          <div class="stat-value">${data.total_users.toLocaleString()}</div>
+          <div class="stat-label">总用户数</div>
+          <div class="stat-change up">↑12% 较上月</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon green">⚡</div>
+        <div>
+          <div class="stat-value">${(data.user_trend && data.user_trend.length>6 ? data.user_trend.slice(-7).reduce((s,d)=>s+d.new_users,0) : data.today_new).toLocaleString()}</div>
+          <div class="stat-label">活跃用户(7日)</div>
+          <div class="stat-change up">↑8% 较上月</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon purple">👑</div>
+        <div>
+          <div class="stat-value">${data.vip_users.toLocaleString()}</div>
+          <div class="stat-label">付费会员</div>
+          <div class="stat-change up">↑23% 较上月</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon orange">📅</div>
+        <div>
+          <div class="stat-value">${data.week_new.toLocaleString()}</div>
+          <div class="stat-label">本周新增</div>
+          <div class="stat-change up">↑18% 较上月</div>
+        </div>
+      </div>`;
+
+    // Trend chart with period filter
+    await loadEcharts();
+    if (!window.echarts) {
+      document.getElementById('trendChart').innerHTML = '<div class="chart-empty"><div class="icon">📊</div>图表库加载失败<div class="hint">请检查网络连接后刷新页面</div></div>';
+      document.getElementById('activeChart').innerHTML = '<div class="chart-empty"><div class="icon">📊</div>图表库加载失败<div class="hint">请检查网络连接后刷新页面</div></div>';
+      // Continue to render tables even without charts
+      document.getElementById('recentUsersTable').innerHTML = renderUserTable((data.recent_users||[]).map(u => ({
+        ...u, status: u.is_vip ? 'VIP会员' : '未激活'
+      })));
+      document.getElementById('latestRecordsTable').innerHTML = renderLatestRecordsTable(data.latest_records||[]);
+      return;
+    }
+    let trendData = data.user_trend || [];
+    if(trendPeriod === 7 && trendData.length > 7) trendData = trendData.slice(-7);
+    else if(trendPeriod === 90) { /* show all 30 available */ }
+    else trendData = trendData.slice(-30);
+
+    // Build date-indexed active users map for proper alignment
+    const activeMap = {};
+    (data.active_trend||[]).forEach(d => { activeMap[d.date] = d.active_users; });
+    try {
+      const trendChartEl = document.getElementById('trendChart');
+      if(!trendChartEl) return;
+      const trendChart = echarts.init(trendChartEl);
+      trendChart.setOption({
+        tooltip:{trigger:'axis'},
+        legend:{data:['新注册','活跃用户'],bottom:0},
+        grid:{left:40,right:20,top:10,bottom:30},
+        xAxis:{type:'category',data:trendData.map(d=>d.date),axisLabel:{fontSize:11}},
+        yAxis:{type:'value',min:0,axisLabel:{fontSize:11}},
+        series:[
+          {name:'新注册',type:'line',data:trendData.map(d=>d.new_users),smooth:true,
+           lineStyle:{color:'#FF6B35',width:2},itemStyle:{color:'#FF6B35'},
+           areaStyle:{color:new echarts.graphic.LinearGradient(0,0,0,1,[
+             {offset:0,color:'rgba(255,107,53,0.2)'},{offset:1,color:'rgba(255,107,53,0.02)'}])}},
+          {name:'活跃用户',type:'line',data:trendData.map((d,i)=>
+            (activeMap[d.date]!==undefined?activeMap[d.date]:0)),
+           smooth:true,lineStyle:{color:'#4A90D9',width:2,type:'dashed'},
+           itemStyle:{color:'#4A90D9'},symbol:'none'}
+        ]
+      });
+
+      // Daily active users bar chart
+      const activeChartEl = document.getElementById('activeChart');
+      if(!activeChartEl) return;
+      const activeChart = echarts.init(activeChartEl);
+      const activeTrend = data.active_trend || [];
+      const activeData = activeTrend.slice(-7);
+      activeChart.setOption({
+        tooltip:{trigger:'axis'},
+        grid:{left:40,right:20,top:10,bottom:30},
+        xAxis:{type:'category',data:activeData.map(d=>d.date),axisLabel:{fontSize:11}},
+        yAxis:{type:'value',min:0,axisLabel:{fontSize:11}},
+        series:[{
+          type:'bar',data:activeData.map(d=>d.active_users),
+          itemStyle:{
+            color:new echarts.graphic.LinearGradient(0,0,0,1,[
+              {offset:0,color:'#4A90D9'},{offset:1,color:'#A0C4FF'}
+            ]),
+            borderRadius:[6,6,0,0]
+          },
+          barMaxWidth:32
+        }]
+      });
+      // Resize charts to fill container
+      setTimeout(() => { trendChart.resize(); activeChart.resize(); }, 100);
+    } catch(e) {
+      console.error('Chart render error:', e);
+    }
+
+    // Tables
+    document.getElementById('recentUsersTable').innerHTML = renderUserTable((data.recent_users||[]).map(u => ({
+      ...u, status: u.is_vip ? 'VIP会员' : '未激活'
+    })));
+    document.getElementById('latestRecordsTable').innerHTML = renderLatestRecordsTable(data.latest_records||[]);
+  }).catch(e => toast('加载仪表盘失败: '+e.message, 'error'));
+}
+
+function renderUserTable(users) {
+  const rows = users.map(u => `
+    <tr>
+      <td><strong>${u.nickname||''}</strong></td>
+      <td>${u.phone||''}</td>
+      <td>${u.created_at||''}</td>
+      <td><span class="badge ${u.is_vip?'badge-vip':'badge-warning'}">${u.is_vip?'已激活':'未激活'}</span></td>
+    </tr>
+  `).join('');
+  return `<table class="data-table">
+    <thead><tr><th>用户</th><th>手机号</th><th>注册时间</th><th>状态</th></tr></thead>
+    <tbody>${rows||'<tr><td colspan="4" class="empty-state">暂无数据</td></tr>'}</tbody>
+  </table>`;
+}
+
+function renderLatestRecordsTable(records) {
+  const rows = records.map(r => `
+    <tr>
+      <td><strong>${r.nickname||''}</strong></td>
+      <td>${r.exercise_name||''}</td>
+      <td>${r.duration||0}分钟</td>
+      <td>${r.calories||0}千卡</td>
+      <td>${r.time||''}</td>
+    </tr>
+  `).join('');
+  return `<table class="data-table">
+    <thead><tr><th>用户</th><th>训练项目</th><th>时长</th><th>消耗</th><th>时间</th></tr></thead>
+    <tbody>${rows||'<tr><td colspan="5" class="empty-state">暂无数据</td></tr>'}</tbody>
+  </table>`;
+}
+
+// ============ User Management ============
+let currentUserPage = 1;
+function renderUsers() {
+  return `
+    <div class="page-card">
+      <div class="page-card-header"><span class="title">用户管理</span></div>
+      <div class="page-card-body">
+        <div class="toolbar">
+          <input class="search-input" id="userSearch" placeholder="搜索用户名/手机号" onkeyup="if(event.key==='Enter')loadUsers()">
+          <select class="filter-select" id="userVipFilter">
+            <option value="">全部会员状态</option>
+            <option value="vip">VIP会员</option>
+            <option value="normal">普通用户</option>
+          </select>
+          <button class="btn btn-primary" onclick="loadUsers()">🔍 搜索</button>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="data-table" id="usersTable"><tbody><tr><td class="empty-state">加载中...</td></tr></tbody></table>
+        </div>
+        <div class="pagination" id="userPagination"></div>
+      </div>
+    </div>
+  `;
+}
+
+function loadUsers(page=1) {
+  currentUserPage = page;
+  const keyword = document.getElementById('userSearch')?.value||'';
+  const vip = document.getElementById('userVipFilter')?.value||'';
+  api('/users',{params:{page,page_size:15,keyword:keyword,vip_status:vip}}).then(data => {
+    const rows = (data.list||[]).map(u => `
+      <tr>
+        <td>${u.id}</td>
+        <td><strong style="cursor:pointer;color:var(--primary)" onclick="showUserDetail(${u.id})">${u.nickname||''}</strong></td>
+        <td>${u.phone_masked||u.phone||''}</td>
+        <td>${u.created_at||''}</td>
+        <td><span class="badge ${u.is_vip?'badge-vip':'badge-warning'}">${u.is_vip?'VIP':'普通'}</span></td>
+        <td>${u.fitness_goal||''}</td>
+        <td>${u.last_active||''}</td>
+        <td>
+          <button class="btn btn-outline btn-sm" onclick="showUserDetail(${u.id})">详情</button>
+        </td>
+      </tr>
+    `).join('');
+    document.getElementById('usersTable').innerHTML = `
+      <thead><tr><th>ID</th><th>用户名</th><th>手机号</th><th>注册时间</th><th>会员</th><th>健身目标</th><th>最后活跃</th><th>操作</th></tr></thead>
+      <tbody>${rows||'<tr><td colspan="8" class="empty-state">暂无数据</td></tr>'}</tbody>`;
+
+    // Pagination
+    const totalPages = Math.ceil(data.total/data.page_size);
+    let phtml = `<span>共${data.total}条</span>`;
+    for(let i=1;i<=totalPages;i++) {
+      phtml += `<button class="${i===page?'active':''}" onclick="loadUsers(${i})">${i}</button>`;
+    }
+    document.getElementById('userPagination').innerHTML = phtml;
+  }).catch(e => toast(e.message,'error'));
+}
+
+function showUserDetail(uid) {
+  api('/users/'+uid).then(user => {
+    const html = `
+      <div class="modal-header"><span class="title">用户详情 - ${user.nickname||''}</span><button class="btn btn-outline btn-sm" onclick="closeModal()">✕</button></div>
+      <div class="modal-body">
+        <h4 style="margin-bottom:12px">基本信息</h4>
+        <div class="form-group">
+          <label>手机号</label>
+          <input type="text" value="${user.phone||''}" disabled style="background:#f5f5f5">
+        </div>
+        <div class="form-group">
+          <label>用户名</label>
+          <input type="text" id="editNickname" value="${user.nickname||''}" placeholder="请输入用户名">
+        </div>
+        <div class="form-group">
+          <label>性别</label>
+          <select id="editGender">
+            <option value="" ${!user.gender?'selected':''}>未设置</option>
+            <option value="男" ${user.gender==='男'?'selected':''}>男</option>
+            <option value="女" ${user.gender==='女'?'selected':''}>女</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>健身目标</label>
+          <select id="editGoal">
+            <option value="" ${!user.fitness_goal?'selected':''}>未设置</option>
+            <option value="减脂" ${user.fitness_goal==='减脂'?'selected':''}>减脂</option>
+            <option value="增肌" ${user.fitness_goal==='增肌'?'selected':''}>增肌</option>
+            <option value="塑形" ${user.fitness_goal==='塑形'?'selected':''}>塑形</option>
+            <option value="增强体质" ${user.fitness_goal==='增强体质'?'selected':''}>增强体质</option>
+            <option value="康复训练" ${user.fitness_goal==='康复训练'?'selected':''}>康复训练</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>注册时间</label>
+          <input type="text" value="${user.created_at||''}" disabled style="background:#f5f5f5">
+        </div>
+
+        <h4 style="margin:20px 0 12px">身体数据</h4>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="form-group">
+            <label>身高 (cm)</label>
+            <input type="number" id="editHeight" value="${user.height||0}" min="0" max="250">
+          </div>
+          <div class="form-group">
+            <label>体重 (kg)</label>
+            <input type="number" id="editWeight" value="${user.weight||0}" min="0" max="300" step="0.1">
+          </div>
+          <div class="form-group">
+            <label>体脂率 (%)</label>
+            <input type="number" id="editBodyFat" value="${user.body_fat||0}" min="0" max="60" step="0.1">
+          </div>
+          <div class="form-group">
+            <label>腰围 (cm)</label>
+            <input type="number" id="editWaist" value="${user.waist||0}" min="0" max="200" step="0.1">
+          </div>
+          <div class="form-group">
+            <label>臀围 (cm)</label>
+            <input type="number" id="editHip" value="${user.hip||0}" min="0" max="200" step="0.1">
+          </div>
+          <div class="form-group">
+            <label>BMI</label>
+            <input type="text" id="editBmi" value="${(user.height>0?(user.weight/((user.height/100)**2)).toFixed(1):'--')}" disabled style="background:#f5f5f5">
+          </div>
+        </div>
+
+        <h4 style="margin:20px 0 12px">训练统计</h4>
+        <table class="data-table" style="margin-bottom:16px">
+          <tr><td style="color:var(--text-muted)">累计训练</td><td>${user.total_workouts||0}次</td><td style="color:var(--text-muted)">累计时长</td><td>${user.total_minutes||0}分钟</td></tr>
+          <tr><td style="color:var(--text-muted)">消耗卡路里</td><td>${(user.total_calories||0).toFixed(0)}千卡</td><td style="color:var(--text-muted)">会员</td><td>${user.is_vip?'<span class="badge badge-vip">VIP</span> '+ (user.vip_expire_time||'') :'普通用户'}</td></tr>
+        </table>
+      </div>
+      <div class="modal-footer" style="justify-content:space-between">
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-outline btn-sm" onclick="changePassword(${uid})">修改密码</button>
+          ${!user.is_vip ? `<button class="btn btn-primary btn-sm" onclick="toggleVip(${uid},true)">开通VIP</button>` :
+            `<button class="btn btn-outline btn-sm" onclick="toggleVip(${uid},false)">取消VIP</button>`}
+          <button class="btn btn-danger btn-sm" onclick="toggleBan(${uid})">封禁用户</button>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-outline" onclick="closeModal()">取消</button>
+          <button class="btn btn-primary" onclick="saveUser(${uid})">确认</button>
+        </div>
+      </div>`;
+    document.getElementById('modalBox').innerHTML = html;
+    document.getElementById('modalOverlay').classList.add('show');
+    // Auto-calculate BMI when height/weight changes
+    const hEl = document.getElementById('editHeight');
+    const wEl = document.getElementById('editWeight');
+    const bmiEl = document.getElementById('editBmi');
+    function calcBmi() {
+      const h = parseFloat(hEl.value), w = parseFloat(wEl.value);
+      bmiEl.value = (h > 0 && w > 0) ? (w / ((h/100)**2)).toFixed(1) : '--';
+    }
+    hEl.addEventListener('input', calcBmi);
+    wEl.addEventListener('input', calcBmi);
+  }).catch(e => toast(e.message,'error'));
+}
+
+function saveUser(uid) {
+  const data = {
+    nickname: document.getElementById('editNickname').value.trim(),
+    gender: document.getElementById('editGender').value || null,
+    fitness_goal: document.getElementById('editGoal').value || null,
+    height: parseInt(document.getElementById('editHeight').value) || 0,
+    weight: parseFloat(document.getElementById('editWeight').value) || 0,
+    body_fat: parseFloat(document.getElementById('editBodyFat').value) || 0,
+    waist: parseFloat(document.getElementById('editWaist').value) || 0,
+    hip: parseFloat(document.getElementById('editHip').value) || 0,
+  };
+  apiPut('/users/'+uid, data).then(() => {
+    toast('用户信息已更新','success');
+    closeModal();
+    loadUsers(currentUserPage);
+  }).catch(e => toast(e.message,'error'));
+}
+
+function changePassword(uid) {
+  const pwd = prompt('请输入新密码（至少6位）：');
+  if(!pwd) return;
+  if(pwd.length < 6) { toast('密码长度不能少于6位','error'); return; }
+  apiPut('/users/'+uid+'/password', {new_password:pwd}).then(() => {
+    toast('密码已修改','success');
+  }).catch(e => toast(e.message,'error'));
+}
+
+function toggleBan(uid) {
+  if(!confirm('确定要封禁该用户吗？封禁后用户将无法登录。')) return;
+  apiPutForm('/users/'+uid+'/ban', {banned:true}).then(() => {
+    toast('用户已封禁','success');
+    closeModal();
+    loadUsers(currentUserPage);
+  }).catch(e => toast(e.message,'error'));
+}
+
+function toggleVip(uid, enable) {
+  const expire = enable ? (prompt('VIP到期时间（如 2026-12-31）：')||'2026-12-31') : '';
+  apiPutForm('/users/'+uid+'/vip', {is_vip:enable, expire_time:expire}).then(() => {
+    toast(enable?'已开通VIP':'已取消VIP','success');
+    closeModal();
+    loadUsers(currentUserPage);
+  }).catch(e => toast(e.message,'error'));
+}
+
+// ============ Training Data ============
+function renderTraining() {
+  return `
+    <div class="page-card">
+      <div class="page-card-header">
+        <span class="title">训练数据</span>
+      </div>
+      <div class="page-card-body">
+        <div class="tabs">
+          <button class="tab-btn active" onclick="loadTrainingRecords()">训练记录</button>
+          <button class="tab-btn" onclick="loadTrainingTasks()">训练任务</button>
+        </div>
+        <div id="trainingSummary" class="summary-row"></div>
+        <div class="toolbar" id="trainingToolbar">
+          <input class="search-input" id="trainingSearch" placeholder="搜索用户/动作" onkeyup="if(event.key==='Enter')loadTrainingRecords()">
+          <input type="date" class="filter-select" id="trainingDateFrom">
+          <input type="date" class="filter-select" id="trainingDateTo">
+          <button class="btn btn-primary" onclick="loadTrainingRecords()">🔍 搜索</button>
+        </div>
+        <div style="overflow-x:auto" id="trainingTable">
+          <table class="data-table"><tbody><tr><td class="empty-state">加载中...</td></tr></tbody></table>
+        </div>
+        <div class="pagination" id="trainingPagination"></div>
+      </div>
+    </div>
+  `;
+}
+
+let trainingPage = 1;
+
+function loadTrainingRecords(page=1) {
+  trainingPage = page;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('.tab-btn:first-child')?.classList.add('active');
+
+  const kw = document.getElementById('trainingSearch')?.value||'';
+  const df = document.getElementById('trainingDateFrom')?.value||'';
+  const dt = document.getElementById('trainingDateTo')?.value||'';
+
+  api('/workout-records',{params:{page,page_size:15,keyword:kw,date_from:df,date_to:dt}}).then(data => {
+    if(data.summary) {
+      document.getElementById('trainingSummary').innerHTML = `
+        <div class="summary-card"><div class="value">${data.summary.total_records}</div><div class="label">总记录数</div></div>
+        <div class="summary-card"><div class="value">${data.summary.today_records}</div><div class="label">今日新增</div></div>
+        <div class="summary-card"><div class="value">${data.summary.avg_calories}千卡</div><div class="label">平均每次消耗</div></div>`;
+    }
+    const rows = (data.list||[]).map(r => `
+      <tr>
+        <td>${r.id}</td><td>${r.nickname||''}</td><td>${r.exercise_name||''}</td>
+        <td>${r.muscle_group||''}</td><td>${r.sets||0}</td><td>${r.reps||0}</td>
+        <td>${r.weight||0}kg</td><td>${r.calories||0}千卡</td><td>${r.time||''}</td>
+        <td><button class="btn btn-danger btn-sm" onclick="deleteRecord(${r.id})">删除</button></td>
+      </tr>
+    `).join('');
+    document.getElementById('trainingTable').innerHTML =
+      `<table class="data-table">
+        <thead><tr><th>ID</th><th>用户</th><th>动作</th><th>肌群</th><th>组数</th><th>次数</th><th>重量</th><th>消耗</th><th>时间</th><th>操作</th></tr></thead>
+        <tbody>${rows||'<tr><td colspan="10" class="empty-state">暂无数据</td></tr>'}</tbody></table>`;
+
+    const totalPages = Math.ceil(data.total/data.page_size);
+    let phtml = `<span>共${data.total}条</span>`;
+    for(let i=1;i<=totalPages;i++) phtml += `<button class="${i===page?'active':''}" onclick="loadTrainingRecords(${i})">${i}</button>`;
+    document.getElementById('trainingPagination').innerHTML = phtml;
+  }).catch(e => toast(e.message,'error'));
+}
+
+function loadTrainingTasks(page=1) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-btn')[1]?.classList.add('active');
+  document.getElementById('trainingSummary').innerHTML = '';
+  const kw = document.getElementById('trainingSearch')?.value||'';
+
+  api('/training-tasks',{params:{page,page_size:15,keyword:kw}}).then(data => {
+    const rows = (data.list||[]).map(t => `
+      <tr>
+        <td>${t.id}</td><td>${t.nickname||''}</td><td>${t.name||''}</td>
+        <td>${t.date||''}</td><td><span class="badge ${t.status==='COMPLETED'?'badge-success':'badge-warning'}">${t.status==='COMPLETED'?'已完成':'未开始'}</span></td>
+        <td>${t.exercise_type||''}</td><td>${t.sets_reps||''}</td><td>${t.created_at||''}</td>
+      </tr>
+    `).join('');
+    document.getElementById('trainingTable').innerHTML =
+      `<table class="data-table">
+        <thead><tr><th>ID</th><th>用户</th><th>任务名</th><th>日期</th><th>状态</th><th>类型</th><th>组×次</th><th>创建时间</th></tr></thead>
+        <tbody>${rows||'<tr><td colspan="8" class="empty-state">暂无数据</td></tr>'}</tbody></table>`;
+
+    const totalPages = Math.ceil(data.total/data.page_size);
+    let phtml = `<span>共${data.total}条</span>`;
+    for(let i=1;i<=totalPages;i++) phtml += `<button class="${i===page?'active':''}" onclick="loadTrainingTasks(${i})">${i}</button>`;
+    document.getElementById('trainingPagination').innerHTML = phtml;
+  }).catch(e => toast(e.message,'error'));
+}
+
+function deleteRecord(id) {
+  if(!confirm('确定删除这条训练记录？')) return;
+  apiDelete('/workout-records/'+id).then(() => {
+    toast('已删除','success');
+    loadTrainingRecords(trainingPage);
+  }).catch(e => toast(e.message,'error'));
+}
+
+// ============ Statistics ============
+let statDimension = 'users';
+
+const statDimensions = [
+  {id:'users',label:'用户画像',icon:'👤'},
+  {id:'training',label:'训练行为',icon:'🏋️'},
+  {id:'equipment',label:'器材统计',icon:'🏗️'},
+  {id:'retention',label:'留存分析',icon:'📈'},
+  {id:'vip',label:'会员转化',icon:'👑'},
+];
+
+function renderStatistics() {
+  return `
+    <div style="display:flex;gap:16px">
+      <div class="stat-tabs">
+        ${statDimensions.map(d => `
+          <div class="stat-tab ${d.id==='users'?'active':''}" data-dim="${d.id}" onclick="switchStatDim('${d.id}',this)">
+            <span class="stat-tab-icon">${d.icon}</span>
+            <span>${d.label}</span>
+          </div>
+        `).join('')}
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;gap:16px" id="statCharts">
+        <!-- filled by JS -->
+      </div>
+    </div>
+  `;
+}
+
+function switchStatDim(dim, btn) {
+  statDimension = dim;
+  document.querySelectorAll('.stat-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  loadStatistics();
+}
+
+
+function safeInitChart(id) {
+  const el = document.getElementById(id);
+  if(!el) { console.warn('Chart element not found:', id); return null; }
+  return echarts.init(el);
+}
+
+async function loadStatistics() {
+  const chartsDiv = document.getElementById('statCharts');
+  chartsDiv.innerHTML = '<div class="chart-empty"><div class="icon">📊</div>加载中...</div>';
+  await loadEcharts();
+  if (!window.echarts) {
+    chartsDiv.innerHTML = '<div class="chart-empty"><div class="icon">📊</div>图表库加载失败<div class="hint">请检查网络连接后刷新页面</div></div>';
+    return;
+  }
+
+          try {
+    if (statDimension === 'users') {
+      const data = await api('/statistics/users');
+      chartsDiv.innerHTML = `
+        <div class="chart-card"><div class="chart-title">性别分布</div><div id="sc1" style="height:300px"></div></div>
+        <div class="chart-card"><div class="chart-title">健身目标分布</div><div id="sc2" style="height:300px"></div></div>`;
+      const c1 = safeInitChart('sc1'); if(c1) c1.setOption({
+        tooltip:{trigger:'item'}, series:[{type:'pie',radius:['45%','70%'],center:['50%','50%'],
+          data:(data.gender_data||[]).map(d=>({name:d.name||'未知',value:d.value})), label:{formatter:'{b}\n{d}%'}}]});
+      const c2 = safeInitChart('sc2'); if(c2) c2.setOption({
+        tooltip:{trigger:'axis'}, xAxis:{type:'category',data:(data.goal_data||[]).map(d=>d.name)},
+        yAxis:{type:'value'}, series:[{type:'bar',data:(data.goal_data||[]).map(d=>d.value),
+          itemStyle:{color:new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'#FF6B35'},{offset:1,color:'#FFA502'}])}, barMaxWidth:40}]});
+    }
+    else if (statDimension === 'training') {
+      const data = await api('/statistics/training');
+      const topData = (data.top_exercises||[]).slice(0,10).reverse();
+      chartsDiv.innerHTML = `
+        <div class="chart-card"><div class="chart-title">热门动作 Top 10</div><div id="sc1" style="height:300px"></div></div>
+        <div class="chart-card"><div class="chart-title">训练类型分布</div><div id="sc2" style="height:300px"></div></div>`;
+      const c1 = safeInitChart('sc1'); if(c1) c1.setOption({
+        tooltip:{trigger:'axis'}, grid:{left:120,right:20,top:10,bottom:20},
+        xAxis:{type:'value'}, yAxis:{type:'category',data:topData.map(d=>d.name),axisLabel:{fontSize:11}},
+        series:[{type:'bar',data:topData.map(d=>d.count),
+          itemStyle:{color:new echarts.graphic.LinearGradient(0,0,1,0,[{offset:0,color:'#FF6B35'},{offset:1,color:'#FFA502'}])}, barMaxWidth:20}]});
+      const c2 = safeInitChart('sc2'); if(c2) c2.setOption({
+        tooltip:{trigger:'item'}, series:[{type:'pie',radius:'60%',center:['50%','50%'],
+          data:(data.type_distribution||[]).map(d=>({name:d.name,value:d.value})), roseType:'radius'}]});
+    }
+    else if (statDimension === 'equipment') {
+      const data = await api('/statistics/equipment').catch(() => ({}));
+      const eqData = data.equipment_data || [];
+      chartsDiv.innerHTML = `
+        <div class="chart-card"><div class="chart-title">用户器材分布</div><div id="sc1" style="height:360px"></div></div>`;
+      if(eqData.length > 0) {
+        const sorted = [...eqData].sort((a,b) => b.value - a.value).reverse();
+        const c1 = safeInitChart('sc1'); if(c1) c1.setOption({
+          tooltip:{trigger:'axis'}, grid:{left:140,right:30,top:10,bottom:20},
+          xAxis:{type:'value'}, yAxis:{type:'category',data:sorted.map(d=>d.name)},
+          series:[{type:'bar',data:sorted.map(d=>d.value),
+            itemStyle:{color:new echarts.graphic.LinearGradient(0,0,1,0,[{offset:0,color:'#A55EEA'},{offset:1,color:'#D4A5F0'}])}, barMaxWidth:20}]});
+      } else {
+        document.getElementById('sc1').innerHTML = '<div class="chart-empty"><div class="icon">🏗️</div>暂无器材数据</div>';
+      }
+    }
+    else if (statDimension === 'retention') {
+      const data = await api('/statistics/retention').catch(() => ({}));
+      const retData = data.retention_data || [];
+      chartsDiv.innerHTML = `
+        <div class="chart-card"><div class="chart-title">用户留存率</div><div id="sc1" style="height:360px"></div></div>`;
+      if(retData.length > 0) {
+        const days = ['次日','3日','7日','14日','30日'];
+        const c1 = safeInitChart('sc1'); if(c1) c1.setOption({
+          tooltip:{trigger:'axis',formatter:'{b}: {c}%'},
+          grid:{left:40,right:20,top:10,bottom:30},
+          xAxis:{type:'category',data:days},
+          yAxis:{type:'value',axisLabel:{formatter:'{value}%'}},
+          series:[{type:'line',data:retData.map(d=>d.rate),smooth:true,
+            lineStyle:{color:'#2ED573',width:2},itemStyle:{color:'#2ED573'},
+            areaStyle:{color:new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'rgba(46,213,115,0.2)'},{offset:1,color:'rgba(46,213,115,0.02)'}])}}]});
+      } else {
+        document.getElementById('sc1').innerHTML = '<div class="chart-empty"><div class="icon">📈</div>暂无留存数据</div>';
+      }
+    }
+    else if (statDimension === 'vip') {
+      const data = await api('/statistics/vip').catch(() => ({}));
+      const vipTrend = data.vip_trend || [];
+      chartsDiv.innerHTML = `
+        <div class="chart-card"><div class="chart-title">每日新增VIP</div><div id="sc1" style="height:360px"></div></div>`;
+      if(vipTrend.length > 0) {
+        const c1 = safeInitChart('sc1'); if(c1) c1.setOption({
+          tooltip:{trigger:'axis'},
+          grid:{left:40,right:20,top:10,bottom:30},
+          xAxis:{type:'category',data:vipTrend.map(d=>d.date),axisLabel:{fontSize:11}},
+          yAxis:{type:'value'},
+          series:[{type:'line',data:vipTrend.map(d=>d.count),smooth:true,
+            lineStyle:{color:'#D4A843',width:2},itemStyle:{color:'#D4A843'},
+            areaStyle:{color:new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'rgba(212,168,67,0.2)'},{offset:1,color:'rgba(212,168,67,0.02)'}])}}]});
+      } else {
+        document.getElementById('sc1').innerHTML = '<div class="chart-empty"><div class="icon">👑</div>暂无VIP转化数据</div>';
+      }
+    }
+  } catch(e) {
+    document.getElementById('statCharts').innerHTML = '<div class="chart-empty"><div class="icon">⚠️</div>加载失败: '+e.message+'</div>';
+  }
+}
+
+
+// ============ Content Management ============
+let contentTab = 'exercises';
+
+function renderContent() {
+  return `
+    <div class="page-card">
+      <div class="page-card-header">
+        <span class="title">内容管理</span>
+      </div>
+      <div class="page-card-body">
+        <div class="content-tabs" id="contentTabs">
+          <button class="content-tab active" onclick="switchContentTab('exercises',this)">动作库管理</button>
+          <button class="content-tab" onclick="switchContentTab('badges',this)">徽章管理</button>
+        </div>
+        <div id="contentBody"></div>
+      </div>
+    </div>
+  `;
+}
+
+function switchContentTab(tab, btn) {
+  contentTab = tab;
+  document.querySelectorAll('.content-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  loadContent();
+}
+
+function loadContent() {
+  if(contentTab === 'exercises') loadExercises();
+  else loadBadges();
+}
+
+// ---- Exercise Management ----
+function loadExercises() {
+  const body = document.getElementById('contentBody');
+  body.innerHTML = '<div class="toolbar"><input class="search-input" id="exerciseSearch" placeholder="搜索动作名称" onkeyup="if(event.key===\'Enter\')loadExercises()"><button class="btn btn-primary" onclick="showExerciseModal()">+ 新增动作</button></div><div id="exerciseGrid" class="exercise-grid"><div class="empty-state" style="grid-column:1/-1">加载中...</div></div>';
+
+  api('/exercises').then(data => {
+    const exercises = data.list || data || [];
+    if(exercises.length === 0) {
+      document.getElementById('exerciseGrid').innerHTML = '<div class="empty-state" style="grid-column:1/-1">暂无动作数据</div>';
+      return;
+    }
+    document.getElementById('exerciseGrid').innerHTML = exercises.map(ex => `
+      <div class="exercise-card">
+        <div class="ex-name">${ex.name||''}</div>
+        <div class="ex-meta">
+          <span class="ex-tag">${ex.muscle_group||''}</span>
+          <span class="ex-tag">${ex.exercise_type||''}</span>
+          <span class="ex-tag">${ex.cal_per_rep||0} cal/次</span>
+        </div>
+        <div class="ex-actions">
+          <button class="btn btn-outline btn-sm" onclick="showExerciseModal(${ex.id})">编辑</button>
+          <button class="btn btn-danger btn-sm" data-exid="${ex.id}" data-exname="${(ex.name||'').replace(/"/g,'&quot;')}" onclick="deleteExercise(this.dataset.exid,this.dataset.exname)">删除</button>
+        </div>
+      </div>
+    `).join('');
+  }).catch(e => {
+    document.getElementById('exerciseGrid').innerHTML = '<div class="empty-state" style="grid-column:1/-1">加载失败: '+e.message+'</div>';
+  });
+}
+
+function showExerciseModal(id) {
+  const isEdit = !!id;
+  const title = isEdit ? '编辑动作' : '新增动作';
+  let exData = {};
+  const loadPromise = isEdit ? api('/exercises/'+id).then(d => exData = d).catch(() => {}) : Promise.resolve();
+
+  loadPromise.then(() => {
+    const html = `
+      <div class="modal-header"><span class="title">${title}</span><button class="btn btn-outline btn-sm" onclick="closeModal()">✕</button></div>
+      <div class="modal-body">
+        <div class="form-group"><label>动作名称</label><input type="text" id="exName" value="${exData.name||''}" placeholder="如：杠铃卧推"></div>
+        <div class="form-group">
+          <label>肌群分类</label>
+          <select id="exMuscle">
+            <option value="胸肌" ${exData.muscle_group==='胸肌'?'selected':''}>胸肌</option>
+            <option value="背部" ${exData.muscle_group==='背部'?'selected':''}>背部</option>
+            <option value="肩部" ${exData.muscle_group==='肩部'?'selected':''}>肩部</option>
+            <option value="手臂" ${exData.muscle_group==='手臂'?'selected':''}>手臂</option>
+            <option value="腿部" ${exData.muscle_group==='腿部'?'selected':''}>腿部</option>
+            <option value="核心" ${exData.muscle_group==='核心'?'selected':''}>核心</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>训练类型</label>
+          <select id="exType">
+            <option value="力量" ${exData.exercise_type==='力量'?'selected':''}>力量</option>
+            <option value="器材" ${exData.exercise_type==='器材'?'selected':''}>器材</option>
+            <option value="有氧" ${exData.exercise_type==='有氧'?'selected':''}>有氧</option>
+            <option value="HIIT" ${exData.exercise_type==='HIIT'?'selected':''}>HIIT</option>
+            <option value="柔韧" ${exData.exercise_type==='柔韧'?'selected':''}>柔韧</option>
+            <option value="核心" ${exData.exercise_type==='核心'?'selected':''}>核心</option>
+          </select>
+        </div>
+        <div class="form-group"><label>基础卡路里系数 (cal/次)</label><input type="number" id="exCal" value="${exData.cal_per_rep||0}" step="0.1" min="0"></div>
+        <div class="form-group"><label>描述</label><textarea id="exDesc" placeholder="动作描述...">${exData.description||''}</textarea></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal()">取消</button>
+        <button class="btn btn-primary" onclick="saveExercise(${id||0})">保存</button>
+      </div>`;
+    document.getElementById('modalBox').innerHTML = html;
+    document.getElementById('modalOverlay').classList.add('show');
+  });
+}
+
+function saveExercise(id) {
+  const data = {
+    name: document.getElementById('exName').value.trim(),
+    muscle_group: document.getElementById('exMuscle').value,
+    exercise_type: document.getElementById('exType').value,
+    cal_per_rep: parseFloat(document.getElementById('exCal').value)||0,
+    description: document.getElementById('exDesc').value.trim()
+  };
+  if(!data.name) { toast('请输入动作名称','error'); return; }
+  const req = id ? apiPut('/exercises/'+id, data) : apiPost('/exercises', data);
+  req.then(() => {
+    toast(id?'已更新':'已添加','success');
+    closeModal();
+    loadExercises();
+  }).catch(e => toast(e.message,'error'));
+}
+
+function deleteExercise(id, name) {
+  if(!confirm('确定删除动作 "'+name+'" 吗？')) return;
+  apiDelete('/exercises/'+id).then(() => {
+    toast('已删除','success');
+    loadExercises();
+  }).catch(e => toast(e.message,'error'));
+}
+
+// ---- Badge Management ----
+function loadBadges() {
+  const body = document.getElementById('contentBody');
+  body.innerHTML = '<div class="badge-grid" id="badgeGrid"><div class="empty-state" style="grid-column:1/-1">加载中...</div></div>';
+
+  api('/achievements').then(data => {
+    const badges = data.list || data || [];
+    if(badges.length === 0) {
+      document.getElementById('badgeGrid').innerHTML = '<div class="empty-state" style="grid-column:1/-1">暂无徽章数据</div>';
+      return;
+    }
+    document.getElementById('badgeGrid').innerHTML = badges.map(b => `
+      <div class="badge-card">
+        <div class="badge-icon">${b.icon||'🏅'}</div>
+        <div class="badge-name">${b.name||''}</div>
+        <div class="badge-desc">${b.description||b.unlock_condition||''}</div>
+        <div class="badge-count">${b.user_count||0} 位用户获得</div>
+      </div>
+    `).join('');
+  }).catch(e => {
+    document.getElementById('badgeGrid').innerHTML = '<div class="empty-state" style="grid-column:1/-1">加载失败: '+e.message+'</div>';
+  });
+}
+
+// ============ Settings ============
+function renderSettings() {
+  return `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div class="page-card">
+        <div class="page-card-header">
+          <span class="title">管理员账号</span>
+          <button class="btn btn-primary btn-sm" onclick="showAddAdminModal()" style="float:right">+ 新增管理员</button>
+        </div>
+        <div class="page-card-body">
+          <table class="data-table" id="adminsTable"><tbody><tr><td class="empty-state">加载中...</td></tr></tbody></table>
+        </div>
+      </div>
+      <div class="page-card">
+        <div class="page-card-header"><span class="title">App 版本管理</span></div>
+        <div class="page-card-body">
+          <div class="form-group">
+            <label>当前版本号</label>
+            <input type="text" value="1.0.0" placeholder="如 1.0.1" id="appVersion">
+          </div>
+          <div class="form-group">
+            <label>强制更新</label>
+            <select id="forceUpdate"><option value="0">否</option><option value="1">是</option></select>
+          </div>
+          <div class="form-group">
+            <label>更新日志</label>
+            <textarea placeholder="版本更新内容..." id="appChangelog"></textarea>
+          </div>
+          <button class="btn btn-primary" onclick="saveAppVersion()">保存设置</button>
+        </div>
+      </div>
+      <div class="page-card">
+        <div class="page-card-header">
+          <span class="title">公告管理</span>
+          <button class="btn btn-primary btn-sm" onclick="showAnnouncementModal()" style="float:right">+ 新增公告</button>
+        </div>
+        <div class="page-card-body">
+          <table class="data-table" id="announcementsTable"><tbody><tr><td class="empty-state">加载中...</td></tr></tbody></table>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function loadAdmins() {
+  api('/admins').then(data => {
+    const rows = (data.list||[]).map(a => `
+      <tr>
+        <td>${a.username}</td>
+        <td><span class="badge ${a.role==='super'?'badge-vip':'badge-info'}">${a.role==='super'?'超级管理员':'普通管理员'}</span></td>
+        <td>${a.created_at||''}</td>
+        <td>${a.last_login||'从未登录'}</td>
+        <td>${a.id ? `<button class="btn btn-danger btn-sm" onclick="deleteAdmin(${a.id},'${a.username}')">删除</button>` : ''}</td>
+      </tr>
+    `).join('');
+    document.getElementById('adminsTable').innerHTML =
+      `<thead><tr><th>用户名</th><th>角色</th><th>创建时间</th><th>最后登录</th><th>操作</th></tr></thead>
+       <tbody>${rows||'<tr><td colspan="5" class="empty-state">暂无数据</td></tr>'}</tbody>`;
+  }).catch(e => { /* super admin only, might fail for normal admin */ });
+}
+
+function showAddAdminModal() {
+  const html = `
+    <div class="modal-header"><span class="title">新增管理员</span><button class="btn btn-outline btn-sm" onclick="closeModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>用户名</label><input type="text" id="newAdminUser" placeholder="请输入用户名"></div>
+      <div class="form-group"><label>密码</label><input type="password" id="newAdminPass" placeholder="请输入密码"></div>
+      <div class="form-group">
+        <label>角色</label>
+        <select id="newAdminRole"><option value="normal">普通管理员</option><option value="super">超级管理员</option></select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal()">取消</button>
+      <button class="btn btn-primary" onclick="doAddAdmin()">确认添加</button>
+    </div>`;
+  document.getElementById('modalBox').innerHTML = html;
+  document.getElementById('modalOverlay').classList.add('show');
+}
+
+function doAddAdmin() {
+  const u = document.getElementById('newAdminUser').value.trim();
+  const p = document.getElementById('newAdminPass').value.trim();
+  const r = document.getElementById('newAdminRole').value;
+  if(!u||!p) { toast('请填写完整信息','error'); return; }
+  apiFormPost('/admins',{username:u,password:p,role:r}).then(() => {
+    toast('管理员添加成功','success');
+    closeModal();
+    loadAdmins();
+  }).catch(e => toast(e.message,'error'));
+}
+
+function deleteAdmin(id, username) {
+  if(!confirm(`确定删除管理员 "${username}" 吗？`)) return;
+  apiDelete('/admins/'+id).then(() => {
+    toast('已删除','success');
+    loadAdmins();
+  }).catch(e => toast(e.message,'error'));
+}
+
+
+function saveAppVersion() {
+  const data = {
+    version: document.getElementById('appVersion').value.trim(),
+    force_update: document.getElementById('forceUpdate').value==='1',
+    changelog: document.getElementById('appChangelog').value.trim()
+  };
+  apiPut('/settings', data).then(() => {
+    toast('设置已保存','success');
+  }).catch(e => toast(e.message,'error'));
+}
+
+function loadAnnouncements() {
+  api('/announcements').then(data => {
+    const rows = (data.list||[]).map(a => `
+      <tr>
+        <td><strong>${a.title||''}</strong></td>
+        <td>${(a.content||'').substring(0,40)}${(a.content||'').length>40?'...':''}</td>
+        <td>${a.created_at||''}</td>
+        <td><span class="badge ${a.is_active?'badge-success':'badge-warning'}">${a.is_active?'已发布':'草稿'}</span></td>
+        <td>
+          <button class="btn btn-outline btn-sm" onclick="showAnnouncementModal(${a.id})">编辑</button>
+          <button class="btn btn-danger btn-sm" data-annid="${a.id}" data-anntitle="${(a.title||'').replace(/"/g,'&quot;')}" onclick="deleteAnnouncement(this.dataset.annid,this.dataset.anntitle)">删除</button>
+        </td>
+      </tr>
+    `).join('');
+    document.getElementById('announcementsTable').innerHTML =
+      '<thead><tr><th>标题</th><th>内容</th><th>发布时间</th><th>状态</th><th>操作</th></tr></thead>'+
+      '<tbody>'+ (rows||'<tr><td colspan="5" class="empty-state">暂无公告</td></tr>') +'</tbody>';
+  }).catch(e => { /* may fail */ });
+}
+
+function showAnnouncementModal(id) {
+  const isEdit = !!id;
+  let annData = {};
+  const loadPromise = isEdit ? api('/announcements/'+id).then(d => annData = d).catch(() => {}) : Promise.resolve();
+  loadPromise.then(() => {
+    const html = `
+      <div class="modal-header"><span class="title">${isEdit?'编辑公告':'新增公告'}</span><button class="btn btn-outline btn-sm" onclick="closeModal()">✕</button></div>
+      <div class="modal-body">
+        <div class="form-group"><label>标题</label><input type="text" id="annTitle" value="${annData.title||''}" placeholder="公告标题"></div>
+        <div class="form-group"><label>内容</label><textarea id="annContent" placeholder="公告内容...">${annData.content||''}</textarea></div>
+        <div class="form-group"><label>状态</label><select id="annActive"><option value="1" ${annData.is_active!==false?'selected':''}>发布</option><option value="0" ${annData.is_active===false?'selected':''}>草稿</option></select></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal()">取消</button>
+        <button class="btn btn-primary" onclick="saveAnnouncement(${id||0})">保存</button>
+      </div>`;
+    document.getElementById('modalBox').innerHTML = html;
+    document.getElementById('modalOverlay').classList.add('show');
+  });
+}
+
+function saveAnnouncement(id) {
+  const data = {
+    title: document.getElementById('annTitle').value.trim(),
+    content: document.getElementById('annContent').value.trim(),
+    is_active: document.getElementById('annActive').value==='1'
+  };
+  if(!data.title) { toast('请输入标题','error'); return; }
+  const req = id ? apiPut('/announcements/'+id, data) : apiPost('/announcements', data);
+  req.then(() => {
+    toast(id?'已更新':'已添加','success');
+    closeModal();
+    loadAnnouncements();
+  }).catch(e => toast(e.message,'error'));
+}
+
+function deleteAnnouncement(id, title) {
+  if(!confirm('确定删除公告 "'+title+'" 吗？')) return;
+  apiDelete('/announcements/'+id).then(() => {
+    toast('已删除','success');
+    loadAnnouncements();
+  }).catch(e => toast(e.message,'error'));
+}
+
+// ============ Modal ============
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('show');
+  document.getElementById('modalBox').innerHTML = '';
+}
+
+document.getElementById('modalOverlay').addEventListener('click',function(e){
+  if(e.target===this) closeModal();
+});
+
+// ============ Toast ============
+function toast(msg, type='success') {
+  const t = document.createElement('div');
+  t.className = 'toast toast-'+type;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+// ============ Init ============
+renderSidebar();
+
+// Start preloading ECharts immediately on page load
+loadEcharts();
+
+// Check saved token — verify it's still valid before showing main
+(async function initAuth() {
+  const savedToken = localStorage.getItem('admin_token');
+  if(savedToken) {
+    token = savedToken;
+            try {
+      const res = await fetch(API_BASE+'/me', {
+        headers: {'Authorization': 'Bearer '+token}
+      });
+      if(res.ok) {
+        showMain();
+        return;
+      }
+    } catch(e) {}
+    // Token invalid or expired — clear and show login
+    token = '';
+    localStorage.clear();
+  }
+  // Ensure login page is visible
+  document.getElementById('loginPage').style.display = 'flex';
+  document.getElementById('mainLayout').style.display = 'none';
+})();
+</script>
+</body>
+</html>
