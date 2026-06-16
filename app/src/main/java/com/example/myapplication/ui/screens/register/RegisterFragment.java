@@ -6,8 +6,6 @@ import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.CheckBox;
-import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -19,12 +17,13 @@ import androidx.navigation.Navigation;
 
 import com.example.myapplication.R;
 import com.example.myapplication.databinding.FragmentRegisterBinding;
-import com.google.android.material.button.MaterialButton;
+import com.example.myapplication.util.SessionManager;
 
 public class RegisterFragment extends Fragment {
 
     private FragmentRegisterBinding binding;
     private NavController navController;
+    private SessionManager sessionManager;
     private int passwordStrength = 0;
 
     @Override
@@ -37,51 +36,29 @@ public class RegisterFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         navController = Navigation.findNavController(view);
-
+        sessionManager = SessionManager.getInstance(requireContext());
         setupListeners();
     }
 
     private void setupListeners() {
-        // Back button
-        binding.backBtn.setOnClickListener(v -> {
-            navController.popBackStack();
-        });
+        binding.backBtn.setOnClickListener(v -> navController.popBackStack());
 
-        // Password strength indicator
         binding.passwordInput.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {}
-
-            @Override
-            public void afterTextChanged(Editable s) {
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
+            @Override public void afterTextChanged(Editable s) {
                 updatePasswordStrength(s.toString());
                 validateInputs();
             }
         });
 
-        // Phone input
         binding.phoneInput.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {}
-
-            @Override
-            public void afterTextChanged(Editable s) {
-                validateInputs();
-            }
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
+            @Override public void afterTextChanged(Editable s) { validateInputs(); }
         });
 
-        // Agreement checkbox
-        binding.agreeCheckbox.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            validateInputs();
-        });
-
-        // Register button
+        binding.agreeCheckbox.setOnCheckedChangeListener((buttonView, isChecked) -> validateInputs());
         binding.registerBtn.setOnClickListener(v -> handleRegister());
     }
 
@@ -91,7 +68,6 @@ public class RegisterFragment extends Fragment {
             passwordStrength = 0;
             return;
         }
-
         binding.strengthIndicator.setVisibility(View.VISIBLE);
 
         int strength = 0;
@@ -100,13 +76,10 @@ public class RegisterFragment extends Fragment {
         if (password.matches(".*[a-z].*") && password.matches(".*[A-Z].*")) strength++;
         if (password.matches(".*\\d.*")) strength++;
         if (password.matches(".*[^a-zA-Z0-9].*")) strength++;
-
         passwordStrength = Math.min(strength, 3);
 
-        // Update bar colors
         int activeColor = R.color.error;
         String strengthTextStr = getString(R.string.password_strength_weak);
-
         if (passwordStrength >= 3) {
             activeColor = R.color.success;
             strengthTextStr = getString(R.string.password_strength_strong);
@@ -116,14 +89,9 @@ public class RegisterFragment extends Fragment {
         }
 
         int color = ContextCompat.getColor(requireContext(), activeColor);
-
-        binding.strengthBar1.setBackgroundColor(passwordStrength >= 1 ? color :
-                ContextCompat.getColor(requireContext(), R.color.border_color));
-        binding.strengthBar2.setBackgroundColor(passwordStrength >= 2 ? color :
-                ContextCompat.getColor(requireContext(), R.color.border_color));
-        binding.strengthBar3.setBackgroundColor(passwordStrength >= 3 ? color :
-                ContextCompat.getColor(requireContext(), R.color.border_color));
-
+        binding.strengthBar1.setBackgroundColor(passwordStrength >= 1 ? color : ContextCompat.getColor(requireContext(), R.color.border_color));
+        binding.strengthBar2.setBackgroundColor(passwordStrength >= 2 ? color : ContextCompat.getColor(requireContext(), R.color.border_color));
+        binding.strengthBar3.setBackgroundColor(passwordStrength >= 3 ? color : ContextCompat.getColor(requireContext(), R.color.border_color));
         binding.strengthText.setText(strengthTextStr);
         binding.strengthText.setTextColor(color);
     }
@@ -132,11 +100,7 @@ public class RegisterFragment extends Fragment {
         String phone = binding.phoneInput.getText() != null ? binding.phoneInput.getText().toString() : "";
         String password = binding.passwordInput.getText() != null ? binding.passwordInput.getText().toString() : "";
         boolean agreed = binding.agreeCheckbox.isChecked();
-
-        boolean phoneValid = phone.length() == 11;
-        boolean passwordValid = password.length() >= 6;
-
-        binding.registerBtn.setEnabled(phoneValid && passwordValid && agreed);
+        binding.registerBtn.setEnabled(phone.length() == 11 && password.length() >= 6 && agreed);
     }
 
     private void handleRegister() {
@@ -147,12 +111,10 @@ public class RegisterFragment extends Fragment {
             Toast.makeText(requireContext(), R.string.error_invalid_phone, Toast.LENGTH_SHORT).show();
             return;
         }
-
         if (password.length() < 6) {
             Toast.makeText(requireContext(), R.string.error_short_password, Toast.LENGTH_SHORT).show();
             return;
         }
-
         if (!binding.agreeCheckbox.isChecked()) {
             Toast.makeText(requireContext(), R.string.error_agree_terms, Toast.LENGTH_SHORT).show();
             return;
@@ -161,12 +123,24 @@ public class RegisterFragment extends Fragment {
         binding.registerBtn.setEnabled(false);
         binding.registerBtn.setText(R.string.loading);
 
-        // TODO: Call API to register
-        // For now, simulate successful registration
-        binding.registerBtn.postDelayed(() -> {
-            Toast.makeText(requireContext(), R.string.success_register, Toast.LENGTH_SHORT).show();
-            navController.navigate(R.id.action_register_to_assessment);
-        }, 1000);
+        // 调用后端 API 注册
+        sessionManager.register(phone, password, "健身爱好者", new SessionManager.AuthCallback() {
+            @Override
+            public void onSuccess() {
+                binding.registerBtn.post(() -> {
+                    Toast.makeText(requireContext(), R.string.success_register, Toast.LENGTH_SHORT).show();
+                    navController.navigate(R.id.action_register_to_assessment);
+                });
+            }
+            @Override
+            public void onError(String error) {
+                binding.registerBtn.post(() -> {
+                    binding.registerBtn.setEnabled(true);
+                    binding.registerBtn.setText(R.string.register_btn);
+                    Toast.makeText(requireContext(), "注册失败: " + error, Toast.LENGTH_SHORT).show();
+                });
+            }
+        });
     }
 
     @Override

@@ -215,7 +215,7 @@ public class AssessmentFragment extends Fragment {
         grid.setOrientation(LinearLayout.VERTICAL);
         grid.setLayoutParams(new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-        grid.setPadding(dpToPx(16), dpToPx(24), dpToPx(16), 0);
+        grid.setPadding(dpToPx(12), dpToPx(24), dpToPx(12), 0);
 
         String[] goals = {getString(R.string.goal_fat_loss), getString(R.string.goal_muscle_gain),
                 getString(R.string.goal_shape), getString(R.string.goal_posture)};
@@ -249,7 +249,7 @@ public class AssessmentFragment extends Fragment {
         list.setOrientation(LinearLayout.VERTICAL);
         list.setLayoutParams(new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-        list.setPadding(dpToPx(16), dpToPx(24), dpToPx(16), 0);
+        list.setPadding(dpToPx(12), dpToPx(24), dpToPx(12), 0);
 
         String[] exps = {getString(R.string.exp_beginner), getString(R.string.exp_intermediate),
                 getString(R.string.exp_advanced)};
@@ -283,7 +283,7 @@ public class AssessmentFragment extends Fragment {
         grid.setOrientation(LinearLayout.VERTICAL);
         grid.setLayoutParams(new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-        grid.setPadding(dpToPx(16), dpToPx(24), dpToPx(16), 0);
+        grid.setPadding(dpToPx(12), dpToPx(24), dpToPx(12), 0);
 
         String[] equip = {getString(R.string.equip_none), getString(R.string.equip_dumbbell),
                 getString(R.string.equip_barbell), getString(R.string.equip_band),
@@ -303,15 +303,27 @@ public class AssessmentFragment extends Fragment {
                         ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
             }
 
-            final int index = i;
-            MaterialCardView card = createSmallOptionCard(equip[i], false);
+            final String item = equip[i];
+            boolean isSelected = false;
+            for (String s : selectedEquipment) {
+                if (s.equals(item)) { isSelected = true; break; }
+            }
+            MaterialCardView card = createSmallOptionCard(item, isSelected);
             card.setOnClickListener(v -> {
                 // Toggle equipment selection
+                java.util.List<String> list = new java.util.ArrayList<>();
+                for (String s : selectedEquipment) list.add(s);
+                if (list.contains(item)) {
+                    list.remove(item);
+                } else {
+                    list.add(item);
+                }
+                selectedEquipment = list.toArray(new String[0]);
                 showStep(3);
             });
 
             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1.0f);
-            params.setMargins(0, 0, dpToPx(8), dpToPx(8));
+            params.setMargins(0, 0, dpToPx(6), dpToPx(6));
             card.setLayoutParams(params);
             row.addView(card);
         }
@@ -334,23 +346,37 @@ public class AssessmentFragment extends Fragment {
         daysContainer.setLayoutParams(new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         daysContainer.setGravity(android.view.Gravity.CENTER);
-        daysContainer.setPadding(dpToPx(16), dpToPx(24), dpToPx(16), 0);
+        daysContainer.setPadding(dpToPx(10), dpToPx(24), dpToPx(10), 0);
 
         for (int i = 1; i <= 7; i++) {
             final int day = i;
             TextView dayBtn = new TextView(requireContext());
             dayBtn.setText(String.valueOf(i));
-            dayBtn.setTextSize(15);
+            dayBtn.setTextSize(14);
             dayBtn.setGravity(android.view.Gravity.CENTER);
             dayBtn.setBackgroundResource(R.drawable.bg_card);
             dayBtn.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_secondary));
 
-            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(dpToPx(44), dpToPx(44));
-            params.setMargins(0, 0, dpToPx(12), 0);
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(dpToPx(40), dpToPx(40));
+            params.setMargins(0, 0, dpToPx(6), 0);
             dayBtn.setLayoutParams(params);
 
+            final boolean isDaySelected = java.util.Arrays.stream(selectedDays).anyMatch(d -> d == day);
+            if (isDaySelected) {
+                dayBtn.setBackgroundResource(R.drawable.bg_button_primary);
+                dayBtn.setTextColor(ContextCompat.getColor(requireContext(), R.color.white));
+            }
+
             dayBtn.setOnClickListener(v -> {
-                // Toggle day selection
+                java.util.List<Integer> list = new java.util.ArrayList<>();
+                for (int d : selectedDays) list.add(d);
+                if (list.contains(day)) {
+                    list.remove(Integer.valueOf(day));
+                } else {
+                    list.add(day);
+                }
+                selectedDays = list.stream().mapToInt(Integer::intValue).toArray();
+                showStep(4);
             });
 
             daysContainer.addView(dayBtn);
@@ -360,7 +386,7 @@ public class AssessmentFragment extends Fragment {
 
         // Summary
         TextView summary = new TextView(requireContext());
-        summary.setText(getString(R.string.days_selected, 0));
+        summary.setText(getString(R.string.days_selected, selectedDays.length));
         summary.setTextSize(14);
         summary.setTextColor(ContextCompat.getColor(requireContext(), R.color.primary));
         summary.setGravity(android.view.Gravity.CENTER);
@@ -380,39 +406,179 @@ public class AssessmentFragment extends Fragment {
         container.addView(title);
         container.addView(desc);
 
+        // BMI preview card
+        MaterialCardView bmiCard = new MaterialCardView(requireContext());
+        bmiCard.setCardBackgroundColor(ContextCompat.getColor(requireContext(), R.color.bg_card));
+        bmiCard.setStrokeColor(ContextCompat.getColor(requireContext(), R.color.border_color));
+        bmiCard.setStrokeWidth(dpToPx(1));
+        bmiCard.setRadius(dpToPx(16));
+        bmiCard.setCardElevation(dpToPx(4));
+        LinearLayout.LayoutParams bmiParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        bmiParams.setMargins(dpToPx(12), dpToPx(20), dpToPx(12), 0);
+        bmiCard.setLayoutParams(bmiParams);
+
+        LinearLayout bmiContent = new LinearLayout(requireContext());
+        bmiContent.setOrientation(LinearLayout.VERTICAL);
+        bmiContent.setGravity(android.view.Gravity.CENTER);
+        bmiContent.setPadding(dpToPx(24), dpToPx(20), dpToPx(24), dpToPx(20));
+
+        TextView bmiLabel = new TextView(requireContext());
+        bmiLabel.setText(getString(R.string.your_bmi));
+        bmiLabel.setTextSize(14);
+        bmiLabel.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_muted));
+
+        TextView bmiValue = new TextView(requireContext());
+        bmiValue.setText("--.-");
+        bmiValue.setTextSize(36);
+        bmiValue.setTextColor(ContextCompat.getColor(requireContext(), R.color.primary));
+        bmiValue.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
+        bmiValue.setPadding(0, dpToPx(4), 0, dpToPx(8));
+
+        TextView bmiCategory = new TextView(requireContext());
+        bmiCategory.setText("请输入身高和体重");
+        bmiCategory.setTextSize(14);
+        bmiCategory.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_secondary));
+
+        bmiContent.addView(bmiLabel);
+        bmiContent.addView(bmiValue);
+        bmiContent.addView(bmiCategory);
+        bmiCard.addView(bmiContent);
+        container.addView(bmiCard);
+
         LinearLayout form = new LinearLayout(requireContext());
         form.setOrientation(LinearLayout.VERTICAL);
         form.setLayoutParams(new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-        form.setPadding(dpToPx(16), dpToPx(24), dpToPx(16), 0);
+        form.setPadding(dpToPx(12), dpToPx(20), dpToPx(12), 0);
 
-        // Height input
+        // Height input card
+        MaterialCardView heightCard = new MaterialCardView(requireContext());
+        heightCard.setCardBackgroundColor(ContextCompat.getColor(requireContext(), R.color.bg_card));
+        heightCard.setStrokeColor(ContextCompat.getColor(requireContext(), R.color.border_color));
+        heightCard.setStrokeWidth(dpToPx(1));
+        heightCard.setRadius(dpToPx(16));
+        heightCard.setCardElevation(0);
+        LinearLayout.LayoutParams hParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        hParams.setMargins(0, 0, 0, dpToPx(12));
+        heightCard.setLayoutParams(hParams);
+
+        LinearLayout hContent = new LinearLayout(requireContext());
+        hContent.setOrientation(LinearLayout.HORIZONTAL);
+        hContent.setGravity(android.view.Gravity.CENTER_VERTICAL);
+        hContent.setPadding(dpToPx(16), dpToPx(16), dpToPx(16), dpToPx(16));
+
+        TextView hLabel = new TextView(requireContext());
+        hLabel.setText(getString(R.string.height));
+        hLabel.setTextSize(15);
+        hLabel.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_secondary));
+        hLabel.setLayoutParams(new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1.0f));
+
         com.google.android.material.textfield.TextInputLayout heightLayout =
                 new com.google.android.material.textfield.TextInputLayout(requireContext(),
                         null, com.google.android.material.R.style.Widget_MaterialComponents_TextInputLayout_OutlinedBox);
-        heightLayout.setLayoutParams(new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-        heightLayout.setHint(getString(R.string.height) + " (cm)");
+        heightLayout.setHint("cm");
+        heightLayout.setBoxBackgroundMode(com.google.android.material.textfield.TextInputLayout.BOX_BACKGROUND_OUTLINE);
+        LinearLayout.LayoutParams htParams = new LinearLayout.LayoutParams(
+                dpToPx(120), ViewGroup.LayoutParams.WRAP_CONTENT);
+        heightLayout.setLayoutParams(htParams);
 
         com.google.android.material.textfield.TextInputEditText heightInput =
                 new com.google.android.material.textfield.TextInputEditText(heightLayout.getContext());
         heightInput.setInputType(android.text.InputType.TYPE_CLASS_NUMBER);
+        heightInput.setTextSize(16);
         heightLayout.addView(heightInput);
-        form.addView(heightLayout);
 
-        // Weight input
+        hContent.addView(hLabel);
+        hContent.addView(heightLayout);
+        heightCard.addView(hContent);
+        form.addView(heightCard);
+
+        // Weight input card
+        MaterialCardView weightCard = new MaterialCardView(requireContext());
+        weightCard.setCardBackgroundColor(ContextCompat.getColor(requireContext(), R.color.bg_card));
+        weightCard.setStrokeColor(ContextCompat.getColor(requireContext(), R.color.border_color));
+        weightCard.setStrokeWidth(dpToPx(1));
+        weightCard.setRadius(dpToPx(16));
+        weightCard.setCardElevation(0);
+        LinearLayout.LayoutParams wParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        wParams.setMargins(0, 0, 0, dpToPx(12));
+        weightCard.setLayoutParams(wParams);
+
+        LinearLayout wContent = new LinearLayout(requireContext());
+        wContent.setOrientation(LinearLayout.HORIZONTAL);
+        wContent.setGravity(android.view.Gravity.CENTER_VERTICAL);
+        wContent.setPadding(dpToPx(16), dpToPx(16), dpToPx(16), dpToPx(16));
+
+        TextView wLabel = new TextView(requireContext());
+        wLabel.setText(getString(R.string.weight));
+        wLabel.setTextSize(15);
+        wLabel.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_secondary));
+        wLabel.setLayoutParams(new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1.0f));
+
         com.google.android.material.textfield.TextInputLayout weightLayout =
                 new com.google.android.material.textfield.TextInputLayout(requireContext(),
                         null, com.google.android.material.R.style.Widget_MaterialComponents_TextInputLayout_OutlinedBox);
-        weightLayout.setLayoutParams(new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-        weightLayout.setHint(getString(R.string.weight) + " (kg)");
+        weightLayout.setHint("kg");
+        weightLayout.setBoxBackgroundMode(com.google.android.material.textfield.TextInputLayout.BOX_BACKGROUND_OUTLINE);
+        LinearLayout.LayoutParams wtParams = new LinearLayout.LayoutParams(
+                dpToPx(120), ViewGroup.LayoutParams.WRAP_CONTENT);
+        weightLayout.setLayoutParams(wtParams);
 
         com.google.android.material.textfield.TextInputEditText weightInput =
                 new com.google.android.material.textfield.TextInputEditText(weightLayout.getContext());
         weightInput.setInputType(android.text.InputType.TYPE_CLASS_NUMBER | android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL);
+        weightInput.setTextSize(16);
         weightLayout.addView(weightInput);
-        form.addView(weightLayout);
+
+        wContent.addView(wLabel);
+        wContent.addView(weightLayout);
+        weightCard.addView(wContent);
+        form.addView(weightCard);
+
+        // BMI updater
+        TextWatcher bmiWatcher = new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
+            @Override public void afterTextChanged(Editable s) {
+                String hStr = heightInput.getText() != null ? heightInput.getText().toString() : "";
+                String wStr = weightInput.getText() != null ? weightInput.getText().toString() : "";
+                if (!hStr.isEmpty() && !wStr.isEmpty()) {
+                    try {
+                        float h = Float.parseFloat(hStr) / 100f;
+                        float w = Float.parseFloat(wStr);
+                        if (h > 0) {
+                            float bmi = w / (h * h);
+                            bmiValue.setText(String.format("%.1f", bmi));
+                            bmiValue.setTextColor(ContextCompat.getColor(requireContext(),
+                                    bmi >= 18.5 && bmi < 24 ? R.color.success :
+                                    bmi >= 24 && bmi < 28 ? R.color.warning : R.color.error));
+                            String category;
+                            if (bmi < 18.5) category = getString(R.string.bmi_underweight);
+                            else if (bmi < 24) category = getString(R.string.bmi_normal);
+                            else if (bmi < 28) category = getString(R.string.bmi_overweight);
+                            else category = getString(R.string.bmi_obese);
+                            bmiCategory.setText(category);
+                            height = (int) Float.parseFloat(hStr);
+                            float wt = Float.parseFloat(wStr);
+                            weight = (int) wt;
+                            binding.nextBtn.setEnabled(true);
+                            return;
+                        }
+                    } catch (NumberFormatException ignored) {}
+                }
+                height = 0;
+                weight = 0;
+                bmiValue.setText("--.-");
+                bmiValue.setTextColor(ContextCompat.getColor(requireContext(), R.color.primary));
+                bmiCategory.setText("请输入身高和体重");
+                binding.nextBtn.setEnabled(false);
+            }
+        };
+        heightInput.addTextChangedListener(bmiWatcher);
+        weightInput.addTextChangedListener(bmiWatcher);
 
         container.addView(form);
         binding.contentContainer.addView(container);
@@ -500,11 +666,11 @@ public class AssessmentFragment extends Fragment {
         LinearLayout content = new LinearLayout(requireContext());
         content.setOrientation(LinearLayout.VERTICAL);
         content.setGravity(android.view.Gravity.CENTER);
-        content.setPadding(dpToPx(16), dpToPx(20), dpToPx(16), dpToPx(20));
+        content.setPadding(dpToPx(12), dpToPx(14), dpToPx(12), dpToPx(14));
 
         TextView titleView = new TextView(requireContext());
         titleView.setText(title);
-        titleView.setTextSize(13);
+        titleView.setTextSize(12);
         titleView.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_primary));
         titleView.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
 

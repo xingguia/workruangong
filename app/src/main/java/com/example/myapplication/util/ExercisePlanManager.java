@@ -1,28 +1,23 @@
 package com.example.myapplication.util;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 
+import com.example.myapplication.api.ApiClient;
 import com.example.myapplication.model.ExercisePlan;
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class ExercisePlanManager {
 
-    private static final String PREF_NAME = "exercise_plan";
-    private static final String KEY_PLANS = "plans";
-
     private static ExercisePlanManager instance;
-    private SharedPreferences prefs;
-    private Gson gson;
+    private ApiClient api;
+    private List<ExercisePlan> cachedPlans = new ArrayList<>();
+    private boolean loaded = false;
 
     private ExercisePlanManager(Context context) {
-        prefs = context.getApplicationContext().getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
-        gson = new Gson();
+        api = ApiClient.getInstance(context.getApplicationContext());
     }
 
     public static synchronized ExercisePlanManager getInstance(Context context) {
@@ -32,50 +27,56 @@ public class ExercisePlanManager {
         return instance;
     }
 
+    public void loadPlans(Runnable onDone) {
+        api.getExercisePlans(new ApiClient.Callback<List<Map<String, Object>>>() {
+            @Override
+            public void onSuccess(List<Map<String, Object>> data) {
+                cachedPlans.clear();
+                if (data != null) {
+                    for (Map<String, Object> item : data) {
+                        ExercisePlan plan = new ExercisePlan();
+                        plan.setDayOfWeek(((Number) item.get("day_of_week")).intValue());
+                        plan.setStatus(ExercisePlan.DayStatus.valueOf((String) item.get("status")));
+                        plan.setCompletionStatus(ExercisePlan.CompletionStatus.valueOf((String) item.get("completion_status")));
+                        cachedPlans.add(plan);
+                    }
+                }
+                loaded = true;
+                if (onDone != null) onDone.run();
+            }
+            @Override
+            public void onError(String error) {
+                loaded = true;
+                if (onDone != null) onDone.run();
+            }
+        });
+    }
+
     public void savePlan(ExercisePlan plan) {
-        List<ExercisePlan> plans = getPlans();
-        // Update existing or add new
         boolean found = false;
-        for (int i = 0; i < plans.size(); i++) {
-            if (plans.get(i).getDayOfWeek() == plan.getDayOfWeek()) {
-                plans.set(i, plan);
+        for (int i = 0; i < cachedPlans.size(); i++) {
+            if (cachedPlans.get(i).getDayOfWeek() == plan.getDayOfWeek()) {
+                cachedPlans.set(i, plan);
                 found = true;
                 break;
             }
         }
-        if (!found) {
-            plans.add(plan);
-        }
-        savePlans(plans);
+        if (!found) cachedPlans.add(plan);
+
+        api.saveExercisePlan(plan, null);
     }
 
     public ExercisePlan getPlan(int dayOfWeek) {
-        List<ExercisePlan> plans = getPlans();
-        for (ExercisePlan plan : plans) {
-            if (plan.getDayOfWeek() == dayOfWeek) {
-                return plan;
-            }
+        for (ExercisePlan plan : cachedPlans) {
+            if (plan.getDayOfWeek() == dayOfWeek) return plan;
         }
-        // Return default plan if not found
         return new ExercisePlan(dayOfWeek);
     }
 
     public List<ExercisePlan> getPlans() {
-        String json = prefs.getString(KEY_PLANS, null);
-        if (json == null) {
-            return new ArrayList<>();
-        }
-        Type type = new TypeToken<ArrayList<ExercisePlan>>() {}.getType();
-        List<ExercisePlan> plans = gson.fromJson(json, type);
-        return plans != null ? plans : new ArrayList<>();
+        return new ArrayList<>(cachedPlans);
     }
 
-    private void savePlans(List<ExercisePlan> plans) {
-        String json = gson.toJson(plans);
-        prefs.edit().putString(KEY_PLANS, json).apply();
-    }
-
-    public void clearAll() {
-        prefs.edit().remove(KEY_PLANS).apply();
-    }
+    public void clearAll() { cachedPlans.clear(); }
+    public boolean isLoaded() { return loaded; }
 }

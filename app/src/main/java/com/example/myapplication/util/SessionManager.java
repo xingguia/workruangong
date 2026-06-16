@@ -1,44 +1,54 @@
 package com.example.myapplication.util;
 
 import android.content.Context;
-import android.content.SharedPreferences;
+
+import com.example.myapplication.api.ApiClient;
+
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class SessionManager {
 
-    private static final String PREF_NAME = "fitness_session";
-    private static final String KEY_USER_ID = "user_id";
-    private static final String KEY_NICKNAME = "nickname";
-    private static final String KEY_PHONE = "phone";
-    private static final String KEY_AVATAR = "avatar";
-    private static final String KEY_HEIGHT = "height";
-    private static final String KEY_WEIGHT = "weight";
-    private static final String KEY_BODY_FAT = "body_fat";
-    private static final String KEY_WAIST = "waist";
-    private static final String KEY_HIP = "hip";
-    private static final String KEY_IS_VIP = "is_vip";
-    private static final String KEY_LEVEL = "level";
-    private static final String KEY_VIP_EXPIRE_TIME = "vip_expire_time";
-    private static final String KEY_TOKEN = "token";
-    private static final String KEY_INITIAL_HEIGHT = "initial_height";
-    private static final String KEY_INITIAL_WEIGHT = "initial_weight";
-    private static final String KEY_INITIAL_BODY_FAT = "initial_body_fat";
-    private static final String KEY_INITIAL_WAIST = "initial_waist";
-    private static final String KEY_INITIAL_HIP = "initial_hip";
-    private static final String KEY_ASSESSMENT_COMPLETED = "assessment_completed";
-    private static final String KEY_USERNAME_SET = "username_set";
-    private static final String KEY_ALL_USERNAMES = "all_usernames";
-    private static final String KEY_GENDER = "gender";
-    private static final String KEY_FITNESS_GOAL = "fitness_goal";
-    private static final String KEY_WORKOUT_REMINDER = "workout_reminder";
-    private static final String KEY_ACHIEVEMENT_NOTIFICATION = "achievement_notification";
-
     private static SessionManager instance;
-    private SharedPreferences prefs;
+    private ApiClient api;
+    private Context appContext;
+
+    // 本地缓存
+    private String userId;
+    private String nickname;
+    private String phone;
+    private String avatar;
+    private String gender;
+    private String fitnessGoal;
+    private int height;
+    private float weight;
+    private float bodyFat;
+    private float waist;
+    private float hip;
+    private boolean isVip;
+    private int level;
+    private String vipExpireTime;
+    private boolean assessmentCompleted;
+    private boolean usernameSet;
+    private boolean workoutReminder;
+    private boolean achievementNotification;
+
+    // 初始数据
+    private int initialHeight;
+    private float initialWeight;
+    private float initialBodyFat;
+    private float initialWaist;
+    private float initialHip;
 
     private SessionManager(Context context) {
-        prefs = context.getApplicationContext().getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        appContext = context.getApplicationContext();
+        api = ApiClient.getInstance(appContext);
+        nickname = "健身爱好者";
+        level = 1;
+        workoutReminder = true;
+        achievementNotification = true;
     }
 
     public static synchronized SessionManager getInstance(Context context) {
@@ -48,219 +58,235 @@ public class SessionManager {
         return instance;
     }
 
-    public void saveUserSession(String userId, String nickname, String phone, String token) {
-        prefs.edit().putString(KEY_USER_ID, userId)
-                .putString(KEY_NICKNAME, nickname)
-                .putString(KEY_PHONE, phone)
-                .putString(KEY_TOKEN, token)
-                .commit();
+    // ==================== Auth ====================
+
+    public interface AuthCallback {
+        void onSuccess();
+        void onError(String error);
     }
 
-    public void saveUserInfo(String nickname, String avatar, int height, float weight, boolean isVip, int level) {
-        prefs.edit().putString(KEY_NICKNAME, nickname)
-                .putString(KEY_AVATAR, avatar)
-                .putInt(KEY_HEIGHT, height)
-                .putFloat(KEY_WEIGHT, weight)
-                .putBoolean(KEY_IS_VIP, isVip)
-                .putInt(KEY_LEVEL, level)
-                .commit();
+    public void login(String phone, String password, AuthCallback callback) {
+        api.login(phone, password, new ApiClient.Callback<Map<String, Object>>() {
+            @Override
+            public void onSuccess(Map<String, Object> data) {
+                Map<String, Object> user = (Map<String, Object>) data.get("user");
+                applyUserData(user);
+                callback.onSuccess();
+            }
+            @Override
+            public void onError(String error) {
+                callback.onError(error);
+            }
+        });
     }
 
-    public void saveVipInfo(boolean isVip, String expireTime) {
-        prefs.edit().putBoolean(KEY_IS_VIP, isVip)
-                .putString(KEY_VIP_EXPIRE_TIME, expireTime)
-                .commit();
+    public void register(String phone, String password, String nickname, AuthCallback callback) {
+        api.register(phone, password, nickname, new ApiClient.Callback<Map<String, Object>>() {
+            @Override
+            public void onSuccess(Map<String, Object> data) {
+                Map<String, Object> user = (Map<String, Object>) data.get("user");
+                applyUserData(user);
+                callback.onSuccess();
+            }
+            @Override
+            public void onError(String error) {
+                callback.onError(error);
+            }
+        });
     }
 
-    public void saveBodyData(int height, float weight) {
-        prefs.edit().putInt(KEY_HEIGHT, height)
-                .putFloat(KEY_WEIGHT, weight)
-                .commit();
-    }
-
-    public void saveFullBodyData(int height, float weight, float bodyFat, float waist, float hip) {
-        prefs.edit().putInt(KEY_HEIGHT, height)
-                .putFloat(KEY_WEIGHT, weight)
-                .putFloat(KEY_BODY_FAT, bodyFat)
-                .putFloat(KEY_WAIST, waist)
-                .putFloat(KEY_HIP, hip)
-                .commit();
-    }
-
-    public void saveInitialBodyData(int height, float weight, float bodyFat, float waist, float hip) {
-        prefs.edit().putInt(KEY_INITIAL_HEIGHT, height)
-                .putFloat(KEY_INITIAL_WEIGHT, weight)
-                .putFloat(KEY_INITIAL_BODY_FAT, bodyFat)
-                .putFloat(KEY_INITIAL_WAIST, waist)
-                .putFloat(KEY_INITIAL_HIP, hip)
-                .commit();
-    }
-
-    public void markAssessmentCompleted() {
-        prefs.edit().putBoolean(KEY_ASSESSMENT_COMPLETED, true).commit();
-    }
-
-    public boolean isAssessmentCompleted() {
-        return prefs.getBoolean(KEY_ASSESSMENT_COMPLETED, false);
-    }
-
-    public void markUsernameSet() {
-        prefs.edit().putBoolean(KEY_USERNAME_SET, true).commit();
-    }
-
-    public boolean isUsernameSet() {
-        return prefs.getBoolean(KEY_USERNAME_SET, false);
-    }
-
-    // Username management
-    public void saveNickname(String nickname) {
-        prefs.edit().putString(KEY_NICKNAME, nickname).commit();
-    }
-
-    public void setNickname(String nickname) {
-        prefs.edit().putString(KEY_NICKNAME, nickname).commit();
-    }
-
-    public void setHeight(int height) {
-        prefs.edit().putInt(KEY_HEIGHT, height).commit();
-    }
-
-    public void setWeight(float weight) {
-        prefs.edit().putFloat(KEY_WEIGHT, weight).commit();
-    }
-
-    public void setAvatar(String avatar) {
-        prefs.edit().putString(KEY_AVATAR, avatar).commit();
-    }
-
-    public void setGender(String gender) {
-        prefs.edit().putString(KEY_GENDER, gender).commit();
-    }
-
-    public void setFitnessGoal(String goal) {
-        prefs.edit().putString(KEY_FITNESS_GOAL, goal).commit();
-    }
-
-    public boolean isNicknameAvailable(String nickname) {
-        Set<String> allUsernames = getAllUsernames();
-        return !allUsernames.contains(nickname);
-    }
-
-    public void addUsernameToSet(String username) {
-        Set<String> allUsernames = getAllUsernames();
-        allUsernames.add(username);
-        prefs.edit().putStringSet(KEY_ALL_USERNAMES, allUsernames).apply();
-    }
-
-    public Set<String> getAllUsernames() {
-        return new HashSet<>(prefs.getStringSet(KEY_ALL_USERNAMES, new HashSet<>()));
-    }
-
-    public int getInitialHeight() {
-        return prefs.getInt(KEY_INITIAL_HEIGHT, 0);
-    }
-
-    public float getInitialWeight() {
-        return prefs.getFloat(KEY_INITIAL_WEIGHT, 0);
-    }
-
-    public float getInitialBodyFat() {
-        return prefs.getFloat(KEY_INITIAL_BODY_FAT, 0);
-    }
-
-    public float getInitialWaist() {
-        return prefs.getFloat(KEY_INITIAL_WAIST, 0);
-    }
-
-    public float getInitialHip() {
-        return prefs.getFloat(KEY_INITIAL_HIP, 0);
-    }
-
-    public String getUserId() {
-        return prefs.getString(KEY_USER_ID, null);
-    }
-
-    public String getNickname() {
-        return prefs.getString(KEY_NICKNAME, "健身爱好者");
-    }
-
-    public String getPhone() {
-        return prefs.getString(KEY_PHONE, null);
-    }
-
-    public String getAvatar() {
-        return prefs.getString(KEY_AVATAR, null);
-    }
-
-    public int getHeight() {
-        return prefs.getInt(KEY_HEIGHT, 0);
-    }
-
-    public float getWeight() {
-        return prefs.getFloat(KEY_WEIGHT, 0);
-    }
-
-    public float getBodyFat() {
-        return prefs.getFloat(KEY_BODY_FAT, 0);
-    }
-
-    public float getWaist() {
-        return prefs.getFloat(KEY_WAIST, 0);
-    }
-
-    public float getHip() {
-        return prefs.getFloat(KEY_HIP, 0);
-    }
-
-    public boolean isVip() {
-        return prefs.getBoolean(KEY_IS_VIP, false);
-    }
-
-    public int getLevel() {
-        return prefs.getInt(KEY_LEVEL, 1);
-    }
-
-    public String getVipExpireTime() {
-        return prefs.getString(KEY_VIP_EXPIRE_TIME, null);
-    }
-
-    public String getToken() {
-        return prefs.getString(KEY_TOKEN, null);
-    }
-
-    public boolean isLoggedIn() {
-        return getToken() != null;
+    public void fetchProfile(Runnable onDone) {
+        api.getProfile(new ApiClient.Callback<Map<String, Object>>() {
+            @Override
+            public void onSuccess(Map<String, Object> data) {
+                applyUserData(data);
+                if (onDone != null) onDone.run();
+            }
+            @Override
+            public void onError(String error) {
+                if (onDone != null) onDone.run();
+            }
+        });
     }
 
     public void logout() {
-        prefs.edit().clear().apply();
+        api.clearAuthToken();
+        userId = null;
+        nickname = "健身爱好者";
+        phone = null;
+        avatar = null;
+        height = 0;
+        weight = 0;
+        bodyFat = 0;
+        waist = 0;
+        hip = 0;
+        isVip = false;
+        level = 1;
+        vipExpireTime = null;
+        assessmentCompleted = false;
+        usernameSet = false;
     }
 
-    // Gender
-    public String getGender() {
-        return prefs.getString(KEY_GENDER, null);
+    private void applyUserData(Map<String, Object> user) {
+        if (user == null) return;
+        userId = String.valueOf(((Number) user.get("id")).longValue());
+        nickname = (String) user.getOrDefault("nickname", "健身爱好者");
+        phone = (String) user.get("phone");
+        avatar = (String) user.get("avatar");
+        gender = (String) user.get("gender");
+        fitnessGoal = (String) user.get("fitness_goal");
+        height = ((Number) user.getOrDefault("height", 0)).intValue();
+        weight = ((Number) user.getOrDefault("weight", 0)).floatValue();
+        bodyFat = ((Number) user.getOrDefault("body_fat", 0)).floatValue();
+        waist = ((Number) user.getOrDefault("waist", 0)).floatValue();
+        hip = ((Number) user.getOrDefault("hip", 0)).floatValue();
+        isVip = (Boolean) user.getOrDefault("is_vip", false);
+        level = ((Number) user.getOrDefault("level", 1)).intValue();
+        vipExpireTime = (String) user.get("vip_expire_time");
+        assessmentCompleted = (Boolean) user.getOrDefault("assessment_completed", false) || assessmentCompleted;
+        usernameSet = (Boolean) user.getOrDefault("username_set", false) || usernameSet;
+        workoutReminder = (Boolean) user.getOrDefault("workout_reminder", true);
+        achievementNotification = (Boolean) user.getOrDefault("achievement_notification", true);
     }
 
-    // Fitness Goal
-    public String getFitnessGoal() {
-        return prefs.getString(KEY_FITNESS_GOAL, null);
+    // ==================== Save methods (API-backed) ====================
+
+    public void saveUserInfo(String nickname, String avatar, int height, float weight, boolean isVip, int level) {
+        this.nickname = nickname;
+        this.avatar = avatar;
+        this.height = height;
+        this.weight = weight;
+        this.isVip = isVip;
+        this.level = level;
+        // Async push to server
+        java.util.Map<String, Object> updates = new java.util.HashMap<>();
+        updates.put("nickname", nickname);
+        updates.put("avatar", avatar);
+        updates.put("height", height);
+        updates.put("weight", weight);
+        api.updateProfile(updates, new ApiClient.Callback<Map<String, Object>>() {
+            @Override public void onSuccess(Map<String, Object> data) {}
+            @Override public void onError(String error) {}
+        });
     }
 
-    // Workout Reminder
+    public void saveVipInfo(boolean isVip, String expireTime) {
+        this.isVip = isVip;
+        this.vipExpireTime = expireTime;
+        api.updateVip(isVip, expireTime, null);
+    }
+
+    public void saveBodyData(int height, float weight) {
+        this.height = height;
+        this.weight = weight;
+        api.updateBodyData(height, weight, bodyFat, waist, hip, null);
+    }
+
+    public void saveFullBodyData(int height, float weight, float bodyFat, float waist, float hip) {
+        this.height = height;
+        this.weight = weight;
+        this.bodyFat = bodyFat;
+        this.waist = waist;
+        this.hip = hip;
+        api.updateBodyData(height, weight, bodyFat, waist, hip, null);
+    }
+
+    public void saveInitialBodyData(int height, float weight, float bodyFat, float waist, float hip) {
+        this.initialHeight = height;
+        this.initialWeight = weight;
+        this.initialBodyFat = bodyFat;
+        this.initialWaist = waist;
+        this.initialHip = hip;
+    }
+
+    public void markAssessmentCompleted() {
+        this.assessmentCompleted = true;
+        api.markAssessmentCompleted(null);
+    }
+
+    public void markUsernameSet() {
+        this.usernameSet = true;
+        api.markUsernameSet(null);
+    }
+
+    // ==================== Getters ====================
+
+    public String getUserId() { return userId; }
+    public String getNickname() { return nickname != null ? nickname : "健身爱好者"; }
+    public String getPhone() { return phone; }
+    public String getAvatar() { return avatar; }
+    public String getGender() { return gender; }
+    public String getFitnessGoal() { return fitnessGoal; }
+    public int getHeight() { return height; }
+    public float getWeight() { return weight; }
+    public float getBodyFat() { return bodyFat; }
+    public float getWaist() { return waist; }
+    public float getHip() { return hip; }
+    public boolean isVip() { return isVip; }
+    public int getLevel() { return level; }
+    public String getVipExpireTime() { return vipExpireTime; }
+    public boolean isAssessmentCompleted() { return assessmentCompleted; }
+    public boolean isUsernameSet() { return usernameSet; }
+    public String getToken() { return api.getAuthToken(); }
+    public boolean isLoggedIn() { return api.isLoggedIn(); }
+
+    public int getInitialHeight() { return initialHeight; }
+    public float getInitialWeight() { return initialWeight; }
+    public float getInitialBodyFat() { return initialBodyFat; }
+    public float getInitialWaist() { return initialWaist; }
+    public float getInitialHip() { return initialHip; }
+
+    // ==================== Setters ====================
+
+    public void saveNickname(String nickname) {
+        this.nickname = nickname;
+        java.util.Map<String, Object> updates = new java.util.HashMap<>();
+        updates.put("nickname", nickname);
+        api.updateProfile(updates, new ApiClient.Callback<Map<String, Object>>() {
+            @Override public void onSuccess(Map<String, Object> data) {}
+            @Override public void onError(String error) {}
+        });
+    }
+
+    public void setNickname(String nickname) { this.nickname = nickname; }
+    public void setHeight(int height) { this.height = height; }
+    public void setWeight(float weight) { this.weight = weight; }
+    public void setAvatar(String avatar) { this.avatar = avatar; }
+    public void setGender(String gender) { this.gender = gender; }
+    public void setFitnessGoal(String goal) { this.fitnessGoal = goal; }
+
+    // ==================== Username ====================
+
+    public boolean isNicknameAvailable(String nickname) {
+        // Synchronous check not possible with API; return true and validate on server
+        return true;
+    }
+
+    public void checkNickname(String nickname, ApiClient.Callback<Map<String, Object>> callback) {
+        api.checkNickname(nickname, callback);
+    }
+
+    public void addUsernameToSet(String username) {
+        api.reserveNickname(username, null);
+    }
+
+    public Set<String> getAllUsernames() {
+        return new HashSet<>();
+    }
+
+    // ==================== Settings ====================
+
     public void setWorkoutReminderEnabled(boolean enabled) {
-        prefs.edit().putBoolean(KEY_WORKOUT_REMINDER, enabled).apply();
+        this.workoutReminder = enabled;
+        api.updateSettings(enabled, null, null);
     }
 
-    public boolean isWorkoutReminderEnabled() {
-        return prefs.getBoolean(KEY_WORKOUT_REMINDER, true);
-    }
+    public boolean isWorkoutReminderEnabled() { return workoutReminder; }
 
-    // Achievement Notification
     public void setAchievementNotificationEnabled(boolean enabled) {
-        prefs.edit().putBoolean(KEY_ACHIEVEMENT_NOTIFICATION, enabled).apply();
+        this.achievementNotification = enabled;
+        api.updateSettings(null, enabled, null);
     }
 
-    public boolean isAchievementNotificationEnabled() {
-        return prefs.getBoolean(KEY_ACHIEVEMENT_NOTIFICATION, true);
-    }
+    public boolean isAchievementNotificationEnabled() { return achievementNotification; }
 }

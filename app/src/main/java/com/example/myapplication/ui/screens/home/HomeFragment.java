@@ -76,11 +76,46 @@ public class HomeFragment extends Fragment {
         achievementManager = AchievementManager.getInstance(requireContext());
         aiCalorieService = AICalorieService.getInstance();
 
+        loadDataFromApi();
         setupHeader();
         setupWeekDays();
         setupBodyData();
         setupTrainingTasks();
         setupListeners();
+    }
+
+    private void loadDataFromApi() {
+        if (sessionManager.isLoggedIn()) {
+            sessionManager.fetchProfile(() -> {
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(() -> {
+                        setupHeader();
+                        setupBodyData();
+                    });
+                }
+            });
+        }
+        recordManager.loadRecords(() -> {
+            if (getActivity() != null) {
+                getActivity().runOnUiThread(this::setupBodyData);
+            }
+        });
+        workoutRecordManager.loadRecords(() -> {
+            if (getActivity() != null) {
+                getActivity().runOnUiThread(this::setupTrainingTasks);
+            }
+        });
+        trainingTaskManager.loadTasks(() -> {
+            if (getActivity() != null) {
+                getActivity().runOnUiThread(this::setupTrainingTasks);
+            }
+        });
+        exercisePlanManager.loadPlans(() -> {
+            if (getActivity() != null) {
+                getActivity().runOnUiThread(this::setupWeekDays);
+            }
+        });
+        achievementManager.loadAchievements(null);
     }
 
     private void setupHeader() {
@@ -1190,6 +1225,7 @@ public class HomeFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
+        loadDataFromApi();
         setupBodyData();
         setupTrainingTasks();
         syncTodayExercisePlan();

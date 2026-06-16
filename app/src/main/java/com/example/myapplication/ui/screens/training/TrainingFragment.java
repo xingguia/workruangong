@@ -316,15 +316,18 @@ public class TrainingFragment extends Fragment {
     private void toggleTaskComplete(TrainingTask task) {
         if (task.isCompleted()) {
             task.setStatus(TrainingTask.TaskStatus.NOT_STARTED);
+            task.setCaloriesRecorded(false);
+            trainingTaskManager.updateTask(task);
+            // 取消完成时删除对应的训练记录
+            workoutRecordManager.deleteRecordByTaskId(task.getId());
         } else {
             task.setStatus(TrainingTask.TaskStatus.COMPLETED);
-        }
-        trainingTaskManager.updateTask(task);
-
-        // 如果完成，保存训练记录
-        if (task.getStatus() == TrainingTask.TaskStatus.COMPLETED) {
-            saveWorkoutRecord(task);
-            achievementManager.recordWorkoutCompletion(requireContext());
+            trainingTaskManager.updateTask(task);
+            // 防止重复记录：检查是否已记录过卡路里
+            if (!task.isCaloriesRecorded()) {
+                saveWorkoutRecord(task);
+                achievementManager.recordWorkoutCompletion(requireContext());
+            }
         }
 
         syncTodayExercisePlan();
@@ -358,10 +361,14 @@ public class TrainingFragment extends Fragment {
         record.setSets(task.getSets());
         record.setReps(task.getReps());
         record.setWeight(task.getWeight());
+        record.setTaskId(task.getId());
         if (task.getMuscleGroup() != null) {
             record.setMuscleGroup(task.getMuscleGroup().name());
         }
         workoutRecordManager.addRecord(record);
+        // 标记卡路里已记录，防止重复
+        task.setCaloriesRecorded(true);
+        trainingTaskManager.updateTask(task);
     }
 
     private float calculateCalories(TrainingTask task) {

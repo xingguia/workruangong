@@ -1,30 +1,24 @@
 package com.example.myapplication.util;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 
+import com.example.myapplication.api.ApiClient;
 import com.example.myapplication.model.BodyRecord;
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 
 public class RecordManager {
 
-    private static final String PREF_NAME = "body_records";
-    private static final String KEY_RECORDS = "records";
-
     private static RecordManager instance;
-    private SharedPreferences prefs;
-    private Gson gson;
+    private ApiClient api;
+    private List<BodyRecord> cachedRecords = new ArrayList<>();
+    private boolean loaded = false;
 
     private RecordManager(Context context) {
-        prefs = context.getApplicationContext().getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
-        gson = new Gson();
+        api = ApiClient.getInstance(context.getApplicationContext());
     }
 
     public static synchronized RecordManager getInstance(Context context) {
@@ -34,43 +28,75 @@ public class RecordManager {
         return instance;
     }
 
+    // ==================== Async load ====================
+
+    public void loadRecords(Runnable onDone) {
+        api.getBodyRecords(new ApiClient.Callback<List<Map<String, Object>>>() {
+            @Override
+            public void onSuccess(List<Map<String, Object>> data) {
+                cachedRecords.clear();
+                if (data != null) {
+                    for (Map<String, Object> item : data) {
+                        cachedRecords.add(mapToBodyRecord(item));
+                    }
+                }
+                loaded = true;
+                if (onDone != null) onDone.run();
+            }
+            @Override
+            public void onError(String error) {
+                loaded = true;
+                if (onDone != null) onDone.run();
+            }
+        });
+    }
+
+    private BodyRecord mapToBodyRecord(Map<String, Object> item) {
+        BodyRecord record = new BodyRecord();
+        record.setId(((Number) item.get("id")).longValue());
+        record.setTimestamp(((Number) item.get("timestamp")).longValue());
+        record.setHeight(((Number) item.getOrDefault("height", 0)).intValue());
+        record.setWeight(((Number) item.getOrDefault("weight", 0)).floatValue());
+        record.setBodyFat(((Number) item.getOrDefault("body_fat", 0)).floatValue());
+        record.setWaist(((Number) item.getOrDefault("waist", 0)).floatValue());
+        record.setHip(((Number) item.getOrDefault("hip", 0)).floatValue());
+        return record;
+    }
+
+    // ==================== CRUD ====================
+
     public void saveRecord(BodyRecord record) {
-        List<BodyRecord> records = getRecords();
-        record.setId(System.currentTimeMillis());
-        records.add(record);
-        saveRecords(records);
+        record.setTimestamp(System.currentTimeMillis());
+        cachedRecords.add(0, record);
+        api.createBodyRecord(record.getHeight(), record.getWeight(), record.getBodyFat(),
+                record.getWaist(), record.getHip(), new ApiClient.Callback<Map<String, Object>>() {
+            @Override
+            public void onSuccess(Map<String, Object> data) {
+                record.setId(((Number) data.get("id")).longValue());
+                record.setTimestamp(((Number) data.get("timestamp")).longValue());
+            }
+            @Override
+            public void onError(String error) { }
+        });
     }
 
     public void updateRecord(BodyRecord record) {
-        List<BodyRecord> records = getRecords();
-        for (int i = 0; i < records.size(); i++) {
-            if (records.get(i).getId() == record.getId()) {
-                records.set(i, record);
+        for (int i = 0; i < cachedRecords.size(); i++) {
+            if (cachedRecords.get(i).getId() == record.getId()) {
+                cachedRecords.set(i, record);
                 break;
             }
         }
-        saveRecords(records);
     }
 
     public void deleteRecord(long recordId) {
-        List<BodyRecord> records = getRecords();
-        records.removeIf(record -> record.getId() == recordId);
-        saveRecords(records);
+        cachedRecords.removeIf(record -> record.getId() == recordId);
+        api.deleteBodyRecord(recordId, null);
     }
 
     public List<BodyRecord> getRecords() {
-        String json = prefs.getString(KEY_RECORDS, null);
-        if (json == null) {
-            return new ArrayList<>();
-        }
-        Type type = new TypeToken<ArrayList<BodyRecord>>() {}.getType();
-        List<BodyRecord> records = gson.fromJson(json, type);
-        if (records == null) {
-            return new ArrayList<>();
-        }
-        // Sort by timestamp descending (newest first)
-        Collections.sort(records, (r1, r2) -> Long.compare(r2.getTimestamp(), r1.getTimestamp()));
-        return records;
+        if (!loaded) return new ArrayList<>();
+        return new ArrayList<>(cachedRecords);
     }
 
     public List<BodyRecord> getRecordsByPeriod(int days) {
@@ -87,18 +113,13 @@ public class RecordManager {
 
     public List<BodyRecord> getLatestRecord() {
         List<BodyRecord> records = getRecords();
-        if (records.isEmpty()) {
-            return new ArrayList<>();
-        }
+        if (records.isEmpty()) return new ArrayList<>();
         return Collections.singletonList(records.get(0));
     }
 
-    private void saveRecords(List<BodyRecord> records) {
-        String json = gson.toJson(records);
-        prefs.edit().putString(KEY_RECORDS, json).apply();
+    public int getRecordCount() {
+        return cachedRecords.size();
     }
 
-    public int getRecordCount() {
-        return getRecords().size();
-    }
+    public boolean isLoaded() { return loaded; }
 }
