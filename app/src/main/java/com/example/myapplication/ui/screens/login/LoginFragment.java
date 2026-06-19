@@ -42,6 +42,8 @@ public class LoginFragment extends Fragment {
         binding.loginBtn.setOnClickListener(v -> handleLogin());
         binding.registerLink.setOnClickListener(v ->
                 navController.navigate(R.id.action_login_to_register));
+        binding.forgotPasswordLink.setOnClickListener(v ->
+                Toast.makeText(requireContext(), "请联系客服重置密码", Toast.LENGTH_SHORT).show());
 
         binding.phoneInput.addTextChangedListener(new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}

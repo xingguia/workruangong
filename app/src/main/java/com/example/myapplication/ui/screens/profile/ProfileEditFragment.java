@@ -470,7 +470,7 @@ public class ProfileEditFragment extends Fragment {
     }
 
     private void showGoalDialog() {
-        String[] goals = {"增肌", "减脂", "塑形", "保持健康", "未设置"};
+        String[] goals = {"减脂", "增肌", "塑形", "体态", "未设置"};
         int currentIndex = 4;
         String currentGoal = sessionManager.getFitnessGoal();
         if (currentGoal != null) {

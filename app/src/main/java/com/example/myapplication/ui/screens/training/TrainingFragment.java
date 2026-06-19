@@ -353,11 +353,13 @@ public class TrainingFragment extends Fragment {
 
     private void saveWorkoutRecord(TrainingTask task) {
         float calories = calculateCalories(task);
+        int duration = task.getSets() > 0 && task.getReps() > 0 ? task.getSets() * task.getReps() * 3 / 60 + 1 : 0;
         WorkoutRecord record = new WorkoutRecord();
         record.setExerciseName(task.getName());
         record.setDate(System.currentTimeMillis());
-        record.setDuration(0);
+        record.setDuration(duration);
         record.setCalories(calories);
+        record.setCaloriesBurned(calories);
         record.setSets(task.getSets());
         record.setReps(task.getReps());
         record.setWeight(task.getWeight());
@@ -520,10 +522,14 @@ public class TrainingFragment extends Fragment {
                 // 创建训练任务
                 TrainingTask task = new TrainingTask();
                 task.setName(selectedExercise[0].name);
-                task.setSets(parseInt(setsInput.getText().toString()));
-                task.setReps(parseInt(repsInput.getText().toString()));
+                int sets = parseInt(setsInput.getText().toString());
+                int reps = parseInt(repsInput.getText().toString());
+                task.setSets(sets);
+                task.setReps(reps);
                 String weightStr = weightInput.getText().toString();
                 task.setWeight(weightStr.isEmpty() ? 0 : Float.parseFloat(weightStr));
+                // 设置预估时长
+                task.setDuration(sets > 0 && reps > 0 ? sets * reps * 3 / 60 + 1 : 0);
 
                 // 设置肌群
                 if (selectedGroup[0] != null) {
@@ -741,10 +747,24 @@ public class TrainingFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
+        // 立即显示缓存数据
         syncTodayExercisePlan();
         setupWeekCalendar();
         updateTrainingDetail();
         updateWeekProgress();
+        // 后台静默刷新
+        trainingTaskManager.loadTasks(() -> {
+            if (getActivity() != null) {
+                getActivity().runOnUiThread(() -> {
+                    if (isAdded() && binding != null) {
+                        syncTodayExercisePlan();
+                        setupWeekCalendar();
+                        updateTrainingDetail();
+                        updateWeekProgress();
+                    }
+                });
+            }
+        });
     }
 
     @Override

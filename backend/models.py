@@ -175,6 +175,35 @@ def init_db():
     """)
 
     conn.commit()
+
+    # Migration: ensure is_active column exists for users table
+    try:
+        cursor.execute("ALTER TABLE users ADD COLUMN is_active TINYINT(1) DEFAULT 1")
+        conn.commit()
+        print("Added is_active column to users table")
+    except Exception:
+        pass  # Column already exists
+
+    # Ensure all existing users have is_active = 1
+    try:
+        cursor.execute("UPDATE users SET is_active = 1 WHERE is_active IS NULL")
+        conn.commit()
+    except Exception:
+        pass
+
+    # Migration: translate old fitness_goal values to unified Chinese
+    try:
+        goal_map = {
+            'fat_loss': '减脂', 'muscle_gain': '增肌', 'shaping': '塑形',
+            'posture': '体态', 'fitness': '增肌', 'rehab': '塑形',
+            '增强体质': '增肌', '康复训练': '塑形',
+        }
+        for old, new in goal_map.items():
+            cursor.execute("UPDATE users SET fitness_goal=%s WHERE fitness_goal=%s", (new, old))
+        conn.commit()
+    except Exception:
+        pass
+
     cursor.close()
     conn.close()
 

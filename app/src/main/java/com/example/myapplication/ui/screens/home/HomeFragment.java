@@ -74,6 +74,17 @@ public class HomeFragment extends Fragment {
         recordManager = RecordManager.getInstance(requireContext());
         workoutRecordManager = WorkoutRecordManager.getInstance(requireContext());
         achievementManager = AchievementManager.getInstance(requireContext());
+        achievementManager.setUnlockListener(achievement -> {
+            if (getActivity() != null) {
+                getActivity().runOnUiThread(() -> {
+                    if (isAdded() && binding != null) {
+                        android.widget.Toast.makeText(requireContext(),
+                                "🎉 成就解锁：" + achievement.getDisplayName(),
+                                android.widget.Toast.LENGTH_LONG).show();
+                    }
+                });
+            }
+        });
         aiCalorieService = AICalorieService.getInstance();
 
         loadDataFromApi();
@@ -119,6 +130,7 @@ public class HomeFragment extends Fragment {
     }
 
     private void setupHeader() {
+        if (binding == null) return;
         Calendar calendar = Calendar.getInstance();
         int hour = calendar.get(Calendar.HOUR_OF_DAY);
         String greeting;
@@ -145,6 +157,7 @@ public class HomeFragment extends Fragment {
     }
 
     private void setupWeekDays() {
+        if (binding == null) return;
         binding.weekDaysRow.removeAllViews();
 
         String[] weekdays = {"周一", "周二", "周三", "周四", "周五", "周六", "周日"};
@@ -345,6 +358,7 @@ public class HomeFragment extends Fragment {
     }
 
     private void setupBodyData() {
+        if (binding == null) return;
         int height = sessionManager.getHeight();
         int initialHeight = sessionManager.getInitialHeight();
         float weight = sessionManager.getWeight();
@@ -385,6 +399,7 @@ public class HomeFragment extends Fragment {
     }
 
     private void setupTrainingTasks() {
+        if (binding == null) return;
         binding.tasksContainer.removeAllViews();
 
         List<TrainingTask> tasks = trainingTaskManager.getTasksForToday();
@@ -440,7 +455,8 @@ public class HomeFragment extends Fragment {
             if (isChecked && !task.isCaloriesRecorded()) {
                 task.setStatus(TrainingTask.TaskStatus.COMPLETED);
                 nameView.setTextColor(Color.parseColor("#2ED573"));
-                calculateAndSaveCalories(task);
+                // 立即用本地估算保存记录，无需等待AI
+                saveWorkoutRecordImmediately(task);
                 achievementManager.recordWorkoutCompletion(requireContext());
             } else if (!isChecked) {
                 task.setStatus(TrainingTask.TaskStatus.NOT_STARTED);
@@ -613,6 +629,26 @@ public class HomeFragment extends Fragment {
     }
 
     /**
+     * 立即保存训练记录（本地估算卡路里，不等待AI）
+     */
+    private void saveWorkoutRecordImmediately(TrainingTask task) {
+        // 本地估算卡路里
+        float calories;
+        if (task.isTreadmillExercise() && task.getTreadmillSpeed() > 0) {
+            float met = calculateMET(task.getTreadmillSpeed(), task.getTreadmillIncline());
+            float userWeight = sessionManager.getWeight() > 0 ? sessionManager.getWeight() : 70f;
+            calories = met * userWeight * (task.getDuration() / 60.0f);
+        } else {
+            calories = calculateCaloriesFromDatabase(task);
+            float userWeight = sessionManager.getWeight() > 0 ? sessionManager.getWeight() : 70f;
+            if (calories > 0 && userWeight > 0) {
+                calories *= userWeight / 70.0f;
+            }
+        }
+        saveWorkoutRecord(task, calories);
+    }
+
+    /**
      * 保存训练记录
      */
     private void saveWorkoutRecord(TrainingTask task, float calories) {
@@ -620,12 +656,16 @@ public class HomeFragment extends Fragment {
         task.setCaloriesRecorded(true);
         trainingTaskManager.updateTask(task);
 
+        // Calculate duration from sets and reps
+        int duration = task.getSets() > 0 && task.getReps() > 0 ? task.getSets() * task.getReps() * 3 / 60 + 1 : 0;
+
         // Save workout record with task ID for deduplication
         WorkoutRecord record = new WorkoutRecord(
                 task.getName(),
-                task.getDuration(),
+                duration,
                 calories
         );
+        record.setCalories(calories);
         record.setTaskId(task.getId());
         record.setReps(task.getReps() * task.getSets());
         record.setSets(task.getSets());
@@ -928,6 +968,10 @@ public class HomeFragment extends Fragment {
                     task.setMuscleGroup(TrainingTask.MuscleGroup.valueOf(selectedGroup[0].name()));
                 }
 
+                // 设置时长
+                int duration = task.getSets() > 0 && task.getReps() > 0 ? task.getSets() * task.getReps() * 3 / 60 + 1 : 0;
+                task.setDuration(duration);
+
                 trainingTaskManager.addTask(task);
                 dialog.dismiss();
                 setupTrainingTasks();
@@ -1121,7 +1165,7 @@ public class HomeFragment extends Fragment {
                 }
             } else {
                 instructionsView.setText("【动作要点】\n请参考标准健身动作教程\n或咨询教练指导");
-                tipsView.setText("动作名称：" + task.getName() + "\n所需器材：待定\n请员工制作对应图片");
+                tipsView.setText("动作名称：" + task.getName() + "\n所需器材：请参考标准健身教程");
                 showNoImage(imageView, noImageHint);
             }
 
@@ -1227,7 +1271,9 @@ public class HomeFragment extends Fragment {
         super.onResume();
         loadDataFromApi();
         setupBodyData();
-        setupTrainingTasks();
+        if (binding != null) {
+            setupTrainingTasks();
+        }
         syncTodayExercisePlan();
     }
 

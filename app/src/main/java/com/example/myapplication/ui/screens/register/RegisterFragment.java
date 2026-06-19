@@ -60,6 +60,12 @@ public class RegisterFragment extends Fragment {
 
         binding.agreeCheckbox.setOnCheckedChangeListener((buttonView, isChecked) -> validateInputs());
         binding.registerBtn.setOnClickListener(v -> handleRegister());
+
+        binding.confirmPasswordInput.addTextChangedListener(new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
+            @Override public void afterTextChanged(Editable s) { validateInputs(); }
+        });
     }
 
     private void updatePasswordStrength(String password) {
@@ -99,13 +105,15 @@ public class RegisterFragment extends Fragment {
     private void validateInputs() {
         String phone = binding.phoneInput.getText() != null ? binding.phoneInput.getText().toString() : "";
         String password = binding.passwordInput.getText() != null ? binding.passwordInput.getText().toString() : "";
+        String confirmPassword = binding.confirmPasswordInput.getText() != null ? binding.confirmPasswordInput.getText().toString() : "";
         boolean agreed = binding.agreeCheckbox.isChecked();
-        binding.registerBtn.setEnabled(phone.length() == 11 && password.length() >= 6 && agreed);
+        binding.registerBtn.setEnabled(phone.length() == 11 && password.length() >= 6 && password.equals(confirmPassword) && agreed);
     }
 
     private void handleRegister() {
         String phone = binding.phoneInput.getText() != null ? binding.phoneInput.getText().toString() : "";
         String password = binding.passwordInput.getText() != null ? binding.passwordInput.getText().toString() : "";
+        String confirmPassword = binding.confirmPasswordInput.getText() != null ? binding.confirmPasswordInput.getText().toString() : "";
 
         if (phone.length() != 11) {
             Toast.makeText(requireContext(), R.string.error_invalid_phone, Toast.LENGTH_SHORT).show();
@@ -113,6 +121,10 @@ public class RegisterFragment extends Fragment {
         }
         if (password.length() < 6) {
             Toast.makeText(requireContext(), R.string.error_short_password, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (!password.equals(confirmPassword)) {
+            Toast.makeText(requireContext(), R.string.error_password_mismatch, Toast.LENGTH_SHORT).show();
             return;
         }
         if (!binding.agreeCheckbox.isChecked()) {

@@ -246,7 +246,8 @@ def admin_users(page: int = 1, page_size: int = 20, keyword: str = "",
         offset = (page - 1) * page_size
         cur.execute(
             f"SELECT u.id, u.phone, u.nickname, u.fitness_goal, u.is_vip, u.created_at, "
-            f"(SELECT MAX(timestamp) FROM workout_records WHERE user_id=u.id) as last_active "
+            f"(SELECT MAX(timestamp) FROM workout_records WHERE user_id=u.id) as last_active, "
+            f"COALESCE(u.is_active, 1) as is_active "
             f"FROM users u WHERE {where} ORDER BY u.created_at DESC LIMIT %s OFFSET %s",
             params + [page_size, offset]
         )
@@ -263,6 +264,7 @@ def admin_users(page: int = 1, page_size: int = 20, keyword: str = "",
                 "is_vip": bool(row[4]),
                 "created_at": str(row[5]) if row[5] else "",
                 "last_active": str(datetime.fromtimestamp(row[6] / 1000)) if row[6] else "无记录",
+                "is_active": bool(row[7]),
             })
 
         return {"total": total, "page": page, "page_size": page_size, "list": users}
@@ -612,10 +614,19 @@ def admin_delete(admin_id: int, admin: dict = Depends(get_admin)):
 # ---- Exercise Management ----
 
 @router.get("/exercises")
-def exercise_list(admin: dict = Depends(get_admin)):
+def exercise_list(keyword: str = "", muscle_group: str = "", admin: dict = Depends(get_admin)):
     with get_db() as conn:
         cur = conn.cursor()
-        cur.execute("SELECT id, name, muscle_group, exercise_type, cal_per_rep, description, created_at FROM exercises ORDER BY created_at DESC")
+        conditions = []
+        params = []
+        if keyword:
+            conditions.append("(name LIKE %s OR muscle_group LIKE %s)")
+            params.extend([f"%{keyword}%", f"%{keyword}%"])
+        if muscle_group:
+            conditions.append("muscle_group = %s")
+            params.append(muscle_group)
+        where = ("WHERE " + " AND ".join(conditions)) if conditions else ""
+        cur.execute(f"SELECT id, name, muscle_group, exercise_type, cal_per_rep, description, created_at FROM exercises {where} ORDER BY muscle_group, name", params)
         exercises = []
         for row in cur.fetchall():
             exercises.append({
@@ -777,15 +788,14 @@ def announcement_delete(ann_id: int, admin: dict = Depends(get_admin)):
 def statistics_equipment(admin: dict = Depends(get_admin)):
     with get_db() as conn:
         cur = conn.cursor()
-        # Try to get equipment data from user profiles or a dedicated table
-        equipment_data = []
+        goal_data = []
         try:
-            cur.execute("SELECT fitness_goal, COUNT(*) FROM users WHERE fitness_goal IS NOT NULL AND fitness_goal != '' GROUP BY fitness_goal")
+            cur.execute("SELECT COALESCE(fitness_goal, '未设置') as goal, COUNT(*) FROM users GROUP BY goal")
             for row in cur.fetchall():
-                equipment_data.append({"name": row[0], "value": row[1]})
+                goal_data.append({"name": row[0], "value": row[1]})
         except Exception:
             pass
-        return {"equipment_data": equipment_data}
+        return {"equipment_data": goal_data}
 
 
 @router.get("/statistics/retention")
@@ -822,15 +832,17 @@ def statistics_vip(admin: dict = Depends(get_admin)):
         cur = conn.cursor()
         vip_trend = []
         try:
-            # VIP signup trend (last 30 days)
+            # Count new VIP activations per day (last 30 days)
             now = datetime.utcnow()
             for i in range(29, -1, -1):
                 day = now - timedelta(days=i)
                 day_start = day.replace(hour=0, minute=0, second=0, microsecond=0)
                 day_end = day.replace(hour=23, minute=59, second=59, microsecond=999999)
+                # Count users who became VIP on this day
                 cur.execute(
-                    "SELECT COUNT(*) FROM users WHERE is_vip=1 AND vip_expire_time >= %s AND created_at <= %s",
-                    (day_start.strftime("%Y-%m-%d %H:%M:%S"), day_end.strftime("%Y-%m-%d %H:%M:%S"))
+                    "SELECT COUNT(*) FROM users WHERE is_vip=1 AND vip_expire_time IS NOT NULL "
+                    "AND DATE(vip_expire_time) >= %s AND created_at <= %s AND created_at >= %s",
+                    (day_start.strftime("%Y-%m-%d"), day_end.strftime("%Y-%m-%d %H:%M:%S"), day_start.strftime("%Y-%m-%d %H:%M:%S"))
                 )
                 vip_trend.append({
                     "date": day_start.strftime("%m/%d"),

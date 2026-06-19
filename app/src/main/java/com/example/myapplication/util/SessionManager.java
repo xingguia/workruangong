@@ -125,6 +125,12 @@ public class SessionManager {
         vipExpireTime = null;
         assessmentCompleted = false;
         usernameSet = false;
+
+        // 清除其他管理器的缓存数据
+        AchievementManager.resetInstance();
+        WorkoutRecordManager.getInstance(appContext).clearAll();
+        TrainingTaskManager.getInstance(appContext).clearAll();
+        ExercisePlanManager.getInstance(appContext).clearAll();
     }
 
     private void applyUserData(Map<String, Object> user) {

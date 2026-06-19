@@ -69,7 +69,24 @@ public class WorkoutHistoryFragment extends Fragment {
     }
 
     private void loadData() {
-        // Get stats from WorkoutRecordManager
+        // 立即显示本地缓存数据（完成训练时已同步到缓存）
+        refreshUI();
+
+        // 后台静默刷新服务器数据
+        workoutRecordManager.loadRecords(() -> {
+            if (getActivity() != null) {
+                getActivity().runOnUiThread(() -> {
+                    if (isAdded() && binding != null) {
+                        refreshUI();
+                    }
+                });
+            }
+        });
+    }
+
+    private void refreshUI() {
+        if (binding == null || !isAdded()) return;
+
         int totalWorkouts = workoutRecordManager.getTotalWorkouts();
         float totalCalories = workoutRecordManager.getTotalCalories();
         int totalMinutes = workoutRecordManager.getTotalMinutes();
@@ -79,10 +96,8 @@ public class WorkoutHistoryFragment extends Fragment {
         binding.totalMinutesValue.setText(String.valueOf(totalMinutes));
         binding.totalDaysValue.setText(String.valueOf(consecutiveDays));
 
-        // Load records from database
         List<WorkoutRecord> records = workoutRecordManager.getAllRecords();
 
-        // Check if empty
         if (records.isEmpty()) {
             binding.emptyState.setVisibility(View.VISIBLE);
             binding.recordsContainer.setVisibility(View.GONE);

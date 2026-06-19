@@ -10,6 +10,7 @@ import androidx.navigation.NavController;
 import androidx.navigation.fragment.NavHostFragment;
 
 import com.example.myapplication.databinding.ActivityMainBinding;
+import com.example.myapplication.util.SessionManager;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import java.util.Set;
@@ -26,6 +27,16 @@ public class MainActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
 
         setupNavigation();
+
+        // 已登录用户自动跳转到首页
+        SessionManager sessionManager = SessionManager.getInstance(this);
+        if (sessionManager.isLoggedIn()) {
+            NavHostFragment navHostFragment = (NavHostFragment) getSupportFragmentManager()
+                    .findFragmentById(R.id.nav_host_fragment_activity_main);
+            if (navHostFragment != null) {
+                navHostFragment.getNavController().navigate(R.id.navigation_home);
+            }
+        }
     }
 
     private void setupNavigation() {

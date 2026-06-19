@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>燃动时刻 - 管理后台</title>
+<link rel="preload" href="/admin/static/echarts.min.js" as="script">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
@@ -372,29 +373,39 @@ let token = '';
 let echartsReady = false;
 let echartsLoading = false;
 
+let echartsLoadPromise = null;
+
 function loadEcharts() {
-  return new Promise((resolve) => {
-    if (window.echarts) { echartsReady = true; resolve(); return; }
-    if (echartsLoading) {
-      // Wait for existing load to finish
-      const check = setInterval(() => { if (echartsReady) { clearInterval(check); resolve(); } }, 100);
-      return;
-    }
-    echartsLoading = true;
-    const urls = [
-      'https://cdn.bootcdn.net/ajax/libs/echarts/5.5.0/echarts.min.js',
-      'https://unpkg.com/echarts@5.5.0/dist/echarts.min.js',
-      'https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js'
-    ];
-    (function tryLoad(idx) {
-      if (idx >= urls.length) { echartsLoading = false; resolve(); return; }
-      const script = document.createElement('script');
-      script.src = urls[idx];
-      script.onload = () => { echartsReady = true; echartsLoading = false; resolve(); };
-      script.onerror = () => tryLoad(idx + 1);
-      document.head.appendChild(script);
-    })(0);
+  if (window.echarts) return Promise.resolve();
+  if (echartsLoadPromise) return echartsLoadPromise;
+  echartsLoadPromise = new Promise((resolve) => {
+    const script = document.createElement('script');
+    script.src = '/admin/static/echarts.min.js';
+    script.onload = () => { echartsReady = true; resolve(); };
+    script.onerror = () => { echartsReady = false; resolve(); };
+    document.head.appendChild(script);
   });
+  return echartsLoadPromise;
+}
+
+function renderPagination(containerId, totalPages, currentPage, loadFn) {
+  const el = document.getElementById(containerId);
+  if (!el || totalPages <= 1) { if(el) el.innerHTML = ''; return; }
+  let phtml = '';
+  const pages = [];
+  pages.push(1);
+  if (currentPage > 3) pages.push('...');
+  for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) pages.push(i);
+  if (currentPage < totalPages - 2) pages.push('...');
+  if (totalPages > 1) pages.push(totalPages);
+  pages.forEach(p => {
+    if (p === '...') {
+      phtml += '<span style="padding:4px 8px;color:var(--text-secondary)">…</span>';
+    } else {
+      phtml += `<button class="${p===currentPage?'active':''}" onclick="${loadFn}(${p})">${p}</button>`;
+    }
+  });
+  el.innerHTML = `<span>共${totalPages}页</span>` + phtml;
 }
 
 function api(path, opts={}) {
@@ -531,6 +542,9 @@ function navigate(page) {
   document.getElementById('pageTitle').textContent = titles[page]||'';
 
   const container = document.getElementById('pageContent');
+  // Dispose charts when leaving dashboard
+  if (trendChartInstance && !trendChartInstance.isDisposed()) { trendChartInstance.dispose(); trendChartInstance = null; }
+  if (activeChartInstance && !activeChartInstance.isDisposed()) { activeChartInstance.dispose(); activeChartInstance = null; }
   switch(page) {
     case 'dashboard': container.innerHTML = renderDashboard(); loadDashboard(); break;
     case 'users': container.innerHTML = renderUsers(); loadUsers(); break;
@@ -601,32 +615,52 @@ function renderDashboard() {
 }
 
 let trendPeriod = 30;
+let dashboardData = null;
+let trendChartInstance = null;
+let activeChartInstance = null;
 
 function switchTrendTab(period, btn) {
   trendPeriod = period;
   document.querySelectorAll('.chart-tab').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  loadDashboard();
+  if (dashboardData && trendChartInstance) updateTrendChart(dashboardData);
+}
+
+function updateTrendChart(data) {
+  let trendData = data.user_trend || [];
+  if(trendPeriod === 7 && trendData.length > 7) trendData = trendData.slice(-7);
+  else if(trendPeriod === 90) { /* show all 30 available */ }
+  else trendData = trendData.slice(-30);
+  const activeMap = {};
+  (data.active_trend||[]).forEach(d => { activeMap[d.date] = d.active_users; });
+  trendChartInstance.setOption({
+    xAxis:{type:'category',data:trendData.map(d=>d.date)},
+    series:[
+      {name:'新注册',data:trendData.map(d=>d.new_users)},
+      {name:'活跃用户',data:trendData.map(d=>(activeMap[d.date]!==undefined?activeMap[d.date]:0))}
+    ]
+  });
 }
 
 function loadDashboard() {
   api('/dashboard').then(async data => {
+    dashboardData = data;
     // Stats
-    document.getElementById('statsRow').innerHTML = `
+    const statsRow = document.getElementById('statsRow');
+    if (!statsRow) return; // page navigated away
+    statsRow.innerHTML = `
       <div class="stat-card">
         <div class="stat-icon blue">👤</div>
         <div>
           <div class="stat-value">${data.total_users.toLocaleString()}</div>
           <div class="stat-label">总用户数</div>
-          <div class="stat-change up">↑12% 较上月</div>
         </div>
       </div>
       <div class="stat-card">
         <div class="stat-icon green">⚡</div>
         <div>
-          <div class="stat-value">${(data.user_trend && data.user_trend.length>6 ? data.user_trend.slice(-7).reduce((s,d)=>s+d.new_users,0) : data.today_new).toLocaleString()}</div>
+          <div class="stat-value">${(data.active_trend||[]).reduce((s,d)=>s+d.active_users,0).toLocaleString()}</div>
           <div class="stat-label">活跃用户(7日)</div>
-          <div class="stat-change up">↑8% 较上月</div>
         </div>
       </div>
       <div class="stat-card">
@@ -634,7 +668,6 @@ function loadDashboard() {
         <div>
           <div class="stat-value">${data.vip_users.toLocaleString()}</div>
           <div class="stat-label">付费会员</div>
-          <div class="stat-change up">↑23% 较上月</div>
         </div>
       </div>
       <div class="stat-card">
@@ -642,35 +675,37 @@ function loadDashboard() {
         <div>
           <div class="stat-value">${data.week_new.toLocaleString()}</div>
           <div class="stat-label">本周新增</div>
-          <div class="stat-change up">↑18% 较上月</div>
         </div>
       </div>`;
 
     // Trend chart with period filter
     await loadEcharts();
     if (!window.echarts) {
-      document.getElementById('trendChart').innerHTML = '<div class="chart-empty"><div class="icon">📊</div>图表库加载失败<div class="hint">请检查网络连接后刷新页面</div></div>';
-      document.getElementById('activeChart').innerHTML = '<div class="chart-empty"><div class="icon">📊</div>图表库加载失败<div class="hint">请检查网络连接后刷新页面</div></div>';
-      // Continue to render tables even without charts
-      document.getElementById('recentUsersTable').innerHTML = renderUserTable((data.recent_users||[]).map(u => ({
+      const trendEl = document.getElementById('trendChart');
+      const activeEl = document.getElementById('activeChart');
+      if (trendEl) trendEl.innerHTML = '<div class="chart-empty"><div class="icon">📊</div>图表库加载失败<div class="hint">请检查网络连接后刷新页面</div></div>';
+      if (activeEl) activeEl.innerHTML = '<div class="chart-empty"><div class="icon">📊</div>图表库加载失败<div class="hint">请检查网络连接后刷新页面</div></div>';
+      const recentEl = document.getElementById('recentUsersTable');
+      const latestEl = document.getElementById('latestRecordsTable');
+      if (recentEl) recentEl.innerHTML = renderUserTable((data.recent_users||[]).map(u => ({
         ...u, status: u.is_vip ? 'VIP会员' : '未激活'
       })));
-      document.getElementById('latestRecordsTable').innerHTML = renderLatestRecordsTable(data.latest_records||[]);
+      if (latestEl) latestEl.innerHTML = renderLatestRecordsTable(data.latest_records||[]);
       return;
     }
-    let trendData = data.user_trend || [];
-    if(trendPeriod === 7 && trendData.length > 7) trendData = trendData.slice(-7);
-    else if(trendPeriod === 90) { /* show all 30 available */ }
-    else trendData = trendData.slice(-30);
-
-    // Build date-indexed active users map for proper alignment
-    const activeMap = {};
-    (data.active_trend||[]).forEach(d => { activeMap[d.date] = d.active_users; });
     try {
       const trendChartEl = document.getElementById('trendChart');
       if(!trendChartEl) return;
-      const trendChart = echarts.init(trendChartEl);
-      trendChart.setOption({
+      if (!trendChartInstance || trendChartInstance.isDisposed()) {
+        trendChartInstance = echarts.init(trendChartEl);
+      }
+      let trendData = data.user_trend || [];
+      if(trendPeriod === 7 && trendData.length > 7) trendData = trendData.slice(-7);
+      else if(trendPeriod === 90) { /* show all 30 available */ }
+      else trendData = trendData.slice(-30);
+      const activeMap = {};
+      (data.active_trend||[]).forEach(d => { activeMap[d.date] = d.active_users; });
+      trendChartInstance.setOption({
         tooltip:{trigger:'axis'},
         legend:{data:['新注册','活跃用户'],bottom:0},
         grid:{left:40,right:20,top:10,bottom:30},
@@ -688,13 +723,14 @@ function loadDashboard() {
         ]
       });
 
-      // Daily active users bar chart
       const activeChartEl = document.getElementById('activeChart');
       if(!activeChartEl) return;
-      const activeChart = echarts.init(activeChartEl);
+      if (!activeChartInstance || activeChartInstance.isDisposed()) {
+        activeChartInstance = echarts.init(activeChartEl);
+      }
       const activeTrend = data.active_trend || [];
       const activeData = activeTrend.slice(-7);
-      activeChart.setOption({
+      activeChartInstance.setOption({
         tooltip:{trigger:'axis'},
         grid:{left:40,right:20,top:10,bottom:30},
         xAxis:{type:'category',data:activeData.map(d=>d.date),axisLabel:{fontSize:11}},
@@ -710,17 +746,18 @@ function loadDashboard() {
           barMaxWidth:32
         }]
       });
-      // Resize charts to fill container
-      setTimeout(() => { trendChart.resize(); activeChart.resize(); }, 100);
+      setTimeout(() => { trendChartInstance.resize(); activeChartInstance.resize(); }, 100);
     } catch(e) {
       console.error('Chart render error:', e);
     }
 
     // Tables
-    document.getElementById('recentUsersTable').innerHTML = renderUserTable((data.recent_users||[]).map(u => ({
+    const recentEl = document.getElementById('recentUsersTable');
+    const latestEl = document.getElementById('latestRecordsTable');
+    if (recentEl) recentEl.innerHTML = renderUserTable((data.recent_users||[]).map(u => ({
       ...u, status: u.is_vip ? 'VIP会员' : '未激活'
     })));
-    document.getElementById('latestRecordsTable').innerHTML = renderLatestRecordsTable(data.latest_records||[]);
+    if (latestEl) latestEl.innerHTML = renderLatestRecordsTable(data.latest_records||[]);
   }).catch(e => toast('加载仪表盘失败: '+e.message, 'error'));
 }
 
@@ -786,30 +823,27 @@ function loadUsers(page=1) {
   const vip = document.getElementById('userVipFilter')?.value||'';
   api('/users',{params:{page,page_size:15,keyword:keyword,vip_status:vip}}).then(data => {
     const rows = (data.list||[]).map(u => `
-      <tr>
+      <tr${u.is_active===false?' style="opacity:0.5"':''}>
         <td>${u.id}</td>
         <td><strong style="cursor:pointer;color:var(--primary)" onclick="showUserDetail(${u.id})">${u.nickname||''}</strong></td>
         <td>${u.phone_masked||u.phone||''}</td>
         <td>${u.created_at||''}</td>
         <td><span class="badge ${u.is_vip?'badge-vip':'badge-warning'}">${u.is_vip?'VIP':'普通'}</span></td>
+        <td>${u.is_active===false?'<span class="badge badge-danger">已封禁</span>':''}</td>
         <td>${u.fitness_goal||''}</td>
         <td>${u.last_active||''}</td>
         <td>
           <button class="btn btn-outline btn-sm" onclick="showUserDetail(${u.id})">详情</button>
+          ${u.is_active===false?`<button class="btn btn-outline btn-sm" onclick="toggleBan(${u.id},false)">解封</button>`:''}
         </td>
       </tr>
     `).join('');
     document.getElementById('usersTable').innerHTML = `
-      <thead><tr><th>ID</th><th>用户名</th><th>手机号</th><th>注册时间</th><th>会员</th><th>健身目标</th><th>最后活跃</th><th>操作</th></tr></thead>
-      <tbody>${rows||'<tr><td colspan="8" class="empty-state">暂无数据</td></tr>'}</tbody>`;
+      <thead><tr><th>ID</th><th>用户名</th><th>手机号</th><th>注册时间</th><th>会员</th><th>状态</th><th>健身目标</th><th>最后活跃</th><th>操作</th></tr></thead>
+      <tbody>${rows||'<tr><td colspan="9" class="empty-state">暂无数据</td></tr>'}</tbody>`;
 
     // Pagination
-    const totalPages = Math.ceil(data.total/data.page_size);
-    let phtml = `<span>共${data.total}条</span>`;
-    for(let i=1;i<=totalPages;i++) {
-      phtml += `<button class="${i===page?'active':''}" onclick="loadUsers(${i})">${i}</button>`;
-    }
-    document.getElementById('userPagination').innerHTML = phtml;
+    renderPagination('userPagination', Math.ceil(data.total/data.page_size), page, 'loadUsers');
   }).catch(e => toast(e.message,'error'));
 }
 
@@ -842,8 +876,7 @@ function showUserDetail(uid) {
             <option value="减脂" ${user.fitness_goal==='减脂'?'selected':''}>减脂</option>
             <option value="增肌" ${user.fitness_goal==='增肌'?'selected':''}>增肌</option>
             <option value="塑形" ${user.fitness_goal==='塑形'?'selected':''}>塑形</option>
-            <option value="增强体质" ${user.fitness_goal==='增强体质'?'selected':''}>增强体质</option>
-            <option value="康复训练" ${user.fitness_goal==='康复训练'?'selected':''}>康复训练</option>
+            <option value="体态" ${user.fitness_goal==='体态'?'selected':''}>体态</option>
           </select>
         </div>
         <div class="form-group">
@@ -890,7 +923,9 @@ function showUserDetail(uid) {
           <button class="btn btn-outline btn-sm" onclick="changePassword(${uid})">修改密码</button>
           ${!user.is_vip ? `<button class="btn btn-primary btn-sm" onclick="toggleVip(${uid},true)">开通VIP</button>` :
             `<button class="btn btn-outline btn-sm" onclick="toggleVip(${uid},false)">取消VIP</button>`}
-          <button class="btn btn-danger btn-sm" onclick="toggleBan(${uid})">封禁用户</button>
+          ${user.is_active!==false ?
+            `<button class="btn btn-danger btn-sm" onclick="toggleBan(${uid},true)">封禁用户</button>` :
+            `<button class="btn btn-outline btn-sm" onclick="toggleBan(${uid},false)">解封用户</button>`}
         </div>
         <div style="display:flex;gap:8px">
           <button class="btn btn-outline" onclick="closeModal()">取消</button>
@@ -931,27 +966,69 @@ function saveUser(uid) {
 }
 
 function changePassword(uid) {
-  const pwd = prompt('请输入新密码（至少6位）：');
-  if(!pwd) return;
+  const html = `
+    <div class="modal-header"><span class="title">修改密码</span><button class="btn btn-outline btn-sm" onclick="closeModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>新密码（至少6位）</label><input type="password" id="newPwdInput" placeholder="请输入新密码"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal()">取消</button>
+      <button class="btn btn-primary" onclick="doChangePassword(${uid})">确认修改</button>
+    </div>`;
+  document.getElementById('modalBox').innerHTML = html;
+  document.getElementById('modalOverlay').classList.add('show');
+}
+
+function doChangePassword(uid) {
+  const pwd = document.getElementById('newPwdInput').value;
+  if(!pwd) { toast('请输入密码','error'); return; }
   if(pwd.length < 6) { toast('密码长度不能少于6位','error'); return; }
   apiPut('/users/'+uid+'/password', {new_password:pwd}).then(() => {
     toast('密码已修改','success');
+    closeModal();
   }).catch(e => toast(e.message,'error'));
 }
 
-function toggleBan(uid) {
-  if(!confirm('确定要封禁该用户吗？封禁后用户将无法登录。')) return;
-  apiPutForm('/users/'+uid+'/ban', {banned:true}).then(() => {
-    toast('用户已封禁','success');
+function toggleBan(uid, banned) {
+  const msg = banned ? '确定要封禁该用户吗？封禁后用户将无法登录。' : '确定要解封该用户吗？';
+  if(!confirm(msg)) return;
+  apiPutForm('/users/'+uid+'/ban', {banned:banned}).then(() => {
+    toast(banned?'用户已封禁':'用户已解封','success');
     closeModal();
     loadUsers(currentUserPage);
   }).catch(e => toast(e.message,'error'));
 }
 
 function toggleVip(uid, enable) {
-  const expire = enable ? (prompt('VIP到期时间（如 2026-12-31）：')||'2026-12-31') : '';
-  apiPutForm('/users/'+uid+'/vip', {is_vip:enable, expire_time:expire}).then(() => {
-    toast(enable?'已开通VIP':'已取消VIP','success');
+  if(!enable) {
+    apiPutForm('/users/'+uid+'/vip', {is_vip:false, expire_time:''}).then(() => {
+      toast('已取消VIP','success');
+      closeModal();
+      loadUsers(currentUserPage);
+    }).catch(e => toast(e.message,'error'));
+    return;
+  }
+  const defaultDate = new Date();
+  defaultDate.setMonth(defaultDate.getMonth() + 1);
+  const dateStr = defaultDate.toISOString().split('T')[0];
+  const html = `
+    <div class="modal-header"><span class="title">开通VIP</span><button class="btn btn-outline btn-sm" onclick="closeModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>VIP到期时间</label><input type="date" id="vipExpireInput" value="${dateStr}"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal()">取消</button>
+      <button class="btn btn-primary" onclick="doToggleVip(${uid})">确认开通</button>
+    </div>`;
+  document.getElementById('modalBox').innerHTML = html;
+  document.getElementById('modalOverlay').classList.add('show');
+}
+
+function doToggleVip(uid) {
+  const expire = document.getElementById('vipExpireInput').value;
+  if(!expire) { toast('请选择到期时间','error'); return; }
+  apiPutForm('/users/'+uid+'/vip', {is_vip:true, expire_time:expire}).then(() => {
+    toast('已开通VIP','success');
     closeModal();
     loadUsers(currentUserPage);
   }).catch(e => toast(e.message,'error'));
@@ -1016,10 +1093,7 @@ function loadTrainingRecords(page=1) {
         <thead><tr><th>ID</th><th>用户</th><th>动作</th><th>肌群</th><th>组数</th><th>次数</th><th>重量</th><th>消耗</th><th>时间</th><th>操作</th></tr></thead>
         <tbody>${rows||'<tr><td colspan="10" class="empty-state">暂无数据</td></tr>'}</tbody></table>`;
 
-    const totalPages = Math.ceil(data.total/data.page_size);
-    let phtml = `<span>共${data.total}条</span>`;
-    for(let i=1;i<=totalPages;i++) phtml += `<button class="${i===page?'active':''}" onclick="loadTrainingRecords(${i})">${i}</button>`;
-    document.getElementById('trainingPagination').innerHTML = phtml;
+    renderPagination('trainingPagination', Math.ceil(data.total/data.page_size), page, 'loadTrainingRecords');
   }).catch(e => toast(e.message,'error'));
 }
 
@@ -1042,10 +1116,7 @@ function loadTrainingTasks(page=1) {
         <thead><tr><th>ID</th><th>用户</th><th>任务名</th><th>日期</th><th>状态</th><th>类型</th><th>组×次</th><th>创建时间</th></tr></thead>
         <tbody>${rows||'<tr><td colspan="8" class="empty-state">暂无数据</td></tr>'}</tbody></table>`;
 
-    const totalPages = Math.ceil(data.total/data.page_size);
-    let phtml = `<span>共${data.total}条</span>`;
-    for(let i=1;i<=totalPages;i++) phtml += `<button class="${i===page?'active':''}" onclick="loadTrainingTasks(${i})">${i}</button>`;
-    document.getElementById('trainingPagination').innerHTML = phtml;
+    renderPagination('trainingPagination', Math.ceil(data.total/data.page_size), page, 'loadTrainingTasks');
   }).catch(e => toast(e.message,'error'));
 }
 
@@ -1230,22 +1301,49 @@ function loadContent() {
 }
 
 // ---- Exercise Management ----
+let exerciseMuscleFilter = '';
+
 function loadExercises() {
   const body = document.getElementById('contentBody');
-  body.innerHTML = '<div class="toolbar"><input class="search-input" id="exerciseSearch" placeholder="搜索动作名称" onkeyup="if(event.key===\'Enter\')loadExercises()"><button class="btn btn-primary" onclick="showExerciseModal()">+ 新增动作</button></div><div id="exerciseGrid" class="exercise-grid"><div class="empty-state" style="grid-column:1/-1">加载中...</div></div>';
+  if (!document.getElementById('exerciseSearch')) {
+    const muscleGroups = ['全部','胸肌','背部','肩部','手臂','腿部','核心'];
+    const filterBtns = muscleGroups.map(g => {
+      const val = g === '全部' ? '' : g;
+      const active = val === exerciseMuscleFilter ? 'active' : '';
+      return `<button class="chart-tab ${active}" onclick="filterExercises('${val}')">${g}</button>`;
+    }).join('');
+    body.innerHTML = `<div class="toolbar"><input class="search-input" id="exerciseSearch" placeholder="搜索动作名称" onkeyup="if(event.key==='Enter')loadExercises()"><button class="btn btn-primary" onclick="showExerciseModal()">+ 新增动作</button></div><div id="exerciseFilterBtns" style="display:flex;gap:8px;margin:12px 0;flex-wrap:wrap">${filterBtns}</div><div id="exerciseGrid" class="exercise-grid"><div class="empty-state" style="grid-column:1/-1">加载中...</div></div>`;
+  } else {
+    // Update filter button active state
+    const muscleGroups = ['全部','胸肌','背部','肩部','手臂','腿部','核心'];
+    const filterContainer = document.getElementById('exerciseFilterBtns');
+    if (filterContainer) {
+      filterContainer.innerHTML = muscleGroups.map(g => {
+        const val = g === '全部' ? '' : g;
+        const active = val === exerciseMuscleFilter ? 'active' : '';
+        return `<button class="chart-tab ${active}" onclick="filterExercises('${val}')">${g}</button>`;
+      }).join('');
+    }
+    document.getElementById('exerciseGrid').innerHTML = '<div class="empty-state" style="grid-column:1/-1">加载中...</div>';
+  }
 
-  api('/exercises').then(data => {
+  const keyword = document.getElementById('exerciseSearch')?.value || '';
+  const params = {};
+  if (keyword) params.keyword = keyword;
+  if (exerciseMuscleFilter) params.muscle_group = exerciseMuscleFilter;
+  api('/exercises',{params}).then(data => {
     const exercises = data.list || data || [];
     if(exercises.length === 0) {
       document.getElementById('exerciseGrid').innerHTML = '<div class="empty-state" style="grid-column:1/-1">暂无动作数据</div>';
       return;
     }
+    const typeMap = {STRENGTH:'力量',EQUIPMENT:'器材',CARDIO:'有氧',HIIT:'HIIT',FLEXIBILITY:'拉伸',CORE:'核心'};
     document.getElementById('exerciseGrid').innerHTML = exercises.map(ex => `
       <div class="exercise-card">
         <div class="ex-name">${ex.name||''}</div>
         <div class="ex-meta">
           <span class="ex-tag">${ex.muscle_group||''}</span>
-          <span class="ex-tag">${ex.exercise_type||''}</span>
+          <span class="ex-tag">${typeMap[ex.exercise_type]||ex.exercise_type||''}</span>
           <span class="ex-tag">${ex.cal_per_rep||0} cal/次</span>
         </div>
         <div class="ex-actions">
@@ -1257,6 +1355,11 @@ function loadExercises() {
   }).catch(e => {
     document.getElementById('exerciseGrid').innerHTML = '<div class="empty-state" style="grid-column:1/-1">加载失败: '+e.message+'</div>';
   });
+}
+
+function filterExercises(group) {
+  exerciseMuscleFilter = group;
+  loadExercises();
 }
 
 function showExerciseModal(id) {
@@ -1284,12 +1387,12 @@ function showExerciseModal(id) {
         <div class="form-group">
           <label>训练类型</label>
           <select id="exType">
-            <option value="力量" ${exData.exercise_type==='力量'?'selected':''}>力量</option>
-            <option value="器材" ${exData.exercise_type==='器材'?'selected':''}>器材</option>
-            <option value="有氧" ${exData.exercise_type==='有氧'?'selected':''}>有氧</option>
+            <option value="STRENGTH" ${exData.exercise_type==='STRENGTH'?'selected':''}>力量</option>
+            <option value="EQUIPMENT" ${exData.exercise_type==='EQUIPMENT'?'selected':''}>器材</option>
+            <option value="CARDIO" ${exData.exercise_type==='CARDIO'?'selected':''}>有氧</option>
             <option value="HIIT" ${exData.exercise_type==='HIIT'?'selected':''}>HIIT</option>
-            <option value="柔韧" ${exData.exercise_type==='柔韧'?'selected':''}>柔韧</option>
-            <option value="核心" ${exData.exercise_type==='核心'?'selected':''}>核心</option>
+            <option value="FLEXIBILITY" ${exData.exercise_type==='FLEXIBILITY'?'selected':''}>柔韧</option>
+            <option value="CORE" ${exData.exercise_type==='CORE'?'selected':''}>核心</option>
           </select>
         </div>
         <div class="form-group"><label>基础卡路里系数 (cal/次)</label><input type="number" id="exCal" value="${exData.cal_per_rep||0}" step="0.1" min="0"></div>
@@ -1553,6 +1656,12 @@ renderSidebar();
 
 // Start preloading ECharts immediately on page load
 loadEcharts();
+
+// Resize charts on window resize
+window.addEventListener('resize', () => {
+  if (trendChartInstance && !trendChartInstance.isDisposed()) trendChartInstance.resize();
+  if (activeChartInstance && !activeChartInstance.isDisposed()) activeChartInstance.resize();
+});
 
 // Check saved token — verify it's still valid before showing main
 (async function initAuth() {

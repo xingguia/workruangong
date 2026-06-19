@@ -197,6 +197,15 @@ public class AchievementManager {
         nightOwlCount = 0;
     }
 
+    public void clearAll() {
+        resetAllAchievements();
+        loaded = false;
+    }
+
+    public static synchronized void resetInstance() {
+        instance = null;
+    }
+
     public void unlockAllAchievements() {
         for (Achievement achievement : achievements) {
             achievement.setUnlocked(true);

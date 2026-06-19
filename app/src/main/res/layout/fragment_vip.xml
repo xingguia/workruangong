@@ -307,7 +307,6 @@
                             android:textSize="@dimen/text_body" />
 
                         <TextView
-                            android:id="@+id/priceValue"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="99"
@@ -316,7 +315,6 @@
                             android:textStyle="bold" />
 
                         <TextView
-                            android:id="@+id/priceUnit"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="/季"
@@ -325,7 +323,6 @@
                     </LinearLayout>
 
                     <TextView
-                        android:id="@+id/originalPrice"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="原价 ¥117"
@@ -420,26 +417,90 @@
                 android:background="@drawable/bg_card"
                 android:orientation="vertical">
 
-                <TextView
+                <!-- FAQ 1 -->
+                <LinearLayout
+                    android:id="@+id/faqItem1"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
                     android:padding="@dimen/margin_normal"
-                    android:text="会员可以退款吗？"
-                    android:textColor="@color/text_primary"
-                    android:textSize="@dimen/text_body" />
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:background="?attr/selectableItemBackground">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="会员可以退款吗？"
+                        android:textColor="@color/text_primary"
+                        android:textSize="@dimen/text_body" />
+
+                    <ImageView
+                        android:id="@+id/faqArrow1"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_arrow_back"
+                        android:rotation="270"
+                        app:tint="@color/text_muted" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/faqAnswer1"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingHorizontal="@dimen/margin_normal"
+                    android:paddingBottom="@dimen/margin_normal"
+                    android:text="开通会员后7天内，如有任何不满意，可申请全额退款。超过7天后不予退款。请在会员中心页面提交退款申请，我们将在1-3个工作日内处理。"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="@dimen/text_caption"
+                    android:visibility="gone" />
 
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
                     android:background="@color/border_color" />
 
-                <TextView
+                <!-- FAQ 2 -->
+                <LinearLayout
+                    android:id="@+id/faqItem2"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
                     android:padding="@dimen/margin_normal"
-                    android:text="如何取消自动续费？"
-                    android:textColor="@color/text_primary"
-                    android:textSize="@dimen/text_body" />
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:background="?attr/selectableItemBackground">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="如何取消自动续费？"
+                        android:textColor="@color/text_primary"
+                        android:textSize="@dimen/text_body" />
+
+                    <ImageView
+                        android:id="@+id/faqArrow2"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_arrow_back"
+                        android:rotation="270"
+                        app:tint="@color/text_muted" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/faqAnswer2"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingHorizontal="@dimen/margin_normal"
+                    android:paddingBottom="@dimen/margin_normal"
+                    android:text="在手机系统设置中找到「订阅管理」或「应用内购买」，选择燃动时刻会员进行取消。取消后当前会员有效期不受影响，到期后不再自动续费。"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="@dimen/text_caption"
+                    android:visibility="gone" />
             </LinearLayout>
         </LinearLayout>
 

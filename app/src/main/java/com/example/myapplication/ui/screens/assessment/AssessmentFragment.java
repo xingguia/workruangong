@@ -40,6 +40,7 @@ public class AssessmentFragment extends Fragment {
     private String selectedExperience = "";
     private String[] selectedEquipment = new String[0];
     private int[] selectedDays = new int[0];
+    private String selectedGender = "";
     private int height = 0;
     private int weight = 0;
     private NestedScrollView scrollView;
@@ -90,6 +91,8 @@ public class AssessmentFragment extends Fragment {
         });
 
         binding.skipBtn.setOnClickListener(v -> {
+            // 即使跳过也保存已选择的数据
+            submitAssessmentData();
             showUsernameSetDialog(true);
         });
     }
@@ -219,15 +222,14 @@ public class AssessmentFragment extends Fragment {
 
         String[] goals = {getString(R.string.goal_fat_loss), getString(R.string.goal_muscle_gain),
                 getString(R.string.goal_shape), getString(R.string.goal_posture)};
-        String[] goalKeys = {"fat_loss", "muscle_gain", "shape", "posture"};
         String[] descriptions = {getString(R.string.goal_fat_loss_desc), getString(R.string.goal_muscle_gain_desc),
                 getString(R.string.goal_shape_desc), getString(R.string.goal_posture_desc)};
 
         for (int i = 0; i < goals.length; i++) {
-            final String goalKey = goalKeys[i];
-            MaterialCardView card = createOptionCard(goals[i], descriptions[i], selectedGoal.equals(goalKey));
+            final String goalName = goals[i];
+            MaterialCardView card = createOptionCard(goals[i], descriptions[i], selectedGoal.equals(goalName));
             card.setOnClickListener(v -> {
-                selectedGoal = goalKey;
+                selectedGoal = goalName;
                 showStep(1);
             });
             grid.addView(card);
@@ -451,6 +453,53 @@ public class AssessmentFragment extends Fragment {
         form.setLayoutParams(new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         form.setPadding(dpToPx(12), dpToPx(20), dpToPx(12), 0);
+
+        // Gender selection card
+        MaterialCardView genderCard = new MaterialCardView(requireContext());
+        genderCard.setCardBackgroundColor(ContextCompat.getColor(requireContext(), R.color.bg_card));
+        genderCard.setStrokeColor(ContextCompat.getColor(requireContext(), R.color.border_color));
+        genderCard.setStrokeWidth(dpToPx(1));
+        genderCard.setRadius(dpToPx(16));
+        genderCard.setCardElevation(0);
+        LinearLayout.LayoutParams gParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        gParams.setMargins(0, 0, 0, dpToPx(12));
+        genderCard.setLayoutParams(gParams);
+
+        LinearLayout gContent = new LinearLayout(requireContext());
+        gContent.setOrientation(LinearLayout.HORIZONTAL);
+        gContent.setGravity(android.view.Gravity.CENTER_VERTICAL);
+        gContent.setPadding(dpToPx(16), dpToPx(16), dpToPx(16), dpToPx(16));
+
+        TextView gLabel = new TextView(requireContext());
+        gLabel.setText("性别");
+        gLabel.setTextSize(15);
+        gLabel.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_secondary));
+        gLabel.setLayoutParams(new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1.0f));
+
+        TextView gValue = new TextView(requireContext());
+        gValue.setText(selectedGender.isEmpty() ? "请选择" : selectedGender);
+        gValue.setTextSize(15);
+        gValue.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_primary));
+
+        gContent.addView(gLabel);
+        gContent.addView(gValue);
+        genderCard.addView(gContent);
+
+        genderCard.setOnClickListener(v -> {
+            String[] genders = {"男", "女"};
+            new AlertDialog.Builder(requireContext())
+                    .setTitle("选择性别")
+                    .setSingleChoiceItems(genders, selectedGender.equals("女") ? 1 : 0, (dialog, which) -> {
+                        selectedGender = genders[which];
+                        gValue.setText(selectedGender);
+                        dialog.dismiss();
+                    })
+                    .setNegativeButton("取消", null)
+                    .show();
+        });
+
+        form.addView(genderCard);
 
         // Height input card
         MaterialCardView heightCard = new MaterialCardView(requireContext());
@@ -698,9 +747,36 @@ public class AssessmentFragment extends Fragment {
     }
 
     private void submitAssessment() {
-        // Save assessment data
-        sessionManager.saveBodyData(height, (float) weight);
+        submitAssessmentData();
         showUsernameSetDialog(false);
+    }
+
+    private void submitAssessmentData() {
+        // Save body data locally
+        if (height > 0 && weight > 0) {
+            sessionManager.saveBodyData(height, (float) weight);
+        }
+
+        // Save fitness goal and other assessment data to server
+        if (selectedGoal != null && !selectedGoal.isEmpty()) {
+            sessionManager.setFitnessGoal(selectedGoal);
+        }
+        if (selectedGender != null && !selectedGender.isEmpty()) {
+            sessionManager.setGender(selectedGender);
+        }
+        java.util.Map<String, Object> updates = new java.util.HashMap<>();
+        if (selectedGoal != null && !selectedGoal.isEmpty()) {
+            updates.put("fitness_goal", selectedGoal);
+        }
+        if (selectedGender != null && !selectedGender.isEmpty()) {
+            updates.put("gender", selectedGender);
+        }
+        if (height > 0) updates.put("height", height);
+        if (weight > 0) updates.put("weight", weight);
+        if (!updates.isEmpty()) {
+            com.example.myapplication.api.ApiClient.getInstance(requireContext())
+                    .updateProfile(updates, null);
+        }
     }
 
     private int dpToPx(int dp) {

@@ -75,6 +75,10 @@ public class TrainingTaskManager {
 
     public long addTask(TrainingTask task) {
         task.setId(System.currentTimeMillis());
+        // 设置时长（如果没有设置的话）
+        if (task.getDuration() <= 0 && task.getSets() > 0 && task.getReps() > 0) {
+            task.setDuration(task.getSets() * task.getReps() * 3 / 60 + 1);
+        }
         cachedTasks.add(0, task);
         api.createTrainingTask(task, new ApiClient.Callback<Map<String, Object>>() {
             @Override

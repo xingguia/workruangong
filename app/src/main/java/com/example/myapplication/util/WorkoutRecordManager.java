@@ -226,13 +226,25 @@ public class WorkoutRecordManager {
 
     public int getTotalMinutesForToday() {
         int total = 0;
-        for (WorkoutRecord r : getRecordsForToday()) total += r.getDuration();
+        for (WorkoutRecord r : getRecordsForToday()) {
+            int dur = r.getDuration();
+            if (dur <= 0 && r.getSets() > 0 && r.getReps() > 0) {
+                dur = r.getSets() * r.getReps() * 3 / 60 + 1;
+            }
+            total += dur;
+        }
         return total;
     }
 
     public int getTotalMinutes() {
         int total = 0;
-        for (WorkoutRecord r : cachedRecords) total += r.getDuration();
+        for (WorkoutRecord r : cachedRecords) {
+            int dur = r.getDuration();
+            if (dur <= 0 && r.getSets() > 0 && r.getReps() > 0) {
+                dur = r.getSets() * r.getReps() * 3 / 60 + 1;
+            }
+            total += dur;
+        }
         return total;
     }
 
@@ -246,7 +258,7 @@ public class WorkoutRecordManager {
 
     public void clearAll() {
         cachedRecords.clear();
-        api = null;
+        loaded = false;
     }
 
     public boolean isLoaded() { return loaded; }

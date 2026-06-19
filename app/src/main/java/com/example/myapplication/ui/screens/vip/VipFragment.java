@@ -1,9 +1,13 @@
 package com.example.myapplication.ui.screens.vip;
 
+import android.animation.ObjectAnimator;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -36,8 +40,10 @@ public class VipFragment extends Fragment {
         sessionManager = SessionManager.getInstance(requireContext());
 
         setupVipStatus();
+        setupFeatureList();
         setupListeners();
         setupPlanSelection();
+        setupFAQ();
         updateSelectedPlan();
     }
 
@@ -57,19 +63,37 @@ public class VipFragment extends Fragment {
         }
     }
 
+    private void setupFeatureList() {
+        // 设置VIP功能列表的文本
+        int[] featureIds = {R.id.feature1, R.id.feature2, R.id.feature3, R.id.feature4};
+        int[] featureTexts = {
+                R.string.vip_feature_personal,
+                R.string.vip_feature_ai,
+                R.string.vip_feature_coach,
+                R.string.vip_feature_library
+        };
+
+        for (int i = 0; i < featureIds.length; i++) {
+            View featureView = binding.vipHeroSection.findViewById(featureIds[i]);
+            if (featureView != null) {
+                TextView textView = featureView.findViewById(R.id.featureText);
+                if (textView != null) {
+                    textView.setText(featureTexts[i]);
+                }
+            }
+        }
+    }
+
     private void setupListeners() {
-        // 返回按钮
         binding.backBtn.setOnClickListener(v -> {
             navController.popBackStack();
         });
 
-        // 续费按钮
         binding.renewBtn.setOnClickListener(v -> {
             binding.vipHeroSection.setVisibility(View.VISIBLE);
             binding.vipStatusSection.setVisibility(View.GONE);
         });
 
-        // 订阅按钮
         binding.subscribeBtn.setOnClickListener(v -> {
             handleSubscribe();
         });
@@ -87,10 +111,8 @@ public class VipFragment extends Fragment {
     }
 
     private void updateSelectedPlan() {
-        // 重置所有卡片样式
         resetPlanCardStyles();
 
-        // 设置选中状态
         int selectedColor = getResources().getColor(R.color.primary, null);
         float density = getResources().getDisplayMetrics().density;
 
@@ -98,32 +120,23 @@ public class VipFragment extends Fragment {
             case "month":
                 binding.planMonth.setStrokeColor(selectedColor);
                 binding.planMonth.setStrokeWidth((int) (2 * density));
-                binding.priceValue.setText("39");
-                binding.priceUnit.setText("/月");
-                binding.originalPrice.setVisibility(View.GONE);
+                binding.finalPrice.setText("39");
                 break;
             case "quarter":
                 binding.planQuarter.setStrokeColor(selectedColor);
                 binding.planQuarter.setStrokeWidth((int) (2 * density));
-                binding.priceValue.setText("99");
-                binding.priceUnit.setText("/季");
-                binding.originalPrice.setVisibility(View.VISIBLE);
-                binding.originalPrice.setText("原价 ¥117");
+                binding.finalPrice.setText("99");
                 break;
             case "year":
                 binding.planYear.setStrokeColor(selectedColor);
                 binding.planYear.setStrokeWidth((int) (2 * density));
-                binding.priceValue.setText("299");
-                binding.priceUnit.setText("/年");
-                binding.originalPrice.setVisibility(View.VISIBLE);
-                binding.originalPrice.setText("原价 ¥468");
+                binding.finalPrice.setText("299");
                 break;
         }
     }
 
     private void resetPlanCardStyles() {
         int defaultColor = getResources().getColor(R.color.border_color, null);
-        float density = getResources().getDisplayMetrics().density;
 
         binding.planMonth.setStrokeColor(defaultColor);
         binding.planMonth.setStrokeWidth(0);
@@ -133,8 +146,52 @@ public class VipFragment extends Fragment {
         binding.planYear.setStrokeWidth(0);
     }
 
+    private void setupFAQ() {
+        // FAQ 1: 会员可以退款吗？
+        LinearLayout faqItem1 = binding.getRoot().findViewById(R.id.faqItem1);
+        TextView faqAnswer1 = binding.getRoot().findViewById(R.id.faqAnswer1);
+        ImageView faqArrow1 = binding.getRoot().findViewById(R.id.faqArrow1);
+
+        if (faqItem1 != null && faqAnswer1 != null) {
+            faqItem1.setOnClickListener(v -> {
+                if (faqAnswer1.getVisibility() == View.GONE) {
+                    faqAnswer1.setVisibility(View.VISIBLE);
+                    if (faqArrow1 != null) {
+                        ObjectAnimator.ofFloat(faqArrow1, "rotation", 0f, 180f).setDuration(200).start();
+                    }
+                } else {
+                    faqAnswer1.setVisibility(View.GONE);
+                    if (faqArrow1 != null) {
+                        ObjectAnimator.ofFloat(faqArrow1, "rotation", 180f, 0f).setDuration(200).start();
+                    }
+                }
+            });
+        }
+
+        // FAQ 2: 如何取消自动续费？
+        LinearLayout faqItem2 = binding.getRoot().findViewById(R.id.faqItem2);
+        TextView faqAnswer2 = binding.getRoot().findViewById(R.id.faqAnswer2);
+        ImageView faqArrow2 = binding.getRoot().findViewById(R.id.faqArrow2);
+
+        if (faqItem2 != null && faqAnswer2 != null) {
+            faqItem2.setOnClickListener(v -> {
+                if (faqAnswer2.getVisibility() == View.GONE) {
+                    faqAnswer2.setVisibility(View.VISIBLE);
+                    if (faqArrow2 != null) {
+                        ObjectAnimator.ofFloat(faqArrow2, "rotation", 0f, 180f).setDuration(200).start();
+                    }
+                } else {
+                    faqAnswer2.setVisibility(View.GONE);
+                    if (faqArrow2 != null) {
+                        ObjectAnimator.ofFloat(faqArrow2, "rotation", 180f, 0f).setDuration(200).start();
+                    }
+                }
+            });
+        }
+    }
+
     private void handleSubscribe() {
-        String price = binding.priceValue.getText().toString();
+        String price = binding.finalPrice.getText().toString();
         Toast.makeText(requireContext(), "支付功能开发中", Toast.LENGTH_SHORT).show();
     }
 

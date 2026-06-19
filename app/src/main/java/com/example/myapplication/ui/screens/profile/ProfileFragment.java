@@ -62,8 +62,18 @@ public class ProfileFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        // Refresh data when returning to this fragment
+        // 立即显示缓存数据
         setupUserInfo();
+        // 后台静默刷新
+        workoutRecordManager.loadRecords(() -> {
+            if (getActivity() != null) {
+                getActivity().runOnUiThread(() -> {
+                    if (isAdded() && binding != null) {
+                        setupUserInfo();
+                    }
+                });
+            }
+        });
     }
 
     private void showUsernameSetDialog() {
