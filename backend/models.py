@@ -34,6 +34,11 @@ def init_db():
             body_fat FLOAT DEFAULT 0,
             waist FLOAT DEFAULT 0,
             hip FLOAT DEFAULT 0,
+            initial_height INT DEFAULT 0,
+            initial_weight FLOAT DEFAULT 0,
+            initial_body_fat FLOAT DEFAULT 0,
+            initial_waist FLOAT DEFAULT 0,
+            initial_hip FLOAT DEFAULT 0,
             is_vip TINYINT(1) DEFAULT 0,
             level INT DEFAULT 1,
             vip_expire_time DATETIME DEFAULT NULL,
@@ -156,8 +161,10 @@ def init_db():
             id BIGINT AUTO_INCREMENT PRIMARY KEY,
             name VARCHAR(100) NOT NULL,
             muscle_group VARCHAR(50) DEFAULT NULL,
+            sub_muscle VARCHAR(50) DEFAULT NULL,
             exercise_type VARCHAR(30) DEFAULT 'STRENGTH',
             cal_per_rep FLOAT DEFAULT 0,
+            needs_equipment TINYINT(1) DEFAULT 0,
             description TEXT DEFAULT NULL,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
@@ -181,6 +188,31 @@ def init_db():
         cursor.execute("ALTER TABLE users ADD COLUMN is_active TINYINT(1) DEFAULT 1")
         conn.commit()
         print("Added is_active column to users table")
+    except Exception:
+        pass  # Column already exists
+
+    # Migration: ensure initial_* columns exist for users table
+    for col in ["initial_height", "initial_weight", "initial_body_fat", "initial_waist", "initial_hip"]:
+        try:
+            default_val = "0" if "height" in col else "0"
+            cursor.execute(f"ALTER TABLE users ADD COLUMN {col} FLOAT DEFAULT 0")
+            conn.commit()
+            print(f"Added {col} column to users table")
+        except Exception:
+            pass  # Column already exists
+
+    # Migration: ensure exercises table has sub_muscle and needs_equipment columns
+    try:
+        cursor.execute("ALTER TABLE exercises ADD COLUMN sub_muscle VARCHAR(50) DEFAULT NULL")
+        conn.commit()
+        print("Added sub_muscle column to exercises table")
+    except Exception:
+        pass  # Column already exists
+
+    try:
+        cursor.execute("ALTER TABLE exercises ADD COLUMN needs_equipment TINYINT(1) DEFAULT 0")
+        conn.commit()
+        print("Added needs_equipment column to exercises table")
     except Exception:
         pass  # Column already exists
 

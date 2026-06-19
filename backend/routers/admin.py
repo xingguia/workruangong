@@ -626,13 +626,13 @@ def exercise_list(keyword: str = "", muscle_group: str = "", admin: dict = Depen
             conditions.append("muscle_group = %s")
             params.append(muscle_group)
         where = ("WHERE " + " AND ".join(conditions)) if conditions else ""
-        cur.execute(f"SELECT id, name, muscle_group, exercise_type, cal_per_rep, description, created_at FROM exercises {where} ORDER BY muscle_group, name", params)
+        cur.execute(f"SELECT id, name, muscle_group, sub_muscle, exercise_type, cal_per_rep, needs_equipment, description, created_at FROM exercises {where} ORDER BY muscle_group, name", params)
         exercises = []
         for row in cur.fetchall():
             exercises.append({
                 "id": row[0], "name": row[1], "muscle_group": row[2],
-                "exercise_type": row[3], "cal_per_rep": float(row[4] or 0),
-                "description": row[5], "created_at": str(row[6]) if row[6] else "",
+                "sub_muscle": row[3], "exercise_type": row[4], "cal_per_rep": float(row[5] or 0),
+                "needs_equipment": bool(row[6]), "description": row[7], "created_at": str(row[8]) if row[8] else "",
             })
         return {"list": exercises}
 
@@ -641,21 +641,24 @@ def exercise_list(keyword: str = "", muscle_group: str = "", admin: dict = Depen
 def exercise_get(exercise_id: int, admin: dict = Depends(get_admin)):
     with get_db() as conn:
         cur = conn.cursor()
-        cur.execute("SELECT id, name, muscle_group, exercise_type, cal_per_rep, description FROM exercises WHERE id=%s", (exercise_id,))
+        cur.execute("SELECT id, name, muscle_group, sub_muscle, exercise_type, cal_per_rep, needs_equipment, description FROM exercises WHERE id=%s", (exercise_id,))
         row = cur.fetchone()
         if not row:
             raise HTTPException(status_code=404, detail="Exercise not found")
         return {
             "id": row[0], "name": row[1], "muscle_group": row[2],
-            "exercise_type": row[3], "cal_per_rep": float(row[4] or 0), "description": row[5],
+            "sub_muscle": row[3], "exercise_type": row[4], "cal_per_rep": float(row[5] or 0),
+            "needs_equipment": bool(row[6]), "description": row[7],
         }
 
 
 class ExerciseBody(BaseModel):
     name: str
     muscle_group: str = ""
+    sub_muscle: str = ""
     exercise_type: str = "STRENGTH"
     cal_per_rep: float = 0
+    needs_equipment: bool = False
     description: str = ""
 
 
@@ -664,8 +667,8 @@ def exercise_create(body: ExerciseBody, admin: dict = Depends(get_admin)):
     with get_db() as conn:
         cur = conn.cursor()
         cur.execute(
-            "INSERT INTO exercises (name, muscle_group, exercise_type, cal_per_rep, description) VALUES (%s,%s,%s,%s,%s)",
-            (body.name, body.muscle_group, body.exercise_type, body.cal_per_rep, body.description)
+            "INSERT INTO exercises (name, muscle_group, sub_muscle, exercise_type, cal_per_rep, needs_equipment, description) VALUES (%s,%s,%s,%s,%s,%s,%s)",
+            (body.name, body.muscle_group, body.sub_muscle or None, body.exercise_type, body.cal_per_rep, 1 if body.needs_equipment else 0, body.description)
         )
         return {"ok": True, "id": cur.lastrowid}
 
@@ -675,8 +678,8 @@ def exercise_update(exercise_id: int, body: ExerciseBody, admin: dict = Depends(
     with get_db() as conn:
         cur = conn.cursor()
         cur.execute(
-            "UPDATE exercises SET name=%s, muscle_group=%s, exercise_type=%s, cal_per_rep=%s, description=%s WHERE id=%s",
-            (body.name, body.muscle_group, body.exercise_type, body.cal_per_rep, body.description, exercise_id)
+            "UPDATE exercises SET name=%s, muscle_group=%s, sub_muscle=%s, exercise_type=%s, cal_per_rep=%s, needs_equipment=%s, description=%s WHERE id=%s",
+            (body.name, body.muscle_group, body.sub_muscle or None, body.exercise_type, body.cal_per_rep, 1 if body.needs_equipment else 0, body.description, exercise_id)
         )
         return {"ok": True}
 

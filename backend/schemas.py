@@ -35,6 +35,11 @@ class UserResponse(BaseModel):
     body_fat: float
     waist: float
     hip: float
+    initial_height: int = 0
+    initial_weight: float = 0
+    initial_body_fat: float = 0
+    initial_waist: float = 0
+    initial_hip: float = 0
     is_vip: bool
     level: int
     vip_expire_time: Optional[str] = None
@@ -169,3 +174,14 @@ class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     user: UserResponse
+
+# ---------- 动作库 ----------
+class ExerciseResponse(BaseModel):
+    id: int
+    name: str
+    muscle_group: Optional[str] = None
+    sub_muscle: Optional[str] = None
+    exercise_type: str = "STRENGTH"
+    cal_per_rep: float = 0
+    needs_equipment: bool = False
+    description: Optional[str] = None

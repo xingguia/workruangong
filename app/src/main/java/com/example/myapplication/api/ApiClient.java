@@ -533,6 +533,38 @@ public class ApiClient {
         void onFailure(String error);
     }
 
+    // ==================== Exercise API ====================
+
+    public void getExercises(Callback<List<Map<String, Object>>> callback) {
+        get("/exercises", new RawCallback() {
+            @Override
+            public void onResponse(String json) {
+                Type listType = new TypeToken<List<Map<String, Object>>>(){}.getType();
+                List<Map<String, Object>> result = gson.fromJson(json, listType);
+                deliverSuccess(callback, result);
+            }
+            @Override
+            public void onFailure(String error) {
+                deliverError(callback, error);
+            }
+        });
+    }
+
+    public void getExercisesByMuscleGroup(String muscleGroup, Callback<List<Map<String, Object>>> callback) {
+        get("/exercises?muscle_group=" + muscleGroup, new RawCallback() {
+            @Override
+            public void onResponse(String json) {
+                Type listType = new TypeToken<List<Map<String, Object>>>(){}.getType();
+                List<Map<String, Object>> result = gson.fromJson(json, listType);
+                deliverSuccess(callback, result);
+            }
+            @Override
+            public void onFailure(String error) {
+                deliverError(callback, error);
+            }
+        });
+    }
+
     private <T> void deliverSuccess(Callback<T> cb, T data) {
         if (cb != null) mainHandler.post(() -> cb.onSuccess(data));
     }

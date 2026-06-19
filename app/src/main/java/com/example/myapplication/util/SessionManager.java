@@ -153,6 +153,12 @@ public class SessionManager {
         usernameSet = (Boolean) user.getOrDefault("username_set", false) || usernameSet;
         workoutReminder = (Boolean) user.getOrDefault("workout_reminder", true);
         achievementNotification = (Boolean) user.getOrDefault("achievement_notification", true);
+        // 读取初始数据
+        initialHeight = ((Number) user.getOrDefault("initial_height", 0)).intValue();
+        initialWeight = ((Number) user.getOrDefault("initial_weight", 0)).floatValue();
+        initialBodyFat = ((Number) user.getOrDefault("initial_body_fat", 0)).floatValue();
+        initialWaist = ((Number) user.getOrDefault("initial_waist", 0)).floatValue();
+        initialHip = ((Number) user.getOrDefault("initial_hip", 0)).floatValue();
     }
 
     // ==================== Save methods (API-backed) ====================
@@ -203,6 +209,14 @@ public class SessionManager {
         this.initialBodyFat = bodyFat;
         this.initialWaist = waist;
         this.initialHip = hip;
+        // 通过API保存到服务器
+        java.util.Map<String, Object> updates = new java.util.HashMap<>();
+        updates.put("initial_height", height);
+        updates.put("initial_weight", weight);
+        updates.put("initial_body_fat", bodyFat);
+        updates.put("initial_waist", waist);
+        updates.put("initial_hip", hip);
+        api.updateProfile(updates, null);
     }
 
     public void markAssessmentCompleted() {

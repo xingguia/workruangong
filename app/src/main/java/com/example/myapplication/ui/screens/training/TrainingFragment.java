@@ -752,6 +752,18 @@ public class TrainingFragment extends Fragment {
         setupWeekCalendar();
         updateTrainingDetail();
         updateWeekProgress();
+
+        // 从服务器加载动作数据
+        ExerciseDatabase.loadExercisesFromServer(requireContext(), () -> {
+            if (getActivity() != null) {
+                getActivity().runOnUiThread(() -> {
+                    if (isAdded() && binding != null) {
+                        // 动作数据已更新，刷新UI
+                    }
+                });
+            }
+        });
+
         // 后台静默刷新
         trainingTaskManager.loadTasks(() -> {
             if (getActivity() != null) {

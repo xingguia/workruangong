@@ -1337,13 +1337,13 @@ function loadExercises() {
       document.getElementById('exerciseGrid').innerHTML = '<div class="empty-state" style="grid-column:1/-1">暂无动作数据</div>';
       return;
     }
-    const typeMap = {STRENGTH:'力量',EQUIPMENT:'器材',CARDIO:'有氧',HIIT:'HIIT',FLEXIBILITY:'拉伸',CORE:'核心'};
     document.getElementById('exerciseGrid').innerHTML = exercises.map(ex => `
       <div class="exercise-card">
         <div class="ex-name">${ex.name||''}</div>
         <div class="ex-meta">
           <span class="ex-tag">${ex.muscle_group||''}</span>
-          <span class="ex-tag">${typeMap[ex.exercise_type]||ex.exercise_type||''}</span>
+          ${ex.sub_muscle ? `<span class="ex-tag">${ex.sub_muscle}</span>` : ''}
+          <span class="ex-tag">${ex.needs_equipment ? '器材' : '徒手'}</span>
           <span class="ex-tag">${ex.cal_per_rep||0} cal/次</span>
         </div>
         <div class="ex-actions">
@@ -1368,31 +1368,50 @@ function showExerciseModal(id) {
   let exData = {};
   const loadPromise = isEdit ? api('/exercises/'+id).then(d => exData = d).catch(() => {}) : Promise.resolve();
 
+  // 子肌群选项映射
+  const subMuscleOptions = {
+    '胸肌': ['上胸', '中胸', '下胸', '胸内侧', '胸外侧'],
+    '背部': ['背阔肌', '中背部', '下背/腰', '斜方肌', '菱形肌'],
+    '肩部': ['三角肌前束', '三角肌中束', '三角肌后束'],
+    '手臂': ['肱二头肌', '肱三头肌', '前臂'],
+    '腿部': ['股四头肌', '腘绳肌', '臀部', '小腿'],
+    '核心': ['上腹', '下腹', '腹斜肌', '腹横肌', '髂腰肌']
+  };
+
   loadPromise.then(() => {
+    const selectedMuscle = exData.muscle_group || '胸肌';
+    const subOptions = subMuscleOptions[selectedMuscle] || [];
+    const subMuscleHtml = subOptions.map(s =>
+      `<option value="${s}" ${exData.sub_muscle===s?'selected':''}>${s}</option>`
+    ).join('');
+
     const html = `
       <div class="modal-header"><span class="title">${title}</span><button class="btn btn-outline btn-sm" onclick="closeModal()">✕</button></div>
       <div class="modal-body">
         <div class="form-group"><label>动作名称</label><input type="text" id="exName" value="${exData.name||''}" placeholder="如：杠铃卧推"></div>
         <div class="form-group">
           <label>肌群分类</label>
-          <select id="exMuscle">
-            <option value="胸肌" ${exData.muscle_group==='胸肌'?'selected':''}>胸肌</option>
-            <option value="背部" ${exData.muscle_group==='背部'?'selected':''}>背部</option>
-            <option value="肩部" ${exData.muscle_group==='肩部'?'selected':''}>肩部</option>
-            <option value="手臂" ${exData.muscle_group==='手臂'?'selected':''}>手臂</option>
-            <option value="腿部" ${exData.muscle_group==='腿部'?'selected':''}>腿部</option>
-            <option value="核心" ${exData.muscle_group==='核心'?'selected':''}>核心</option>
+          <select id="exMuscle" onchange="updateSubMuscleOptions()">
+            <option value="胸肌" ${selectedMuscle==='胸肌'?'selected':''}>胸肌</option>
+            <option value="背部" ${selectedMuscle==='背部'?'selected':''}>背部</option>
+            <option value="肩部" ${selectedMuscle==='肩部'?'selected':''}>肩部</option>
+            <option value="手臂" ${selectedMuscle==='手臂'?'selected':''}>手臂</option>
+            <option value="腿部" ${selectedMuscle==='腿部'?'selected':''}>腿部</option>
+            <option value="核心" ${selectedMuscle==='核心'?'selected':''}>核心</option>
           </select>
         </div>
         <div class="form-group">
-          <label>训练类型</label>
-          <select id="exType">
-            <option value="STRENGTH" ${exData.exercise_type==='STRENGTH'?'selected':''}>力量</option>
-            <option value="EQUIPMENT" ${exData.exercise_type==='EQUIPMENT'?'selected':''}>器材</option>
-            <option value="CARDIO" ${exData.exercise_type==='CARDIO'?'selected':''}>有氧</option>
-            <option value="HIIT" ${exData.exercise_type==='HIIT'?'selected':''}>HIIT</option>
-            <option value="FLEXIBILITY" ${exData.exercise_type==='FLEXIBILITY'?'selected':''}>柔韧</option>
-            <option value="CORE" ${exData.exercise_type==='CORE'?'selected':''}>核心</option>
+          <label>子肌群（可选）</label>
+          <select id="exSubMuscle">
+            <option value="">无</option>
+            ${subMuscleHtml}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>是否需要器材</label>
+          <select id="exEquipment">
+            <option value="0" ${!exData.needs_equipment?'selected':''}>徒手</option>
+            <option value="1" ${exData.needs_equipment?'selected':''}>需要器材</option>
           </select>
         </div>
         <div class="form-group"><label>基础卡路里系数 (cal/次)</label><input type="number" id="exCal" value="${exData.cal_per_rep||0}" step="0.1" min="0"></div>
@@ -1407,12 +1426,29 @@ function showExerciseModal(id) {
   });
 }
 
+function updateSubMuscleOptions() {
+  const subMuscleOptions = {
+    '胸肌': ['上胸', '中胸', '下胸', '胸内侧', '胸外侧'],
+    '背部': ['背阔肌', '中背部', '下背/腰', '斜方肌', '菱形肌'],
+    '肩部': ['三角肌前束', '三角肌中束', '三角肌后束'],
+    '手臂': ['肱二头肌', '肱三头肌', '前臂'],
+    '腿部': ['股四头肌', '腘绳肌', '臀部', '小腿'],
+    '核心': ['上腹', '下腹', '腹斜肌', '腹横肌', '髂腰肌']
+  };
+  const muscle = document.getElementById('exMuscle').value;
+  const subSelect = document.getElementById('exSubMuscle');
+  const options = subMuscleOptions[muscle] || [];
+  subSelect.innerHTML = '<option value="">无</option>' + options.map(s => `<option value="${s}">${s}</option>`).join('');
+}
+
 function saveExercise(id) {
   const data = {
     name: document.getElementById('exName').value.trim(),
     muscle_group: document.getElementById('exMuscle').value,
-    exercise_type: document.getElementById('exType').value,
+    sub_muscle: document.getElementById('exSubMuscle').value || null,
+
     cal_per_rep: parseFloat(document.getElementById('exCal').value)||0,
+    needs_equipment: document.getElementById('exEquipment').value === '1',
     description: document.getElementById('exDesc').value.trim()
   };
   if(!data.name) { toast('请输入动作名称','error'); return; }

@@ -127,6 +127,13 @@ public class WorkoutRecordManager {
     }
 
     public void deleteRecordByTaskId(long taskId) {
+        // 先找到记录ID用于服务器删除
+        for (WorkoutRecord r : cachedRecords) {
+            if (r.getTaskId() == taskId) {
+                api.deleteWorkoutRecord(r.getId(), null);
+                break;
+            }
+        }
         cachedRecords.removeIf(r -> r.getTaskId() == taskId);
     }
 

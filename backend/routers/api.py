@@ -9,6 +9,7 @@ from schemas import (
     TrainingTaskCreate, TrainingTaskUpdate, TrainingTaskResponse,
     ExercisePlanCreate, ExercisePlanUpdate, ExercisePlanResponse,
     AchievementUpdate, AchievementResponse,
+    ExerciseResponse,
 )
 import time
 
@@ -143,6 +144,9 @@ def _get_user_dict(cur, user_id):
         fitness_goal=d.get("fitness_goal"),
         height=d.get("height", 0), weight=d.get("weight", 0),
         body_fat=d.get("body_fat", 0), waist=d.get("waist", 0), hip=d.get("hip", 0),
+        initial_height=d.get("initial_height", 0), initial_weight=d.get("initial_weight", 0),
+        initial_body_fat=d.get("initial_body_fat", 0), initial_waist=d.get("initial_waist", 0),
+        initial_hip=d.get("initial_hip", 0),
         is_vip=bool(d.get("is_vip", 0)), level=d.get("level", 1),
         vip_expire_time=str(d["vip_expire_time"]) if d.get("vip_expire_time") else None,
         workout_reminder=bool(d.get("workout_reminder", 1)),
@@ -362,3 +366,21 @@ def update_achievement(achievement_type: str, data: AchievementUpdate,
             values.extend([user_id, achievement_type])
             cur.execute(f"UPDATE achievements SET {','.join(fields)} WHERE user_id=%s AND achievement_type=%s", values)
         return {"ok": True}
+
+# ==================== 动作库 ====================
+
+@router.get("/exercises", response_model=list[ExerciseResponse])
+def get_exercises(muscle_group: str = None):
+    with get_db() as conn:
+        cur = conn.cursor()
+        if muscle_group:
+            cur.execute("SELECT * FROM exercises WHERE muscle_group=%s ORDER BY id", (muscle_group,))
+        else:
+            cur.execute("SELECT * FROM exercises ORDER BY muscle_group, id")
+        rows = cur.fetchall()
+        return [ExerciseResponse(
+            id=r[0], name=r[1], muscle_group=r[2],
+            exercise_type=r[3], cal_per_rep=r[4], description=r[5],
+            sub_muscle=r[7] if len(r) > 7 else None,
+            needs_equipment=bool(r[8]) if len(r) > 8 else False
+        ) for r in rows]

@@ -1,5 +1,10 @@
 package com.example.myapplication.model;
 
+import android.content.Context;
+
+import com.example.myapplication.api.ApiClient;
+
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -7,9 +12,12 @@ import java.util.HashMap;
 
 /**
  * 健身动作数据库
- * 包含六大肌群分类和对应的动作
+ * 支持从服务器动态获取动作，本地数据作为fallback
  */
 public class ExerciseDatabase {
+
+    private static List<Exercise> cachedExercises = null;
+    private static boolean isLoading = false;
 
     /**
      * 六大肌群分类
@@ -28,6 +36,33 @@ public class ExerciseDatabase {
         }
         public String getDisplayName() {
             return displayName;
+        }
+
+        public static MuscleGroup fromDisplayName(String name) {
+            for (MuscleGroup group : values()) {
+                if (group.displayName.equals(name)) {
+                    return group;
+                }
+            }
+            return null;
+        }
+
+        public static MuscleGroup fromServerName(String name) {
+            if (name == null) return null;
+            // 先尝试英文名称匹配
+            String upper = name.toUpperCase();
+            for (MuscleGroup group : values()) {
+                if (group.name().equals(upper)) {
+                    return group;
+                }
+            }
+            // 再尝试中文名称匹配
+            for (MuscleGroup group : values()) {
+                if (group.displayName.equals(name)) {
+                    return group;
+                }
+            }
+            return null;
         }
     }
 
@@ -79,6 +114,136 @@ public class ExerciseDatabase {
         public String getDisplayName() {
             return displayName;
         }
+    }
+
+    /**
+     * 从服务器加载动作数据
+     */
+    public static void loadExercisesFromServer(Context context, Runnable onComplete) {
+        if (isLoading) return;
+        isLoading = true;
+
+        ApiClient api = ApiClient.getInstance(context);
+        api.getExercises(new ApiClient.Callback<List<Map<String, Object>>>() {
+            @Override
+            public void onSuccess(List<Map<String, Object>> data) {
+                cachedExercises = new ArrayList<>();
+                if (data != null) {
+                    for (Map<String, Object> item : data) {
+                        Exercise ex = mapToExercise(item);
+                        if (ex != null) {
+                            cachedExercises.add(ex);
+                        }
+                    }
+                }
+                isLoading = false;
+                if (onComplete != null) onComplete.run();
+            }
+
+            @Override
+            public void onError(String error) {
+                isLoading = false;
+                if (onComplete != null) onComplete.run();
+            }
+        });
+    }
+
+    private static Exercise mapToExercise(Map<String, Object> item) {
+        try {
+            String name = (String) item.get("name");
+            String muscleGroupStr = (String) item.get("muscle_group");
+            String exerciseType = (String) item.getOrDefault("exercise_type", "STRENGTH");
+            Number calPerRep = (Number) item.getOrDefault("cal_per_rep", 4f);
+
+            MuscleGroup muscleGroup = MuscleGroup.fromServerName(muscleGroupStr);
+            if (muscleGroup == null) return null;
+
+            // 优先使用服务器返回的 sub_muscle 和 needs_equipment
+            List<SubMuscle> subMuscles = new ArrayList<>();
+            String serverSubMuscle = (String) item.get("sub_muscle");
+            if (serverSubMuscle != null && !serverSubMuscle.isEmpty()) {
+                for (SubMuscle sm : SubMuscle.values()) {
+                    if (sm.name().equals(serverSubMuscle) || sm.displayName.equals(serverSubMuscle)) {
+                        subMuscles.add(sm);
+                        break;
+                    }
+                }
+            }
+            if (subMuscles.isEmpty()) {
+                subMuscles = inferSubMuscles(name, muscleGroup);
+            }
+
+            Object needsEquipObj = item.get("needs_equipment");
+            boolean needsEquipment;
+            if (needsEquipObj != null) {
+                needsEquipment = needsEquipObj instanceof Boolean ? (Boolean) needsEquipObj
+                        : needsEquipObj instanceof Number ? ((Number) needsEquipObj).intValue() != 0
+                        : Boolean.parseBoolean(String.valueOf(needsEquipObj));
+            } else {
+                needsEquipment = inferNeedsEquipment(name, exerciseType);
+            }
+
+            return new Exercise(name, subMuscles, needsEquipment, calPerRep.floatValue());
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private static List<SubMuscle> inferSubMuscles(String name, MuscleGroup group) {
+        List<SubMuscle> result = new ArrayList<>();
+
+        switch (group) {
+            case CHEST:
+                if (name.contains("上斜")) result.add(SubMuscle.UPPER_CHEST);
+                else if (name.contains("下斜")) result.add(SubMuscle.LOWER_CHEST);
+                else result.add(SubMuscle.MIDDLE_CHEST);
+                break;
+            case BACK:
+                if (name.contains("引体") || name.contains("下拉")) result.add(SubMuscle.LAT);
+                else if (name.contains("划船")) result.add(SubMuscle.MIDDLE_BACK);
+                else if (name.contains("硬拉") || name.contains("山羊")) result.add(SubMuscle.LOWER_BACK);
+                else result.add(SubMuscle.MIDDLE_BACK);
+                break;
+            case SHOULDERS:
+                if (name.contains("前平举")) result.add(SubMuscle.FRONT_DELTS);
+                else if (name.contains("侧平举")) result.add(SubMuscle.SIDE_DELTS);
+                else if (name.contains("面拉") || name.contains("俯身")) result.add(SubMuscle.REAR_DELTS);
+                else result.add(SubMuscle.FRONT_DELTS);
+                break;
+            case ARMS:
+                if (name.contains("弯举")) result.add(SubMuscle.BICEPS);
+                else if (name.contains("下压") || name.contains("臂屈伸")) result.add(SubMuscle.TRICEPS);
+                else result.add(SubMuscle.BICEPS);
+                break;
+            case LEGS:
+                if (name.contains("深蹲") || name.contains("腿举") || name.contains("箭步")) result.add(SubMuscle.QUADS);
+                else if (name.contains("弯举") || name.contains("硬拉")) result.add(SubMuscle.HAMSTRINGS);
+                else if (name.contains("臀")) result.add(SubMuscle.GLUTES);
+                else if (name.contains("提踵")) result.add(SubMuscle.CALVES);
+                else result.add(SubMuscle.QUADS);
+                break;
+            case CORE:
+                if (name.contains("卷腹") || name.contains("仰卧起坐")) result.add(SubMuscle.UPPER_ABS);
+                else if (name.contains("举腿") || name.contains("登山")) result.add(SubMuscle.LOWER_ABS);
+                else if (name.contains("转体") || name.contains("伐木")) result.add(SubMuscle.OBLIQUES);
+                else if (name.contains("平板") || name.contains("支撑")) result.add(SubMuscle.TRANSVERSE_ABS);
+                else result.add(SubMuscle.UPPER_ABS);
+                break;
+        }
+
+        if (result.isEmpty()) {
+            result.add(SubMuscle.UPPER_CHEST);
+        }
+        return result;
+    }
+
+    private static boolean inferNeedsEquipment(String name, String exerciseType) {
+        if ("CARDIO".equals(exerciseType)) return false;
+        String[] equipmentKeywords = {"杠铃", "哑铃", "器械", "机器", "绳索", "龙门架", "蝴蝶机", "高位下拉", "腿举", "腿屈伸", "腿弯举"};
+        for (String keyword : equipmentKeywords) {
+            if (name.contains(keyword)) return true;
+        }
+        return false;
     }
 
     /**
@@ -142,9 +307,20 @@ public class ExerciseDatabase {
     }
 
     /**
-     * 获取某大肌群下的所有动作
+     * 获取某大肌群下的所有动作（优先使用服务器数据）
      */
     public static List<Exercise> getExercisesForGroup(MuscleGroup group) {
+        if (cachedExercises != null && !cachedExercises.isEmpty()) {
+            List<Exercise> filtered = new ArrayList<>();
+            for (Exercise ex : cachedExercises) {
+                MuscleGroup exGroup = ex.getPrimaryMuscleGroup();
+                if (exGroup == group) {
+                    filtered.add(ex);
+                }
+            }
+            if (!filtered.isEmpty()) return filtered;
+        }
+        // Fallback to local data
         switch (group) {
             case CHEST:
                 return getChestExercises();
@@ -181,6 +357,10 @@ public class ExerciseDatabase {
      * 获取所有动作
      */
     public static List<Exercise> getAllExercises() {
+        if (cachedExercises != null && !cachedExercises.isEmpty()) {
+            return new ArrayList<>(cachedExercises);
+        }
+        // Fallback to local data
         List<Exercise> all = new java.util.ArrayList<>();
         all.addAll(getChestExercises());
         all.addAll(getBackExercises());
@@ -189,6 +369,13 @@ public class ExerciseDatabase {
         all.addAll(getLegExercises());
         all.addAll(getCoreExercises());
         return all;
+    }
+
+    /**
+     * 清除缓存
+     */
+    public static void clearCache() {
+        cachedExercises = null;
     }
 
     /**

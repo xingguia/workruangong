@@ -138,6 +138,86 @@ public class ProgressFragment extends Fragment {
             binding.weightChange.setVisibility(View.GONE);
         }
 
+        // 计算身高变化
+        if (initialHeight > 0 && height > 0) {
+            int change = height - initialHeight;
+            if (binding.heightChange != null) {
+                binding.heightChange.setVisibility(View.VISIBLE);
+                if (change > 0) {
+                    binding.heightChange.setText(String.format("+%dcm", change));
+                    binding.heightChange.setTextColor(getResources().getColor(R.color.error, null));
+                } else if (change < 0) {
+                    binding.heightChange.setText(String.format("%dcm", change));
+                    binding.heightChange.setTextColor(getResources().getColor(R.color.success, null));
+                } else {
+                    binding.heightChange.setText("0cm");
+                    binding.heightChange.setTextColor(getResources().getColor(R.color.text_muted, null));
+                }
+            }
+        } else if (binding.heightChange != null) {
+            binding.heightChange.setVisibility(View.GONE);
+        }
+
+        // 计算体脂率变化
+        if (initialBodyFat > 0 && bodyFat > 0) {
+            float change = bodyFat - initialBodyFat;
+            if (binding.bodyFatChange != null) {
+                binding.bodyFatChange.setVisibility(View.VISIBLE);
+                if (change > 0) {
+                    binding.bodyFatChange.setText(String.format("+%.1f%%", change));
+                    binding.bodyFatChange.setTextColor(getResources().getColor(R.color.error, null));
+                } else if (change < 0) {
+                    binding.bodyFatChange.setText(String.format("%.1f%%", change));
+                    binding.bodyFatChange.setTextColor(getResources().getColor(R.color.success, null));
+                } else {
+                    binding.bodyFatChange.setText("0.0%");
+                    binding.bodyFatChange.setTextColor(getResources().getColor(R.color.text_muted, null));
+                }
+            }
+        } else if (binding.bodyFatChange != null) {
+            binding.bodyFatChange.setVisibility(View.GONE);
+        }
+
+        // 计算腰围变化
+        if (initialWaist > 0 && waist > 0) {
+            float change = waist - initialWaist;
+            if (binding.waistChange != null) {
+                binding.waistChange.setVisibility(View.VISIBLE);
+                if (change > 0) {
+                    binding.waistChange.setText(String.format("+%.1fcm", change));
+                    binding.waistChange.setTextColor(getResources().getColor(R.color.error, null));
+                } else if (change < 0) {
+                    binding.waistChange.setText(String.format("%.1fcm", change));
+                    binding.waistChange.setTextColor(getResources().getColor(R.color.success, null));
+                } else {
+                    binding.waistChange.setText("0.0cm");
+                    binding.waistChange.setTextColor(getResources().getColor(R.color.text_muted, null));
+                }
+            }
+        } else if (binding.waistChange != null) {
+            binding.waistChange.setVisibility(View.GONE);
+        }
+
+        // 计算臀围变化
+        if (initialHip > 0 && hip > 0) {
+            float change = hip - initialHip;
+            if (binding.hipChange != null) {
+                binding.hipChange.setVisibility(View.VISIBLE);
+                if (change > 0) {
+                    binding.hipChange.setText(String.format("+%.1fcm", change));
+                    binding.hipChange.setTextColor(getResources().getColor(R.color.error, null));
+                } else if (change < 0) {
+                    binding.hipChange.setText(String.format("%.1fcm", change));
+                    binding.hipChange.setTextColor(getResources().getColor(R.color.success, null));
+                } else {
+                    binding.hipChange.setText("0.0cm");
+                    binding.hipChange.setTextColor(getResources().getColor(R.color.text_muted, null));
+                }
+            }
+        } else if (binding.hipChange != null) {
+            binding.hipChange.setVisibility(View.GONE);
+        }
+
         // Update empty state visibility
         boolean hasData = (height > 0 || initialHeight > 0) && (weight > 0 || initialWeight > 0);
         binding.emptyState.setVisibility(hasData ? View.GONE : View.VISIBLE);

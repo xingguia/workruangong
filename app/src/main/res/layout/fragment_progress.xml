@@ -201,6 +201,16 @@
                         android:textColor="@color/text_muted"
                         android:textSize="14sp" />
                 </LinearLayout>
+
+                <TextView
+                    android:id="@+id/heightChange"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="+0cm"
+                    android:textColor="@color/accent"
+                    android:textSize="@dimen/text_caption"
+                    android:visibility="gone" />
             </LinearLayout>
         </LinearLayout>
 
@@ -273,6 +283,16 @@
                         android:textColor="@color/text_muted"
                         android:textSize="14sp" />
                 </LinearLayout>
+
+                <TextView
+                    android:id="@+id/bodyFatChange"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="+0.0%"
+                    android:textColor="@color/accent"
+                    android:textSize="@dimen/text_caption"
+                    android:visibility="gone" />
             </LinearLayout>
 
             <Space
@@ -340,6 +360,16 @@
                         android:textColor="@color/text_muted"
                         android:textSize="14sp" />
                 </LinearLayout>
+
+                <TextView
+                    android:id="@+id/waistChange"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="+0.0cm"
+                    android:textColor="@color/accent"
+                    android:textSize="@dimen/text_caption"
+                    android:visibility="gone" />
             </LinearLayout>
         </LinearLayout>
 
@@ -412,6 +442,16 @@
                         android:textColor="@color/text_muted"
                         android:textSize="14sp" />
                 </LinearLayout>
+
+                <TextView
+                    android:id="@+id/hipChange"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="+0.0cm"
+                    android:textColor="@color/accent"
+                    android:textSize="@dimen/text_caption"
+                    android:visibility="gone" />
             </LinearLayout>
 
             <Space

@@ -1275,6 +1275,9 @@ public class HomeFragment extends Fragment {
             setupTrainingTasks();
         }
         syncTodayExercisePlan();
+
+        // 从服务器加载动作数据
+        ExerciseDatabase.loadExercisesFromServer(requireContext(), null);
     }
 
     @Override

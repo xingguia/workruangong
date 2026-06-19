@@ -21,6 +21,8 @@ import androidx.navigation.Navigation;
 
 import com.example.myapplication.R;
 import com.example.myapplication.databinding.FragmentAssessmentBinding;
+import com.example.myapplication.model.BodyRecord;
+import com.example.myapplication.util.RecordManager;
 import com.example.myapplication.util.SessionManager;
 import com.example.myapplication.util.UsernameValidator;
 import com.google.android.material.card.MaterialCardView;
@@ -755,6 +757,12 @@ public class AssessmentFragment extends Fragment {
         // Save body data locally
         if (height > 0 && weight > 0) {
             sessionManager.saveBodyData(height, (float) weight);
+            // 保存为初始数据
+            sessionManager.saveInitialBodyData(height, (float) weight, 0, 0, 0);
+            // 保存为第一条测量记录
+            RecordManager recordManager = RecordManager.getInstance(requireContext());
+            BodyRecord record = new BodyRecord(height, (float) weight, 0, 0, 0);
+            recordManager.saveRecord(record);
         }
 
         // Save fitness goal and other assessment data to server
