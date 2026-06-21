@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from routers.api import router as api_router
 from routers.admin import router as admin_router
 from models import init_db
@@ -27,9 +28,12 @@ if os.path.exists(static_dir):
 @app.get("/admin")
 @app.get("/admin/{rest_of_path:path}")
 async def serve_admin():
-    from fastapi.responses import FileResponse
     admin_html = os.path.join(os.path.dirname(__file__), "static", "admin", "index.html")
     return FileResponse(admin_html)
+
+@app.get("/favicon.ico")
+async def favicon():
+    return FileResponse(os.path.join(os.path.dirname(__file__), "static", "favicon.ico"))
 
 @app.on_event("startup")
 def startup():
