@@ -19,11 +19,15 @@
 ```
 app/src/main/java/com/example/myapplication/
 ├── api/
-│   └── ApiClient.java         # 网络请求封装 (OkHttp)
+│   ├── ApiClient.java         # 网络请求封装 (OkHttp)
+│   └── AICalorieService.java  # AI卡路里计算服务
 ├── model/
-│   ├── User.java              # 用户模型
-│   ├── WorkoutRecord.java     # 训练记录模型
-│   └── TrainingTask.java      # 训练任务模型
+│   ├── Achievement.java       # 成就模型
+│   ├── BodyRecord.java        # 身体记录模型
+│   ├── ExerciseDatabase.java  # 训练动作数据库
+│   ├── ExercisePlan.java      # 训练计划模型
+│   ├── TrainingTask.java      # 训练任务模型
+│   └── WorkoutRecord.java     # 训练记录模型
 ├── ui/screens/
 │   ├── login/
 │   │   ├── LoginFragment.java       # 登录页
@@ -34,13 +38,33 @@ app/src/main/java/com/example/myapplication/
 │   │   └── HomeFragment.java        # 首页
 │   ├── training/
 │   │   └── TrainingFragment.java    # 训练记录
-│   └── profile/
-│       └── ProfileFragment.java     # 个人中心
+│   ├── progress/
+│   │   └── ProgressFragment.java    # 进度页面
+│   ├── profile/
+│   │   ├── ProfileFragment.java     # 个人中心
+│   │   ├── ProfileEditFragment.java # 编辑资料
+│   │   ├── AchievementsFragment.java # 成就页面
+│   │   ├── BadgeWallFragment.java   # 勋章墙
+│   │   ├── SettingsFragment.java    # 设置页面
+│   │   ├── UsernameSetDialog.java   # 用户名设置对话框
+│   │   └── WorkoutHistoryFragment.java # 训练历史
+│   ├── register/
+│   │   └── RegisterFragment.java    # 注册页
+│   └── vip/
+│       └── VipFragment.java         # VIP页面
+├── views/
+│   └── BodyChartView.java    # 身体数据图表视图
 └── util/
     ├── SessionManager.java    # 登录状态管理
     ├── UserManager.java       # 用户数据缓存
     ├── WorkoutRecordManager.java  # 训练记录管理
-    └── TrainingTaskManager.java   # 训练任务管理
+    ├── TrainingTaskManager.java   # 训练任务管理
+    ├── AchievementManager.java    # 成就管理
+    ├── DateUtils.java         # 日期工具类
+    ├── ExercisePlanManager.java # 训练计划管理
+    ├── RecordManager.java     # 记录管理
+    ├── UsernameValidator.java # 用户名校验
+    └── ValidationUtils.java   # 验证工具类
 ```
 
 ## 主要功能
@@ -66,12 +90,22 @@ app/src/main/java/com/example/myapplication/
 - 记录组数、次数、重量、时长
 - 自动计算卡路里消耗
 
+### 进度页面
+- 身体数据趋势图表
+- 训练进度统计
+
 ### 个人中心
 - 查看/编辑个人资料
 - 身体数据趋势图
 - VIP 会员状态
 - 成就系统
+- 勋章墙展示
 - 设置（训练提醒、成就通知）
+- 训练历史查看
+
+### VIP功能
+- VIP会员状态展示
+- VIP特权说明
 
 ## 注意事项
 

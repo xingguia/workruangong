@@ -12,6 +12,7 @@
 │  · 训练数据          │   (可滚动)               │
 │  · 内容管理          │                         │
 │  · 数据统计          │                         │
+│  · 反馈管理          │                         │
 │  · 系统设置          │                         │
 │                     │                         │
 └──────────────────────────────────────────────┘
@@ -202,6 +203,47 @@ GET /api/v1/admin/statistics/vip       → 会员数据
 GET/POST/PUT/DELETE /api/v1/admin/admins
 PUT /api/v1/admin/settings
 GET/POST/PUT/DELETE /api/v1/admin/announcements
+```
+
+---
+
+### 页面 7：反馈管理
+
+**布局**：顶部筛选 + 反馈列表表格 + 详情弹窗
+
+**筛选栏**：用户搜索 + 状态筛选（全部/待处理/处理中/已解决）+ 日期范围选择
+
+**反馈列表表格列**：
+| 列名 | 说明 |
+|------|------|
+| ID | 反馈ID |
+| 用户 | 用户名 |
+| 内容 | 反馈内容（截断显示） |
+| 分类 | 问题类型 |
+| 状态 | 待处理/处理中/已解决 |
+| 时间 | 创建时间 |
+| 操作 | 查看/删除 |
+
+**点击反馈 → 详情弹窗**：
+- 反馈基本信息：用户、内容、分类、状态、时间
+- 消息记录：管理员与用户的对话记录
+- 回复输入框：管理员可以回复用户
+- 操作按钮：更新状态、删除反馈
+
+**批量操作**：
+- 批量删除选中反馈
+- 批量更新状态
+
+**数据接口**：
+```
+GET    /api/v1/admin/feedback                     → 反馈列表
+GET    /api/v1/admin/feedback/{id}                → 反馈详情
+GET    /api/v1/admin/feedback/{id}/messages       → 消息记录
+POST   /api/v1/admin/feedback/{id}/messages       → 发送回复
+PUT    /api/v1/admin/feedback/{id}/status         → 更新状态
+DELETE /api/v1/admin/feedback/{id}                → 删除反馈
+POST   /api/v1/admin/feedback/batch-delete        → 批量删除
+PUT    /api/v1/admin/feedback/batch-status        → 批量更新状态
 ```
 
 ---
