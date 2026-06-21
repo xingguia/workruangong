@@ -43,29 +43,37 @@ public class RegisterFragment extends Fragment {
     private void setupListeners() {
         binding.backBtn.setOnClickListener(v -> navController.popBackStack());
 
+        binding.phoneInput.addTextChangedListener(new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
+            @Override public void afterTextChanged(Editable s) {
+                validatePhone(s.toString());
+                validateInputs();
+            }
+        });
+
         binding.passwordInput.addTextChangedListener(new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
             @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
             @Override public void afterTextChanged(Editable s) {
                 updatePasswordStrength(s.toString());
+                validatePassword(s.toString());
+                validateConfirmPassword(binding.confirmPasswordInput.getText().toString());
                 validateInputs();
             }
         });
 
-        binding.phoneInput.addTextChangedListener(new TextWatcher() {
+        binding.confirmPasswordInput.addTextChangedListener(new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
             @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
-            @Override public void afterTextChanged(Editable s) { validateInputs(); }
+            @Override public void afterTextChanged(Editable s) {
+                validateConfirmPassword(s.toString());
+                validateInputs();
+            }
         });
 
         binding.agreeCheckbox.setOnCheckedChangeListener((buttonView, isChecked) -> validateInputs());
         binding.registerBtn.setOnClickListener(v -> handleRegister());
-
-        binding.confirmPasswordInput.addTextChangedListener(new TextWatcher() {
-            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
-            @Override public void afterTextChanged(Editable s) { validateInputs(); }
-        });
     }
 
     private void updatePasswordStrength(String password) {
@@ -102,6 +110,53 @@ public class RegisterFragment extends Fragment {
         binding.strengthText.setTextColor(color);
     }
 
+    private void validatePhone(String phone) {
+        if (phone.isEmpty()) {
+            binding.phoneError.setVisibility(View.GONE);
+            binding.phoneInputLayout.setBoxStrokeColor(ContextCompat.getColor(requireContext(), R.color.border_color));
+        } else if (phone.length() < 11) {
+            binding.phoneError.setText("手机号需要11位，当前" + phone.length() + "位");
+            binding.phoneError.setVisibility(View.VISIBLE);
+            binding.phoneInputLayout.setBoxStrokeColor(ContextCompat.getColor(requireContext(), R.color.error));
+        } else if (!phone.startsWith("1")) {
+            binding.phoneError.setText("手机号必须以1开头");
+            binding.phoneError.setVisibility(View.VISIBLE);
+            binding.phoneInputLayout.setBoxStrokeColor(ContextCompat.getColor(requireContext(), R.color.error));
+        } else {
+            binding.phoneError.setVisibility(View.GONE);
+            binding.phoneInputLayout.setBoxStrokeColor(ContextCompat.getColor(requireContext(), R.color.success));
+        }
+    }
+
+    private void validatePassword(String password) {
+        if (password.isEmpty()) {
+            binding.passwordError.setVisibility(View.GONE);
+            binding.passwordInputLayout.setBoxStrokeColor(ContextCompat.getColor(requireContext(), R.color.border_color));
+        } else if (password.length() < 6) {
+            binding.passwordError.setText("密码至少需要6位，当前" + password.length() + "位");
+            binding.passwordError.setVisibility(View.VISIBLE);
+            binding.passwordInputLayout.setBoxStrokeColor(ContextCompat.getColor(requireContext(), R.color.error));
+        } else {
+            binding.passwordError.setVisibility(View.GONE);
+            binding.passwordInputLayout.setBoxStrokeColor(ContextCompat.getColor(requireContext(), R.color.success));
+        }
+    }
+
+    private void validateConfirmPassword(String confirmPassword) {
+        String password = binding.passwordInput.getText() != null ? binding.passwordInput.getText().toString() : "";
+        if (confirmPassword.isEmpty()) {
+            binding.confirmPasswordError.setVisibility(View.GONE);
+            binding.confirmPasswordInputLayout.setBoxStrokeColor(ContextCompat.getColor(requireContext(), R.color.border_color));
+        } else if (!confirmPassword.equals(password)) {
+            binding.confirmPasswordError.setText("两次输入的密码不一致");
+            binding.confirmPasswordError.setVisibility(View.VISIBLE);
+            binding.confirmPasswordInputLayout.setBoxStrokeColor(ContextCompat.getColor(requireContext(), R.color.error));
+        } else {
+            binding.confirmPasswordError.setVisibility(View.GONE);
+            binding.confirmPasswordInputLayout.setBoxStrokeColor(ContextCompat.getColor(requireContext(), R.color.success));
+        }
+    }
+
     private void validateInputs() {
         String phone = binding.phoneInput.getText() != null ? binding.phoneInput.getText().toString() : "";
         String password = binding.passwordInput.getText() != null ? binding.passwordInput.getText().toString() : "";
@@ -115,16 +170,18 @@ public class RegisterFragment extends Fragment {
         String password = binding.passwordInput.getText() != null ? binding.passwordInput.getText().toString() : "";
         String confirmPassword = binding.confirmPasswordInput.getText() != null ? binding.confirmPasswordInput.getText().toString() : "";
 
-        if (phone.length() != 11) {
-            Toast.makeText(requireContext(), R.string.error_invalid_phone, Toast.LENGTH_SHORT).show();
+        // 实时校验已经在输入时显示，这里做最终检查
+        validatePhone(phone);
+        validatePassword(password);
+        validateConfirmPassword(confirmPassword);
+
+        if (phone.length() != 11 || !phone.startsWith("1")) {
             return;
         }
         if (password.length() < 6) {
-            Toast.makeText(requireContext(), R.string.error_short_password, Toast.LENGTH_SHORT).show();
             return;
         }
         if (!password.equals(confirmPassword)) {
-            Toast.makeText(requireContext(), R.string.error_password_mismatch, Toast.LENGTH_SHORT).show();
             return;
         }
         if (!binding.agreeCheckbox.isChecked()) {
@@ -149,7 +206,17 @@ public class RegisterFragment extends Fragment {
                 binding.registerBtn.post(() -> {
                     binding.registerBtn.setEnabled(true);
                     binding.registerBtn.setText(R.string.register_btn);
-                    Toast.makeText(requireContext(), "注册失败: " + error, Toast.LENGTH_SHORT).show();
+                    String errorMsg;
+                    if (error.contains("already exists") || error.contains("already registered") || error.contains("400")) {
+                        errorMsg = "手机号已被注册";
+                    } else if (error.contains("invalid phone") || error.contains("phone")) {
+                        errorMsg = "手机号格式不正确";
+                    } else if (error.contains("timeout") || error.contains("connect")) {
+                        errorMsg = "网络连接失败，请检查网络";
+                    } else {
+                        errorMsg = "注册失败，请稍后重试";
+                    }
+                    Toast.makeText(requireContext(), errorMsg, Toast.LENGTH_SHORT).show();
                 });
             }
         });

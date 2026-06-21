@@ -360,7 +360,7 @@ public class ProfileEditFragment extends Fragment {
                 .setPositiveButton("保存", (dialog, which) -> {
                     String newNickname = editText.getText().toString().trim();
                     if (!newNickname.isEmpty()) {
-                        sessionManager.setNickname(newNickname);
+                        sessionManager.saveNickname(newNickname);
                         binding.nicknameValue.setText(newNickname);
                         // Update avatar letter
                         if (!newNickname.equals("健身爱好者")) {

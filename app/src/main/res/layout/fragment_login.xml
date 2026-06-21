@@ -114,6 +114,16 @@
                         android:textColorHint="@color/text_muted" />
                 </com.google.android.material.textfield.TextInputLayout>
 
+                <TextView
+                    android:id="@+id/phoneError"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:layout_marginTop="4dp"
+                    android:textColor="@color/error"
+                    android:textSize="@dimen/text_caption"
+                    android:visibility="gone" />
+
                 <!-- Password Input -->
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/passwordInputLayout"
@@ -142,6 +152,16 @@
                         android:textColor="@color/text_primary"
                         android:textColorHint="@color/text_muted" />
                 </com.google.android.material.textfield.TextInputLayout>
+
+                <TextView
+                    android:id="@+id/passwordError"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:layout_marginTop="4dp"
+                    android:textColor="@color/error"
+                    android:textSize="@dimen/text_caption"
+                    android:visibility="gone" />
 
                 <!-- Forgot Password -->
                 <TextView

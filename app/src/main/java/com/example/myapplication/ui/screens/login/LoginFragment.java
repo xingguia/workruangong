@@ -10,6 +10,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
@@ -48,13 +49,19 @@ public class LoginFragment extends Fragment {
         binding.phoneInput.addTextChangedListener(new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
             @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
-            @Override public void afterTextChanged(Editable s) { validateInputs(); }
+            @Override public void afterTextChanged(Editable s) {
+                validatePhone(s.toString());
+                validateInputs();
+            }
         });
 
         binding.passwordInput.addTextChangedListener(new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
             @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
-            @Override public void afterTextChanged(Editable s) { validateInputs(); }
+            @Override public void afterTextChanged(Editable s) {
+                validatePassword(s.toString());
+                validateInputs();
+            }
         });
     }
 
@@ -62,12 +69,14 @@ public class LoginFragment extends Fragment {
         String phone = binding.phoneInput.getText() != null ? binding.phoneInput.getText().toString() : "";
         String password = binding.passwordInput.getText() != null ? binding.passwordInput.getText().toString() : "";
 
-        if (phone.length() != 11) {
-            Toast.makeText(requireContext(), R.string.error_invalid_phone, Toast.LENGTH_SHORT).show();
+        // 实时校验已经在输入时显示，这里做最终检查
+        validatePhone(phone);
+        validatePassword(password);
+
+        if (phone.length() != 11 || !phone.startsWith("1")) {
             return;
         }
         if (password.length() < 6) {
-            Toast.makeText(requireContext(), R.string.error_short_password, Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -89,7 +98,17 @@ public class LoginFragment extends Fragment {
                 binding.loginBtn.post(() -> {
                     binding.loginBtn.setEnabled(true);
                     binding.loginBtn.setText(R.string.login);
-                    Toast.makeText(requireContext(), "登录失败: " + error, Toast.LENGTH_SHORT).show();
+                    String errorMsg;
+                    if (error.contains("Invalid phone or password") || error.contains("401")) {
+                        errorMsg = "手机号或密码错误";
+                    } else if (error.contains("not found") || error.contains("404")) {
+                        errorMsg = "用户不存在";
+                    } else if (error.contains("timeout") || error.contains("connect")) {
+                        errorMsg = "网络连接失败，请检查网络";
+                    } else {
+                        errorMsg = "登录失败，请稍后重试";
+                    }
+                    Toast.makeText(requireContext(), errorMsg, Toast.LENGTH_SHORT).show();
                 });
             }
         });
@@ -99,6 +118,38 @@ public class LoginFragment extends Fragment {
         String phone = binding.phoneInput.getText() != null ? binding.phoneInput.getText().toString() : "";
         String password = binding.passwordInput.getText() != null ? binding.passwordInput.getText().toString() : "";
         binding.loginBtn.setEnabled(phone.length() == 11 && password.length() >= 6);
+    }
+
+    private void validatePhone(String phone) {
+        if (phone.isEmpty()) {
+            binding.phoneError.setVisibility(View.GONE);
+            binding.phoneInputLayout.setBoxStrokeColor(ContextCompat.getColor(requireContext(), R.color.border_color));
+        } else if (phone.length() < 11) {
+            binding.phoneError.setText("手机号需要11位，当前" + phone.length() + "位");
+            binding.phoneError.setVisibility(View.VISIBLE);
+            binding.phoneInputLayout.setBoxStrokeColor(ContextCompat.getColor(requireContext(), R.color.error));
+        } else if (!phone.startsWith("1")) {
+            binding.phoneError.setText("手机号必须以1开头");
+            binding.phoneError.setVisibility(View.VISIBLE);
+            binding.phoneInputLayout.setBoxStrokeColor(ContextCompat.getColor(requireContext(), R.color.error));
+        } else {
+            binding.phoneError.setVisibility(View.GONE);
+            binding.phoneInputLayout.setBoxStrokeColor(ContextCompat.getColor(requireContext(), R.color.border_color));
+        }
+    }
+
+    private void validatePassword(String password) {
+        if (password.isEmpty()) {
+            binding.passwordError.setVisibility(View.GONE);
+            binding.passwordInputLayout.setBoxStrokeColor(ContextCompat.getColor(requireContext(), R.color.border_color));
+        } else if (password.length() < 6) {
+            binding.passwordError.setText("密码至少需要6位，当前" + password.length() + "位");
+            binding.passwordError.setVisibility(View.VISIBLE);
+            binding.passwordInputLayout.setBoxStrokeColor(ContextCompat.getColor(requireContext(), R.color.error));
+        } else {
+            binding.passwordError.setVisibility(View.GONE);
+            binding.passwordInputLayout.setBoxStrokeColor(ContextCompat.getColor(requireContext(), R.color.border_color));
+        }
     }
 
     @Override

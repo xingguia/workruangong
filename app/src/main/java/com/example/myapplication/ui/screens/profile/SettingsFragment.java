@@ -249,7 +249,15 @@ public class SettingsFragment extends Fragment {
             @Override
             public void onError(String error) {
                 if (!isAdded()) return;
-                Toast.makeText(requireContext(), "导出失败: " + error, Toast.LENGTH_SHORT).show();
+                String errorMsg;
+                if (error.contains("timeout") || error.contains("connect")) {
+                    errorMsg = "网络连接失败，请检查网络";
+                } else if (error.contains("500") || error.contains("server")) {
+                    errorMsg = "服务器繁忙，请稍后重试";
+                } else {
+                    errorMsg = "导出失败，请稍后重试";
+                }
+                Toast.makeText(requireContext(), errorMsg, Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -299,7 +307,15 @@ public class SettingsFragment extends Fragment {
                         @Override
                         public void onError(String error) {
                             if (!isAdded()) return;
-                            Toast.makeText(requireContext(), "修改失败: " + error, Toast.LENGTH_SHORT).show();
+                            String errorMsg;
+                            if (error.contains("incorrect password") || error.contains("old password") || error.contains("400")) {
+                                errorMsg = "旧密码错误";
+                            } else if (error.contains("timeout") || error.contains("connect")) {
+                                errorMsg = "网络连接失败，请检查网络";
+                            } else {
+                                errorMsg = "修改失败，请稍后重试";
+                            }
+                            Toast.makeText(requireContext(), errorMsg, Toast.LENGTH_SHORT).show();
                         }
                     });
                 })
@@ -359,7 +375,15 @@ public class SettingsFragment extends Fragment {
                         @Override
                         public void onError(String error) {
                             if (!isAdded()) return;
-                            Toast.makeText(requireContext(), "修改失败: " + error, Toast.LENGTH_SHORT).show();
+                            String errorMsg;
+                            if (error.contains("incorrect password") || error.contains("old password") || error.contains("400")) {
+                                errorMsg = "旧密码错误";
+                            } else if (error.contains("timeout") || error.contains("connect")) {
+                                errorMsg = "网络连接失败，请检查网络";
+                            } else {
+                                errorMsg = "修改失败，请稍后重试";
+                            }
+                            Toast.makeText(requireContext(), errorMsg, Toast.LENGTH_SHORT).show();
                         }
                     });
                 })
@@ -407,7 +431,15 @@ public class SettingsFragment extends Fragment {
                                     @Override
                                     public void onError(String error) {
                                         if (!isAdded()) return;
-                                        Toast.makeText(requireContext(), "注销失败: " + error, Toast.LENGTH_SHORT).show();
+                                        String errorMsg;
+                                        if (error.contains("timeout") || error.contains("connect")) {
+                                            errorMsg = "网络连接失败，请检查网络";
+                                        } else if (error.contains("500") || error.contains("server")) {
+                                            errorMsg = "服务器繁忙，请稍后重试";
+                                        } else {
+                                            errorMsg = "注销失败，请稍后重试";
+                                        }
+                                        Toast.makeText(requireContext(), errorMsg, Toast.LENGTH_SHORT).show();
                                     }
                                 });
                             })
@@ -489,7 +521,15 @@ public class SettingsFragment extends Fragment {
                         @Override
                         public void onError(String error) {
                             if (!isAdded()) return;
-                            Toast.makeText(requireContext(), "提交失败: " + error, Toast.LENGTH_SHORT).show();
+                            String errorMsg;
+                            if (error.contains("timeout") || error.contains("connect")) {
+                                errorMsg = "网络连接失败，请检查网络";
+                            } else if (error.contains("500") || error.contains("server")) {
+                                errorMsg = "服务器繁忙，请稍后重试";
+                            } else {
+                                errorMsg = "提交失败，请稍后重试";
+                            }
+                            Toast.makeText(requireContext(), errorMsg, Toast.LENGTH_SHORT).show();
                         }
                     });
                 })
@@ -717,7 +757,15 @@ public class SettingsFragment extends Fragment {
                                                 requireActivity().runOnUiThread(() -> {
                                                     sendBtn.setEnabled(true);
                                                     sendBtn.setText("发送");
-                                                    Toast.makeText(requireContext(), "发送失败: " + error, Toast.LENGTH_SHORT).show();
+                                                    String errorMsg;
+                                                    if (error.contains("timeout") || error.contains("connect")) {
+                                                        errorMsg = "网络连接失败，请检查网络";
+                                                    } else if (error.contains("500") || error.contains("server")) {
+                                                        errorMsg = "服务器繁忙，请稍后重试";
+                                                    } else {
+                                                        errorMsg = "发送失败，请稍后重试";
+                                                    }
+                                                    Toast.makeText(requireContext(), errorMsg, Toast.LENGTH_SHORT).show();
                                                 });
                                             }
                                         });

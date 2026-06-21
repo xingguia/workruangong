@@ -400,16 +400,27 @@ public class ProgressFragment extends Fragment {
 
             TextView dateText = recordView.findViewById(R.id.recordDate);
             TextView dayOfWeek = recordView.findViewById(R.id.recordDayOfWeek);
+            TextView heightText = recordView.findViewById(R.id.recordHeight);
             TextView weightText = recordView.findViewById(R.id.recordWeight);
             TextView weightChange = recordView.findViewById(R.id.recordWeightChange);
             TextView bmiText = recordView.findViewById(R.id.recordBmi);
             TextView bodyFatText = recordView.findViewById(R.id.recordBodyFat);
             TextView waistText = recordView.findViewById(R.id.recordWaist);
+            TextView hipText = recordView.findViewById(R.id.recordHip);
+            ImageView deleteBtn = recordView.findViewById(R.id.deleteRecordBtn);
 
             dateText.setText(record.getFormattedDate());
             dayOfWeek.setText(record.getDayOfWeek());
             weightText.setText(String.format("%.1f", record.getWeight()));
             bmiText.setText(String.format("%.1f", record.getBmi()));
+
+            // Height
+            if (record.getHeight() > 0) {
+                heightText.setText(String.valueOf(record.getHeight()));
+            } else {
+                heightText.setText("--");
+                heightText.setTextColor(getResources().getColor(R.color.text_muted, null));
+            }
 
             // Calculate weight change from initial
             if (initialWeight > 0) {
@@ -443,6 +454,34 @@ public class ProgressFragment extends Fragment {
                 waistText.setText("--");
                 waistText.setTextColor(getResources().getColor(R.color.text_muted, null));
             }
+
+            // Hip
+            if (record.getHip() > 0) {
+                hipText.setText(String.format("%.1f", record.getHip()));
+            } else {
+                hipText.setText("--");
+                hipText.setTextColor(getResources().getColor(R.color.text_muted, null));
+            }
+
+            // Delete button click
+            deleteBtn.setOnClickListener(v -> {
+                new AlertDialog.Builder(requireContext())
+                        .setTitle("删除记录")
+                        .setMessage("确定要删除这条身体记录吗？\n\n日期：" + record.getFormattedDate()
+                                + "\n身高：" + (record.getHeight() > 0 ? record.getHeight() + "cm" : "--")
+                                + "\n体重：" + String.format("%.1fkg", record.getWeight())
+                                + "\n体脂率：" + (record.getBodyFat() > 0 ? String.format("%.1f%%", record.getBodyFat()) : "--")
+                                + "\n腰围：" + (record.getWaist() > 0 ? String.format("%.0fcm", record.getWaist()) : "--")
+                                + "\n臀围：" + (record.getHip() > 0 ? String.format("%.1fcm", record.getHip()) : "--"))
+                        .setPositiveButton("删除", (dialog, which) -> {
+                            recordManager.deleteRecord(record.getId());
+                            Toast.makeText(requireContext(), "记录已删除", Toast.LENGTH_SHORT).show();
+                            updateRecordsList();
+                            setupInitialData();
+                        })
+                        .setNegativeButton("取消", null)
+                        .show();
+            });
 
             binding.recordsContainer.addView(recordView);
         }
