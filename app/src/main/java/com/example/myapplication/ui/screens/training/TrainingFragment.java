@@ -32,6 +32,8 @@ import com.example.myapplication.util.WorkoutRecordManager;
 
 import java.util.Calendar;
 import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 public class TrainingFragment extends Fragment {
 
@@ -697,9 +699,11 @@ public class TrainingFragment extends Fragment {
     }
 
     private void updateWeekProgress() {
-        // 获取本周的训练数据
+        // 获取本周的起止时间（与 getTasksForDay 保持一致的算法）
         Calendar cal = Calendar.getInstance();
-        cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
+        int dayOfWeek = cal.get(Calendar.DAY_OF_WEEK);
+        int daysSinceMonday = (dayOfWeek - Calendar.MONDAY + 7) % 7;
+        cal.add(Calendar.DAY_OF_MONTH, -daysSinceMonday);
         cal.set(Calendar.HOUR_OF_DAY, 0);
         cal.set(Calendar.MINUTE, 0);
         cal.set(Calendar.SECOND, 0);
@@ -709,44 +713,56 @@ public class TrainingFragment extends Fragment {
         cal.add(Calendar.DAY_OF_MONTH, 7);
         long weekEnd = cal.getTimeInMillis();
 
-        List<TrainingTask> allTasks = trainingTaskManager.getTasks();
-        int totalDaysWithTasks = 0;
-        int completedDays = 0;
+        // 按天分组统计任务
+        Map<Long, List<TrainingTask>> tasksByDay = new HashMap<>();
 
-        // 遍历本周7天
-        Calendar dayCal = Calendar.getInstance();
-        dayCal.setTimeInMillis(weekStart);
-        for (int d = 0; d < 7; d++) {
-            // 判断这一天是否有任务
-            boolean hasTask = false;
-            boolean allDone = true;
-            for (TrainingTask task : allTasks) {
-                Calendar taskDay = Calendar.getInstance();
-                taskDay.setTimeInMillis(task.getDate());
-                if (taskDay.get(Calendar.DAY_OF_YEAR) == dayCal.get(Calendar.DAY_OF_YEAR) &&
-                    taskDay.get(Calendar.YEAR) == dayCal.get(Calendar.YEAR)) {
-                    hasTask = true;
-                    if (!task.isCompleted()) {
-                        allDone = false;
-                    }
+        List<TrainingTask> allTasks = trainingTaskManager.getTasks();
+        for (TrainingTask task : allTasks) {
+            Calendar taskDay = Calendar.getInstance();
+            taskDay.setTimeInMillis(task.getDate());
+            taskDay.set(Calendar.HOUR_OF_DAY, 0);
+            taskDay.set(Calendar.MINUTE, 0);
+            taskDay.set(Calendar.SECOND, 0);
+            taskDay.set(Calendar.MILLISECOND, 0);
+            long taskTime = taskDay.getTimeInMillis();
+
+            if (taskTime >= weekStart && taskTime < weekEnd) {
+                List<TrainingTask> dayList = tasksByDay.get(taskTime);
+                if (dayList == null) {
+                    dayList = new java.util.ArrayList<>();
+                    tasksByDay.put(taskTime, dayList);
                 }
+                dayList.add(task);
             }
-            if (hasTask) {
-                totalDaysWithTasks++;
-                if (allDone) {
-                    completedDays++;
-                }
-            }
-            dayCal.add(Calendar.DAY_OF_MONTH, 1);
         }
 
-        int remainingDays = totalDaysWithTasks - completedDays;
+        int completedDays = 0;
+        int remainingDays = 0;
+
+        for (List<TrainingTask> dayTasks : tasksByDay.values()) {
+            if (dayTasks.isEmpty()) continue;
+
+            boolean allCompleted = true;
+            for (TrainingTask task : dayTasks) {
+                if (!task.isCompleted()) {
+                    allCompleted = false;
+                    break;
+                }
+            }
+
+            if (allCompleted) {
+                completedDays++;
+            } else {
+                remainingDays++;
+            }
+        }
+
+        int totalMeaningfulDays = completedDays + remainingDays;
+        int completionRate = totalMeaningfulDays > 0
+                ? (completedDays * 100) / totalMeaningfulDays : 0;
 
         binding.completedDays.setText(String.valueOf(completedDays));
-        binding.remainingDays.setText(String.valueOf(Math.max(0, remainingDays)));
-
-        int completionRate = totalDaysWithTasks > 0
-                ? (completedDays * 100) / totalDaysWithTasks : 0;
+        binding.remainingDays.setText(String.valueOf(remainingDays));
         binding.completionRate.setText(completionRate + "%");
         binding.progressBar.setProgress(completionRate);
     }
