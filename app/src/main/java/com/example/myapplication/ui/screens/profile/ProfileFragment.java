@@ -198,6 +198,11 @@ public class ProfileFragment extends Fragment {
         if (isVip) {
             binding.vipStatusCard.setVisibility(View.VISIBLE);
             binding.vipTag.setVisibility(View.GONE);
+            String expireTime = sessionManager.getVipExpireTime();
+            if (expireTime != null && !expireTime.isEmpty()) {
+                String displayDate = expireTime.split("T")[0].split(" ")[0];
+                binding.vipExpiry.setText("有效期至 " + displayDate);
+            }
         } else {
             binding.vipStatusCard.setVisibility(View.GONE);
             binding.vipTag.setVisibility(View.VISIBLE);

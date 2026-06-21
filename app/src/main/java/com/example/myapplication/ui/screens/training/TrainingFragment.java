@@ -101,7 +101,6 @@ public class TrainingFragment extends Fragment {
 
         // Day label
         TextView labelView = new TextView(requireContext());
-        labelView.setText(dayLabel);
         labelView.setTextSize(12);
         labelView.setGravity(Gravity.CENTER);
 
@@ -118,11 +117,19 @@ public class TrainingFragment extends Fragment {
         boolean isCompletedDay = taskCount > 0 && completedCount == taskCount; // 全部完成
         boolean isPartialComplete = taskCount > 0 && completedCount > 0; // 部分完成
         boolean isRestDay = (index == 5 || index == 6) && taskCount == 0; // 休息日（周六日且没有任务）
+        boolean isPastDayWithNoTask = index < todayIndex && taskCount == 0; // 过去的日期且没有任务
 
-        if (taskCount > 0) {
-            statusView.setText(completedCount + "/" + taskCount);
-        } else {
+        // 过去的日期没有任务时显示"休"
+        if (isPastDayWithNoTask) {
+            labelView.setText("休");
             statusView.setText("--");
+        } else {
+            labelView.setText(dayLabel);
+            if (taskCount > 0) {
+                statusView.setText(completedCount + "/" + taskCount);
+            } else {
+                statusView.setText("--");
+            }
         }
         statusView.setTextSize(10);
         statusView.setGravity(Gravity.CENTER);
@@ -139,8 +146,8 @@ public class TrainingFragment extends Fragment {
             container.setBackgroundTintList(ContextCompat.getColorStateList(requireContext(), R.color.success));
             labelView.setTextColor(ContextCompat.getColor(requireContext(), R.color.white));
             statusView.setTextColor(ContextCompat.getColor(requireContext(), R.color.white));
-        } else if (isRestDay) {
-            // 休息日（周六日没有任务）：显示默认灰色
+        } else if (isPastDayWithNoTask || isRestDay) {
+            // 休息日（过去没有任务的日期 或 周六日没有任务）：显示默认灰色
             labelView.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_secondary));
             statusView.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_muted));
         } else if (isPartialComplete) {

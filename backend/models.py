@@ -44,6 +44,9 @@ def init_db():
             vip_expire_time DATETIME DEFAULT NULL,
             workout_reminder TINYINT(1) DEFAULT 1,
             achievement_notification TINYINT(1) DEFAULT 1,
+            dark_mode TINYINT(1) DEFAULT 1,
+            unit_system VARCHAR(20) DEFAULT 'metric',
+            reminder_time VARCHAR(10) DEFAULT '18:00',
             assessment_completed TINYINT(1) DEFAULT 0,
             is_active TINYINT(1) DEFAULT 1,
             username_set TINYINT(1) DEFAULT 0,
@@ -181,6 +184,32 @@ def init_db():
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     """)
 
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS feedback (
+            id BIGINT AUTO_INCREMENT PRIMARY KEY,
+            user_id BIGINT NOT NULL,
+            content TEXT NOT NULL,
+            contact VARCHAR(200) DEFAULT NULL,
+            category VARCHAR(20) DEFAULT 'other',
+            status VARCHAR(20) DEFAULT 'pending',
+            user_read TINYINT(1) DEFAULT 0,
+            created_at BIGINT NOT NULL,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """)
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS feedback_messages (
+            id BIGINT AUTO_INCREMENT PRIMARY KEY,
+            feedback_id BIGINT NOT NULL,
+            sender_type VARCHAR(10) NOT NULL,
+            content TEXT NOT NULL,
+            is_read TINYINT(1) DEFAULT 0,
+            created_at BIGINT NOT NULL,
+            FOREIGN KEY (feedback_id) REFERENCES feedback(id) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """)
+
     conn.commit()
 
     # Migration: ensure is_active column exists for users table
@@ -190,6 +219,28 @@ def init_db():
         print("Added is_active column to users table")
     except Exception:
         pass  # Column already exists
+
+    # Migration: ensure dark_mode and unit_system columns exist
+    try:
+        cursor.execute("ALTER TABLE users ADD COLUMN dark_mode TINYINT(1) DEFAULT 1")
+        conn.commit()
+        print("Added dark_mode column to users table")
+    except Exception:
+        pass
+
+    try:
+        cursor.execute("ALTER TABLE users ADD COLUMN unit_system VARCHAR(20) DEFAULT 'metric'")
+        conn.commit()
+        print("Added unit_system column to users table")
+    except Exception:
+        pass
+
+    try:
+        cursor.execute("ALTER TABLE users ADD COLUMN reminder_time VARCHAR(10) DEFAULT '18:00'")
+        conn.commit()
+        print("Added reminder_time column to users table")
+    except Exception:
+        pass
 
     # Migration: ensure initial_* columns exist for users table
     for col in ["initial_height", "initial_weight", "initial_body_fat", "initial_waist", "initial_hip"]:
@@ -233,6 +284,37 @@ def init_db():
         for old, new in goal_map.items():
             cursor.execute("UPDATE users SET fitness_goal=%s WHERE fitness_goal=%s", (new, old))
         conn.commit()
+    except Exception:
+        pass
+
+    # Migration: ensure feedback table has new columns
+    for col, default in [
+        ("category", "'other'"),
+        ("status", "'pending'"),
+        ("user_read", "0"),
+    ]:
+        try:
+            cursor.execute(f"ALTER TABLE feedback ADD COLUMN {col} VARCHAR(200) DEFAULT {default}")
+            conn.commit()
+            print(f"Added {col} column to feedback table")
+        except Exception:
+            pass
+
+    # Migration: ensure feedback_messages table exists
+    try:
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS feedback_messages (
+                id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                feedback_id BIGINT NOT NULL,
+                sender_type VARCHAR(10) NOT NULL,
+                content TEXT NOT NULL,
+                is_read TINYINT(1) DEFAULT 0,
+                created_at BIGINT NOT NULL,
+                FOREIGN KEY (feedback_id) REFERENCES feedback(id) ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+        """)
+        conn.commit()
+        print("Ensured feedback_messages table exists")
     except Exception:
         pass
 

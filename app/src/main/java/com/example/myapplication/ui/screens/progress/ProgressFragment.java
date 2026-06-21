@@ -461,16 +461,7 @@ public class ProgressFragment extends Fragment {
         TextView subtitle = dialogView.findViewById(R.id.dialogSubtitle);
 
         title.setText("添加记录");
-        title.setTextColor(Color.BLACK);
         subtitle.setText("记录今天的身体数据，追踪你的变化");
-        subtitle.setTextColor(Color.parseColor("#666666"));
-
-        // 设置输入框文字颜色为黑色
-        setInputTextColorBlack(heightInput);
-        setInputTextColorBlack(weightInput);
-        setInputTextColorBlack(bodyFatInput);
-        setInputTextColorBlack(waistInput);
-        setInputTextColorBlack(hipInput);
 
         // Pre-fill with current values
         int currentHeight = sessionManager.getHeight();
@@ -495,13 +486,13 @@ public class ProgressFragment extends Fragment {
             hipInput.setText(String.format("%.1f", currentHip));
         }
 
-        AlertDialog dialog = new AlertDialog.Builder(requireContext())
+        AlertDialog dialog = new AlertDialog.Builder(requireContext(), R.style.DarkDialog)
                 .setView(dialogView)
                 .setPositiveButton("保存", null)
                 .setNegativeButton("取消", null)
                 .create();
 
-        // 设置对话框背景为白色圆角
+        // 设置对话框背景
         dialog.setOnShowListener(dialogInterface -> {
             Window window = dialog.getWindow();
             if (window != null) {
@@ -633,16 +624,7 @@ public class ProgressFragment extends Fragment {
         TextView subtitle = dialogView.findViewById(R.id.dialogSubtitle);
 
         title.setText("设置最初数据");
-        title.setTextColor(Color.BLACK);
         subtitle.setText("作为基准线，记录你的起点");
-        subtitle.setTextColor(Color.parseColor("#666666"));
-
-        // 设置输入框文字颜色为黑色
-        setInputTextColorBlack(heightInput);
-        setInputTextColorBlack(weightInput);
-        setInputTextColorBlack(bodyFatInput);
-        setInputTextColorBlack(waistInput);
-        setInputTextColorBlack(hipInput);
 
         // Pre-fill with current initial data
         int initialHeight = sessionManager.getInitialHeight();
@@ -667,13 +649,13 @@ public class ProgressFragment extends Fragment {
             hipInput.setText(String.format("%.1f", initialHip));
         }
 
-        AlertDialog dialog = new AlertDialog.Builder(requireContext())
+        AlertDialog dialog = new AlertDialog.Builder(requireContext(), R.style.DarkDialog)
                 .setView(dialogView)
                 .setPositiveButton("保存", null)
                 .setNegativeButton("取消", null)
                 .create();
 
-        // 设置对话框背景为白色圆角
+        // 设置对话框背景
         dialog.setOnShowListener(dialogInterface -> {
             Window window = dialog.getWindow();
             if (window != null) {

@@ -147,6 +147,20 @@ a{color:var(--primary);text-decoration:none}
 .login-subtitle{text-align:center;color:var(--text-muted);font-size:14px;margin-bottom:28px}
 .login-error{background:rgba(255,71,87,0.08);color:var(--danger);padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:16px;display:none}
 
+/* ===== Chat Modal ===== */
+.chat-modal{width:560px;max-height:85vh;display:flex;flex-direction:column}
+.chat-header-info{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px}
+.chat-messages{flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:12px;min-height:200px;max-height:400px;background:var(--body-bg);border-radius:8px}
+.chat-msg{max-width:80%;padding:10px 14px;border-radius:12px;font-size:13px;line-height:1.6;word-break:break-all;position:relative}
+.chat-msg.user{align-self:flex-start;background:#fff;border:1px solid var(--border);border-bottom-left-radius:4px}
+.chat-msg.admin{align-self:flex-end;background:var(--primary);color:#fff;border-bottom-right-radius:4px}
+.chat-msg .msg-time{font-size:11px;color:var(--text-muted);margin-top:4px}
+.chat-msg.admin .msg-time{color:rgba(255,255,255,0.7)}
+.chat-input-area{display:flex;gap:8px;padding:12px 20px;border-top:1px solid var(--border);align-items:flex-end}
+.chat-input-area textarea{flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;resize:none;outline:none;min-height:38px;max-height:100px;font-family:inherit}
+.chat-input-area textarea:focus{border-color:var(--primary)}
+.chat-status-bar{display:flex;gap:8px;align-items:center;padding:8px 20px;border-top:1px solid var(--border);background:#FAFAFA;border-radius:0 0 12px 12px}
+
 /* Toast */
 .toast{position:fixed;top:20px;right:20px;z-index:9999;padding:12px 20px;border-radius:8px;color:#fff;font-size:14px;animation:slideIn 0.3s ease;box-shadow:0 4px 12px rgba(0,0,0,0.15)}
 .toast-success{background:var(--success)}
@@ -344,8 +358,8 @@ a{color:var(--primary);text-decoration:none}
         <span class="breadcrumb" id="pageTitle">仪表盘</span>
       </div>
       <div class="header-right">
-        <button class="icon-btn" title="通知">
-          🔔<span class="badge">3</span>
+        <button class="icon-btn" title="通知" onclick="showNotifications()" style="font-size:16px">
+          🔔<span class="badge" id="notificationBadge" style="display:none">0</span>
         </button>
         <div class="admin-info" id="adminInfo" onclick="doLogout()">
           <div class="admin-avatar" id="adminAvatar">A</div>
@@ -509,6 +523,63 @@ function showMain() {
   document.getElementById('adminAvatar').textContent = (localStorage.getItem('admin_username')||'A')[0].toUpperCase();
   // Preload ECharts before navigating to dashboard
   loadEcharts().then(() => navigate('dashboard'));
+  loadNotifications();
+}
+
+function loadNotifications() {
+  api('/notifications').then(data => {
+    const badge = document.getElementById('notificationBadge');
+    if (badge) {
+      const total = data.total || 0;
+      if (total > 0) {
+        badge.textContent = total > 99 ? '99+' : total;
+        badge.style.display = 'flex';
+      } else {
+        badge.style.display = 'none';
+      }
+    }
+  }).catch(() => {});
+}
+
+function showNotifications() {
+  api('/notifications').then(data => {
+    const html = `
+      <div class="modal-header">
+        <span class="title">通知详情</span>
+        <button class="btn btn-outline btn-sm" onclick="closeModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--body-bg);border-radius:8px;">
+            <span style="font-size:24px">📝</span>
+            <div>
+              <div style="font-weight:600;color:var(--text-primary)">用户反馈</div>
+              <div style="font-size:13px;color:var(--text-muted)">${data.feedback_count} 条待处理</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--body-bg);border-radius:8px;">
+            <span style="font-size:24px">👤</span>
+            <div>
+              <div style="font-weight:600;color:var(--text-primary)">今日新增用户</div>
+              <div style="font-size:13px;color:var(--text-muted)">${data.new_users_today} 人</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--body-bg);border-radius:8px;">
+            <span style="font-size:24px">🏋️</span>
+            <div>
+              <div style="font-weight:600;color:var(--text-primary)">今日训练记录</div>
+              <div style="font-size:13px;color:var(--text-muted)">${data.new_records_today} 条</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" onclick="closeModal()">知道了</button>
+      </div>
+    `;
+    document.getElementById('modalBox').innerHTML = html;
+    document.getElementById('modalOverlay').classList.add('show');
+  }).catch(() => toast('加载通知失败', 'error'));
 }
 
 // ============ Navigation ============
@@ -551,7 +622,7 @@ function navigate(page) {
     case 'training': container.innerHTML = renderTraining(); loadTrainingRecords(); break;
     case 'content': container.innerHTML = renderContent(); loadContent(); break;
     case 'statistics': container.innerHTML = renderStatistics(); loadStatistics(); break;
-    case 'settings': container.innerHTML = renderSettings(); loadAdmins(); loadAnnouncements(); break;
+    case 'settings': container.innerHTML = renderSettings(); loadAdmins(); loadAnnouncements(); loadFeedback(); break;
   }
 }
 
@@ -923,9 +994,10 @@ function showUserDetail(uid) {
           <button class="btn btn-outline btn-sm" onclick="changePassword(${uid})">修改密码</button>
           ${!user.is_vip ? `<button class="btn btn-primary btn-sm" onclick="toggleVip(${uid},true)">开通VIP</button>` :
             `<button class="btn btn-outline btn-sm" onclick="toggleVip(${uid},false)">取消VIP</button>`}
-          ${user.is_active!==false ?
-            `<button class="btn btn-danger btn-sm" onclick="toggleBan(${uid},true)">封禁用户</button>` :
-            `<button class="btn btn-outline btn-sm" onclick="toggleBan(${uid},false)">解封用户</button>`}
+          ${!user.is_active ?
+            `<button class="btn btn-outline btn-sm" onclick="toggleBan(${uid},false)">解封用户</button>` :
+            `<button class="btn btn-danger btn-sm" onclick="toggleBan(${uid},true)">封禁用户</button>`}
+          <button class="btn btn-danger btn-sm" onclick="deleteUser(${uid},'${(user.nickname||'').replace(/"/g,'&quot;')}')" style="border:1px solid var(--danger);background:#fff;color:var(--danger)">注销用户</button>
         </div>
         <div style="display:flex;gap:8px">
           <button class="btn btn-outline" onclick="closeModal()">取消</button>
@@ -994,6 +1066,16 @@ function toggleBan(uid, banned) {
   if(!confirm(msg)) return;
   apiPutForm('/users/'+uid+'/ban', {banned:banned}).then(() => {
     toast(banned?'用户已封禁':'用户已解封','success');
+    closeModal();
+    loadUsers(currentUserPage);
+  }).catch(e => toast(e.message,'error'));
+}
+
+function deleteUser(uid, name) {
+  if(!confirm(`确定要注销用户 "${name}" 吗？\n\n此操作不可恢复，将删除该用户的所有数据（训练记录、反馈、身体数据等）。`)) return;
+  if(!confirm('再次确认：真的要永久删除该用户吗？')) return;
+  apiDelete('/users/'+uid).then(() => {
+    toast('用户已注销','success');
     closeModal();
     loadUsers(currentUserPage);
   }).catch(e => toast(e.message,'error'));
@@ -1532,6 +1614,36 @@ function renderSettings() {
           <table class="data-table" id="announcementsTable"><tbody><tr><td class="empty-state">加载中...</td></tr></tbody></table>
         </div>
       </div>
+      <div class="page-card">
+        <div class="page-card-header">
+          <span class="title">用户反馈</span>
+          <span class="badge badge-info" id="feedbackCount" style="margin-left:8px">0</span>
+        </div>
+        <div class="page-card-body">
+          <div class="toolbar">
+            <input type="text" class="search-input" id="feedbackSearch" placeholder="搜索反馈内容/联系方式" onkeyup="if(event.key==='Enter')filterFeedback()">
+            <select class="filter-select" id="feedbackCategoryFilter" onchange="filterFeedback()">
+              <option value="">全部类型</option>
+              <option value="bug">BUG反馈</option>
+              <option value="suggestion">功能建议</option>
+              <option value="other">其他</option>
+            </select>
+            <select class="filter-select" id="feedbackStatusFilter" onchange="filterFeedback()">
+              <option value="">全部状态</option>
+              <option value="pending">待处理</option>
+              <option value="processing">处理中</option>
+              <option value="replied">已回复</option>
+              <option value="resolved">已解决</option>
+            </select>
+            <button class="btn btn-outline btn-sm" onclick="filterFeedback()">搜索</button>
+            <button class="btn btn-outline btn-sm" onclick="selectAllFeedback()">全选</button>
+            <button class="btn btn-danger btn-sm" id="batchDeleteBtn" style="display:none" onclick="batchDeleteFeedback()">批量删除</button>
+            <button class="btn btn-outline btn-sm" id="batchStatusBtn" style="display:none" onclick="batchUpdateFeedbackStatus('resolved')">标记已解决</button>
+          </div>
+          <div id="feedbackList"><div class="empty-state">加载中...</div></div>
+          <div class="pagination" id="feedbackPagination"></div>
+        </div>
+      </div>
     </div>
   `;
 }
@@ -1668,10 +1780,238 @@ function deleteAnnouncement(id, title) {
   }).catch(e => toast(e.message,'error'));
 }
 
+// ============ Feedback Management ============
+let feedbackPage = 1;
+let feedbackKeyword = '';
+let feedbackCategory = '';
+let feedbackStatus = '';
+let selectedFeedbackIds = [];
+
+function loadFeedback(page=1) {
+  feedbackPage = page;
+  const params = {page, page_size: 10};
+  if(feedbackKeyword) params.keyword = feedbackKeyword;
+  if(feedbackCategory) params.category = feedbackCategory;
+  if(feedbackStatus) params.status = feedbackStatus;
+
+  api('/feedback',{params}).then(data => {
+    const countEl = document.getElementById('feedbackCount');
+    if(countEl) countEl.textContent = data.total || 0;
+
+    const list = data.list || [];
+    selectedFeedbackIds = [];
+
+    if(list.length === 0) {
+      document.getElementById('feedbackList').innerHTML = '<div class="empty-state">暂无用户反馈</div>';
+      updateBatchButtons();
+      return;
+    }
+
+    const categoryMap = {bug:'BUG反馈', suggestion:'功能建议', other:'其他'};
+    const statusMap = {pending:'待处理', processing:'处理中', replied:'已回复', resolved:'已解决'};
+    const statusClass = {pending:'warning', processing:'info', replied:'success', resolved:'success'};
+
+    const html = list.map(f => {
+      const date = new Date(f.created_at).toLocaleString('zh-CN');
+      const unread = f.unread_count > 0 ? `<span style="background:var(--danger);color:#fff;border-radius:50%;width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;margin-left:4px">${f.unread_count}</span>` : '';
+      return `
+        <div style="padding:12px 0;border-bottom:1px solid var(--border)" data-id="${f.id}">
+          <div style="display:flex;gap:12px;align-items:flex-start">
+            <input type="checkbox" class="feedback-checkbox" value="${f.id}" onchange="toggleFeedbackSelect(${f.id})" style="margin-top:4px">
+            <div style="flex:1;min-width:0;cursor:pointer" onclick="showChatModal(${f.id})">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">
+                <strong style="color:var(--text-primary);font-size:13px">${f.nickname||'用户'+f.user_id}</strong>
+                <span style="color:var(--text-muted);font-size:12px">${f.phone||''}</span>
+                <span class="badge badge-${statusClass[f.status]||'warning'}">${statusMap[f.status]||'待处理'}</span>
+                <span class="badge badge-info">${categoryMap[f.category]||'其他'}</span>
+                ${unread}
+                <span style="color:var(--text-muted);font-size:11px;margin-left:auto">${date}</span>
+              </div>
+              <div style="color:var(--text-secondary);font-size:13px;line-height:1.6;word-break:break-all">${f.last_message || f.content}</div>
+              ${f.contact ? `<div style="color:var(--text-muted);font-size:12px;margin-top:4px">联系方式: <a href="tel:${f.contact}" style="color:var(--primary)">${f.contact}</a> <button class="btn btn-outline btn-sm" onclick="event.stopPropagation();copyText('${f.contact}')" style="padding:2px 6px;font-size:11px">复制</button></div>` : ''}
+            </div>
+            <div style="display:flex;gap:6px;flex-shrink:0">
+              <button class="btn btn-outline btn-sm" onclick="showChatModal(${f.id})">对话</button>
+              <button class="btn btn-danger btn-sm" onclick="deleteFeedback(${f.id})">删除</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    document.getElementById('feedbackList').innerHTML = html;
+    renderPagination('feedbackPagination', Math.ceil(data.total/data.page_size), page, 'loadFeedback');
+    updateBatchButtons();
+  }).catch(e => {
+    document.getElementById('feedbackList').innerHTML = '<div class="empty-state">加载失败: '+e.message+'</div>';
+  });
+}
+
+function filterFeedback() {
+  feedbackKeyword = document.getElementById('feedbackSearch')?.value || '';
+  feedbackCategory = document.getElementById('feedbackCategoryFilter')?.value || '';
+  feedbackStatus = document.getElementById('feedbackStatusFilter')?.value || '';
+  loadFeedback(1);
+}
+
+function toggleFeedbackSelect(id) {
+  const idx = selectedFeedbackIds.indexOf(id);
+  if(idx >= 0) selectedFeedbackIds.splice(idx, 1);
+  else selectedFeedbackIds.push(id);
+  updateBatchButtons();
+}
+
+function selectAllFeedback() {
+  const checkboxes = document.querySelectorAll('.feedback-checkbox');
+  const allChecked = selectedFeedbackIds.length === checkboxes.length;
+  checkboxes.forEach(cb => {
+    const id = parseInt(cb.value);
+    if(allChecked) {
+      cb.checked = false;
+    } else {
+      cb.checked = true;
+      if(!selectedFeedbackIds.includes(id)) selectedFeedbackIds.push(id);
+    }
+  });
+  if(allChecked) selectedFeedbackIds = [];
+  updateBatchButtons();
+}
+
+function updateBatchButtons() {
+  const batchDelete = document.getElementById('batchDeleteBtn');
+  const batchStatus = document.getElementById('batchStatusBtn');
+  if(batchDelete) batchDelete.style.display = selectedFeedbackIds.length > 0 ? 'inline-block' : 'none';
+  if(batchStatus) batchStatus.style.display = selectedFeedbackIds.length > 0 ? 'inline-block' : 'none';
+}
+
+function batchDeleteFeedback() {
+  if(selectedFeedbackIds.length === 0) return;
+  if(!confirm(`确定删除选中的 ${selectedFeedbackIds.length} 条反馈吗？`)) return;
+  apiPost('/feedback/batch-delete', {ids: selectedFeedbackIds}).then(() => {
+    toast('已批量删除','success');
+    loadFeedback(feedbackPage);
+  }).catch(e => toast(e.message,'error'));
+}
+
+function batchUpdateFeedbackStatus(status) {
+  if(selectedFeedbackIds.length === 0) return;
+  apiPut('/feedback/batch-status', {ids: selectedFeedbackIds, status}).then(() => {
+    toast('状态已更新','success');
+    loadFeedback(feedbackPage);
+  }).catch(e => toast(e.message,'error'));
+}
+
+function showChatModal(feedbackId) {
+  const categoryMap = {bug:'BUG反馈', suggestion:'功能建议', other:'其他'};
+  const statusMap = {pending:'待处理', processing:'处理中', replied:'已回复', resolved:'已解决'};
+
+  api('/feedback/'+feedbackId+'/messages').then(data => {
+    const fb = data.feedback || {};
+    const messages = data.messages || [];
+    const isResolved = fb.status === 'resolved';
+
+    const messagesHtml = messages.length === 0
+      ? '<div style="text-align:center;color:var(--text-muted);padding:20px;font-size:13px">暂无消息</div>'
+      : messages.map(m => {
+        const time = new Date(m.created_at).toLocaleString('zh-CN');
+        const isAdmin = m.sender_type === 'admin';
+        return `
+          <div class="chat-msg ${isAdmin?'admin':'user'}">
+            <div>${m.content}</div>
+            <div class="msg-time">${isAdmin?'管理员':'用户'} · ${time}</div>
+          </div>
+        `;
+      }).join('');
+
+    const html = `
+      <div class="modal-header">
+        <span class="title">反馈对话 #${feedbackId}</span>
+        <button class="btn btn-outline btn-sm" onclick="closeModal()">✕</button>
+      </div>
+      <div class="modal-body" style="padding:16px 20px;display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:13px">
+          <strong>${fb.nickname||'用户'+fb.user_id}</strong>
+          <span style="color:var(--text-muted)">${fb.phone||''}</span>
+          <span class="badge badge-info">${categoryMap[fb.category]||'其他'}</span>
+          <span class="badge badge-${fb.status==='resolved'?'success':fb.status==='pending'?'warning':'info'}" id="chatStatusBadge">${statusMap[fb.status]||'待处理'}</span>
+          ${fb.contact ? `<span style="color:var(--text-muted)">联系: <a href="tel:${fb.contact}" style="color:var(--primary)">${fb.contact}</a></span>` : ''}
+        </div>
+        <div class="chat-messages" id="chatMessages">${messagesHtml}</div>
+        ${isResolved ? '<div style="text-align:center;color:var(--text-muted);font-size:12px;padding:4px 0">该反馈已解决，无法继续回复</div>' : ''}
+        <div class="chat-input-area" ${isResolved?'style="display:none"':''}>
+          <textarea id="chatInput" rows="1" placeholder="输入回复内容..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChatReply(${feedbackId})}"></textarea>
+          <button class="btn btn-primary btn-sm" onclick="sendChatReply(${feedbackId})">发送</button>
+        </div>
+        <div class="chat-status-bar">
+          <span style="font-size:12px;color:var(--text-muted)">变更状态:</span>
+          <select class="filter-select" style="padding:4px 8px;font-size:12px" onchange="changeFeedbackStatus(${feedbackId},this.value)" id="chatStatusSelect">
+            <option value="pending" ${fb.status==='pending'?'selected':''}>待处理</option>
+            <option value="processing" ${fb.status==='processing'?'selected':''}>处理中</option>
+            <option value="replied" ${fb.status==='replied'?'selected':''}>已回复</option>
+            <option value="resolved" ${fb.status==='resolved'?'selected':''}>已解决</option>
+          </select>
+          <button class="btn btn-danger btn-sm" style="margin-left:auto" onclick="deleteFeedback(${feedbackId});closeModal()">删除反馈</button>
+        </div>
+      </div>
+    `;
+    document.getElementById('modalBox').innerHTML = html;
+    document.getElementById('modalBox').classList.add('chat-modal');
+    document.getElementById('modalOverlay').classList.add('show');
+    // Scroll to bottom
+    const msgBox = document.getElementById('chatMessages');
+    if(msgBox) msgBox.scrollTop = msgBox.scrollHeight;
+  }).catch(e => toast('加载对话失败: '+e.message, 'error'));
+}
+
+function sendChatReply(feedbackId) {
+  const input = document.getElementById('chatInput');
+  const content = input?.value?.trim();
+  if(!content) { toast('请输入回复内容','error'); return; }
+  apiPost('/feedback/'+feedbackId+'/messages', {content}).then(() => {
+    input.value = '';
+    // Reload messages
+    showChatModal(feedbackId);
+    loadFeedback(feedbackPage);
+    loadNotifications();
+  }).catch(e => toast(e.message, 'error'));
+}
+
+function changeFeedbackStatus(feedbackId, status) {
+  apiPut('/feedback/'+feedbackId+'/status', {status}).then(() => {
+    toast('状态已更新','success');
+    const badge = document.getElementById('chatStatusBadge');
+    const statusMap = {pending:'待处理', processing:'处理中', replied:'已回复', resolved:'已解决'};
+    if(badge) badge.textContent = statusMap[status]||status;
+    // Reload modal to reflect resolved lock
+    showChatModal(feedbackId);
+    loadFeedback(feedbackPage);
+  }).catch(e => toast(e.message,'error'));
+}
+
+function updateFeedbackStatus(id, status) {
+  apiPut('/feedback/'+id+'/status', {status}).then(() => {
+    toast('状态已更新','success');
+    loadFeedback(feedbackPage);
+  }).catch(e => toast(e.message,'error'));
+}
+
+function deleteFeedback(id) {
+  if(!confirm('确定删除这条反馈吗？')) return;
+  apiDelete('/feedback/'+id).then(() => {
+    toast('已删除','success');
+    loadFeedback(feedbackPage);
+  }).catch(e => toast(e.message,'error'));
+}
+
+function copyText(text) {
+  navigator.clipboard.writeText(text).then(() => toast('已复制','success')).catch(() => {});
+}
+
 // ============ Modal ============
 function closeModal() {
   document.getElementById('modalOverlay').classList.remove('show');
   document.getElementById('modalBox').innerHTML = '';
+  document.getElementById('modalBox').classList.remove('chat-modal');
 }
 
 document.getElementById('modalOverlay').addEventListener('click',function(e){

@@ -4,28 +4,33 @@
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:padding="24dp"
-    android:background="#FFFFFF">
+    android:background="@color/bg_card">
 
     <TextView
         android:id="@+id/dialogTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="修改"
-        android:textColor="#000000"
+        android:textColor="@color/text_primary"
         android:textSize="18sp"
         android:textStyle="bold" />
 
     <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp">
+        android:layout_marginTop="16dp"
+        app:boxBackgroundColor="@color/bg_input"
+        app:boxStrokeColor="@color/border_color"
+        app:hintTextColor="@color/text_muted"
+        xmlns:app="http://schemas.android.com/apk/res-auto">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/editText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:inputType="text"
-            android:textColor="#000000"
+            android:textColor="@color/text_primary"
+            android:textColorHint="@color/text_muted"
             android:maxLength="20" />
     </com.google.android.material.textfield.TextInputLayout>
 

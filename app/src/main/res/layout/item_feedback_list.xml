@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:paddingHorizontal="20dp"
+    android:paddingVertical="14dp"
+    android:background="?android:attr/selectableItemBackground">
+
+    <!-- 左侧内容区 -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="4dp">
+
+            <TextView
+                android:id="@+id/feedbackCategoryTag"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="其他"
+                android:textSize="11sp"
+                android:textColor="#FF6B35"
+                android:background="@drawable/bg_status_tag"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="2dp"
+                android:layout_marginEnd="8dp" />
+
+            <TextView
+                android:id="@+id/feedbackStatusTag"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="待处理"
+                android:textSize="11sp"
+                android:textColor="#FFA502"
+                android:background="@drawable/bg_status_tag"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="2dp" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/feedbackContentPreview"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="反馈内容预览..."
+            android:textSize="14sp"
+            android:textColor="#1A1A1A"
+            android:maxLines="2"
+            android:ellipsize="end"
+            android:layout_marginBottom="4dp" />
+
+        <TextView
+            android:id="@+id/feedbackLastMessage"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textSize="12sp"
+            android:textColor="#999999"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:visibility="gone" />
+    </LinearLayout>
+
+    <!-- 右侧箭头 -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="›"
+        android:textSize="20sp"
+        android:textColor="#CCCCCC"
+        android:layout_marginStart="8dp" />
+</LinearLayout>

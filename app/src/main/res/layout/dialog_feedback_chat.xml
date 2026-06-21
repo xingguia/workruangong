@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@android:color/white">
+
+    <!-- 顶部状态栏 -->
+    <LinearLayout
+        android:id="@+id/chatStatusBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="20dp"
+        android:paddingVertical="10dp"
+        android:background="#FAFAFA">
+
+        <TextView
+            android:id="@+id/chatStatusText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="待处理"
+            android:textSize="12sp"
+            android:textColor="#FF6B35"
+            android:background="@drawable/bg_status_tag"
+            android:paddingHorizontal="10dp"
+            android:paddingVertical="3dp" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <TextView
+            android:id="@+id/chatCategoryText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="其他"
+            android:textSize="12sp"
+            android:textColor="#3498DB"
+            android:background="@drawable/bg_status_tag"
+            android:paddingHorizontal="10dp"
+            android:paddingVertical="3dp" />
+    </LinearLayout>
+
+    <!-- 分割线 -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#E0E0E0" />
+
+    <!-- 消息列表 -->
+    <ScrollView
+        android:id="@+id/chatScrollView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="12dp">
+
+        <LinearLayout
+            android:id="@+id/chatMessageContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" />
+    </ScrollView>
+
+    <!-- 已解决提示 -->
+    <TextView
+        android:id="@+id/chatResolvedHint"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="该反馈已解决，无法继续回复"
+        android:textSize="12sp"
+        android:textColor="#999999"
+        android:gravity="center"
+        android:paddingVertical="8dp"
+        android:visibility="gone" />
+
+    <!-- 输入区域 -->
+    <LinearLayout
+        android:id="@+id/chatInputArea"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="10dp"
+        android:background="#FAFAFA">
+
+        <EditText
+            android:id="@+id/chatInput"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@drawable/bg_chat_input"
+            android:hint="输入回复内容..."
+            android:textSize="14sp"
+            android:textColorHint="#BBBBBB"
+            android:minHeight="40dp"
+            android:maxHeight="100dp"
+            android:gravity="center_vertical"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="8dp"
+            android:singleLine="false"
+            android:inputType="textMultiLine" />
+
+        <TextView
+            android:id="@+id/chatSendBtn"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:background="@drawable/bg_chat_send_btn"
+            android:text="发送"
+            android:textColor="@android:color/white"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:paddingHorizontal="16dp"
+            android:layout_marginStart="8dp" />
+    </LinearLayout>
+</LinearLayout>

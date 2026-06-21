@@ -1,16 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:padding="24dp"
-    android:background="#FFFFFF">
+    android:background="@color/bg_card">
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="更换头像"
-        android:textColor="#000000"
+        android:textColor="@color/text_primary"
         android:textSize="18sp"
         android:textStyle="bold" />
 
@@ -19,7 +20,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:text="选择你喜欢的颜色作为头像背景，或从相册选择图片"
-        android:textColor="#666666"
+        android:textColor="@color/text_secondary"
         android:textSize="14sp" />
 
     <!-- 选择图片按钮 -->
@@ -30,15 +31,14 @@
         android:layout_marginTop="16dp"
         android:text="从相册选择图片"
         style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-        app:cornerRadius="12dp"
-        xmlns:app="http://schemas.android.com/apk/res-auto" />
+        app:cornerRadius="12dp" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:text="选择头像颜色"
-        android:textColor="#000000"
+        android:textColor="@color/text_primary"
         android:textSize="16sp"
         android:textStyle="bold" />
 

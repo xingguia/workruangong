@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from database import get_db
-from auth import hash_password, verify_password, create_access_token, get_current_user_id
+from auth import hash_password, verify_password, create_access_token, get_current_user_id, get_active_user_id
 from schemas import (
     UserRegister, UserLogin, UserUpdate,
     UserResponse, TokenResponse,
@@ -10,6 +10,7 @@ from schemas import (
     ExercisePlanCreate, ExercisePlanUpdate, ExercisePlanResponse,
     AchievementUpdate, AchievementResponse,
     ExerciseResponse,
+    ChangePasswordRequest, FeedbackCreate,
 )
 import time
 
@@ -42,10 +43,12 @@ def register(data: UserRegister):
 def login(data: UserLogin):
     with get_db() as conn:
         cur = conn.cursor()
-        cur.execute("SELECT id, password_hash FROM users WHERE phone=%s", (data.phone,))
+        cur.execute("SELECT id, password_hash, COALESCE(is_active, 1) FROM users WHERE phone=%s", (data.phone,))
         row = cur.fetchone()
         if not row or not verify_password(data.password, row[1]):
             raise HTTPException(status_code=401, detail="Invalid phone or password")
+        if row[2] == 0:
+            raise HTTPException(status_code=403, detail="该账号已被封禁，请联系管理员")
         token = create_access_token(row[0])
         return {
             "access_token": token,
@@ -53,13 +56,13 @@ def login(data: UserLogin):
         }
 
 @router.get("/user/profile", response_model=UserResponse)
-def get_profile(user_id: int = __import__("fastapi").Depends(get_current_user_id)):
+def get_profile(user_id: int = __import__("fastapi").Depends(get_active_user_id)):
     with get_db() as conn:
         cur = conn.cursor()
         return _get_user_dict(cur, user_id)
 
 @router.put("/user/profile", response_model=UserResponse)
-def update_profile(data: UserUpdate, user_id: int = __import__("fastapi").Depends(get_current_user_id)):
+def update_profile(data: UserUpdate, user_id: int = __import__("fastapi").Depends(get_active_user_id)):
     with get_db() as conn:
         cur = conn.cursor()
         fields = []
@@ -73,7 +76,7 @@ def update_profile(data: UserUpdate, user_id: int = __import__("fastapi").Depend
         return _get_user_dict(cur, user_id)
 
 @router.put("/user/vip")
-def update_vip(is_vip: bool, expire_time: str = None, user_id: int = __import__("fastapi").Depends(get_current_user_id)):
+def update_vip(is_vip: bool, expire_time: str = None, user_id: int = __import__("fastapi").Depends(get_active_user_id)):
     with get_db() as conn:
         cur = conn.cursor()
         cur.execute("UPDATE users SET is_vip=%s, vip_expire_time=%s WHERE id=%s",
@@ -82,7 +85,7 @@ def update_vip(is_vip: bool, expire_time: str = None, user_id: int = __import__(
 
 @router.put("/user/body-data")
 def update_body_data(height: int, weight: float, body_fat: float = 0, waist: float = 0, hip: float = 0,
-                     user_id: int = __import__("fastapi").Depends(get_current_user_id)):
+                     user_id: int = __import__("fastapi").Depends(get_active_user_id)):
     with get_db() as conn:
         cur = conn.cursor()
         cur.execute("UPDATE users SET height=%s, weight=%s, body_fat=%s, waist=%s, hip=%s WHERE id=%s",
@@ -90,14 +93,14 @@ def update_body_data(height: int, weight: float, body_fat: float = 0, waist: flo
         return {"ok": True}
 
 @router.put("/user/assessment-completed")
-def mark_assessment_completed(user_id: int = __import__("fastapi").Depends(get_current_user_id)):
+def mark_assessment_completed(user_id: int = __import__("fastapi").Depends(get_active_user_id)):
     with get_db() as conn:
         cur = conn.cursor()
         cur.execute("UPDATE users SET assessment_completed=1 WHERE id=%s", (user_id,))
         return {"ok": True}
 
 @router.put("/user/username-set")
-def mark_username_set(user_id: int = __import__("fastapi").Depends(get_current_user_id)):
+def mark_username_set(user_id: int = __import__("fastapi").Depends(get_active_user_id)):
     with get_db() as conn:
         cur = conn.cursor()
         cur.execute("UPDATE users SET username_set=1 WHERE id=%s", (user_id,))
@@ -105,14 +108,174 @@ def mark_username_set(user_id: int = __import__("fastapi").Depends(get_current_u
 
 @router.put("/user/settings")
 def update_settings(workout_reminder: bool = None, achievement_notification: bool = None,
-                    user_id: int = __import__("fastapi").Depends(get_current_user_id)):
+                    dark_mode: bool = None, unit_system: str = None, reminder_time: str = None,
+                    user_id: int = __import__("fastapi").Depends(get_active_user_id)):
     with get_db() as conn:
         cur = conn.cursor()
         if workout_reminder is not None:
             cur.execute("UPDATE users SET workout_reminder=%s WHERE id=%s", (1 if workout_reminder else 0, user_id))
         if achievement_notification is not None:
             cur.execute("UPDATE users SET achievement_notification=%s WHERE id=%s", (1 if achievement_notification else 0, user_id))
+        if dark_mode is not None:
+            cur.execute("UPDATE users SET dark_mode=%s WHERE id=%s", (1 if dark_mode else 0, user_id))
+        if unit_system is not None:
+            cur.execute("UPDATE users SET unit_system=%s WHERE id=%s", (unit_system, user_id))
+        if reminder_time is not None:
+            cur.execute("UPDATE users SET reminder_time=%s WHERE id=%s", (reminder_time, user_id))
         return {"ok": True}
+
+@router.post("/user/change-password")
+def change_password(data: ChangePasswordRequest, user_id: int = __import__("fastapi").Depends(get_active_user_id)):
+    with get_db() as conn:
+        cur = conn.cursor()
+        cur.execute("SELECT password_hash FROM users WHERE id=%s", (user_id,))
+        row = cur.fetchone()
+        if not row or not verify_password(data.old_password, row[0]):
+            raise HTTPException(status_code=400, detail="原密码不正确")
+        new_hash = hash_password(data.new_password)
+        cur.execute("UPDATE users SET password_hash=%s WHERE id=%s", (new_hash, user_id))
+        return {"ok": True}
+
+@router.delete("/user/account")
+def delete_account(user_id: int = __import__("fastapi").Depends(get_active_user_id)):
+    with get_db() as conn:
+        cur = conn.cursor()
+        cur.execute("DELETE FROM body_records WHERE user_id=%s", (user_id,))
+        cur.execute("DELETE FROM workout_records WHERE user_id=%s", (user_id,))
+        cur.execute("DELETE FROM training_tasks WHERE user_id=%s", (user_id,))
+        cur.execute("DELETE FROM exercise_plans WHERE user_id=%s", (user_id,))
+        cur.execute("DELETE FROM achievements WHERE user_id=%s", (user_id,))
+        cur.execute("DELETE FROM users WHERE id=%s", (user_id,))
+        return {"ok": True}
+
+@router.post("/user/feedback")
+def submit_feedback(data: FeedbackCreate, user_id: int = __import__("fastapi").Depends(get_active_user_id)):
+    with get_db() as conn:
+        cur = conn.cursor()
+        ts = int(time.time() * 1000)
+        cur.execute(
+            "INSERT INTO feedback (user_id, content, contact, category, created_at) VALUES (%s,%s,%s,%s,%s)",
+            (user_id, data.content, data.contact, data.category or "other", ts)
+        )
+        feedback_id = cur.lastrowid
+        cur.execute(
+            "INSERT INTO feedback_messages (feedback_id, sender_type, content, created_at) VALUES (%s, 'user', %s, %s)",
+            (feedback_id, data.content, ts)
+        )
+        return {"ok": True, "feedback_id": feedback_id}
+
+
+@router.get("/user/feedback")
+def get_user_feedback(user_id: int = __import__("fastapi").Depends(get_active_user_id)):
+    """获取用户的反馈列表"""
+    with get_db() as conn:
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT f.id, f.content, f.contact, f.category, f.status, f.user_read, f.created_at,
+                   fm.content AS last_message
+            FROM feedback f
+            LEFT JOIN feedback_messages fm ON fm.id = (
+                SELECT id FROM feedback_messages WHERE feedback_id = f.id ORDER BY created_at DESC LIMIT 1
+            )
+            WHERE f.user_id = %s ORDER BY f.created_at DESC
+        """, (user_id,))
+        items = []
+        for r in cur.fetchall():
+            items.append({
+                "id": r[0], "content": r[1], "contact": r[2],
+                "category": r[3] or "other", "status": r[4] or "pending",
+                "user_read": bool(r[5]), "created_at": r[6],
+                "last_message": r[7] or ""
+            })
+        return {"list": items}
+
+
+@router.get("/user/feedback/{feedback_id}/messages")
+def get_feedback_messages(feedback_id: int, user_id: int = __import__("fastapi").Depends(get_active_user_id)):
+    """获取反馈的对话消息"""
+    with get_db() as conn:
+        cur = conn.cursor()
+        cur.execute("SELECT id, status FROM feedback WHERE id=%s AND user_id=%s", (feedback_id, user_id))
+        fb_row = cur.fetchone()
+        if not fb_row:
+            raise __import__("fastapi").HTTPException(status_code=404, detail="Feedback not found")
+
+        cur.execute("""
+            SELECT id, sender_type, content, is_read, created_at
+            FROM feedback_messages WHERE feedback_id = %s ORDER BY created_at ASC
+        """, (feedback_id,))
+        messages = []
+        for r in cur.fetchall():
+            messages.append({
+                "id": r[0], "sender_type": r[1], "content": r[2],
+                "is_read": bool(r[3]), "created_at": str(r[4]) if r[4] else ""
+            })
+        return {"status": fb_row[1], "messages": messages}
+
+
+@router.post("/user/feedback/{feedback_id}/messages")
+def send_feedback_message(feedback_id: int, data: FeedbackCreate, user_id: int = __import__("fastapi").Depends(get_active_user_id)):
+    """用户发送追问消息"""
+    with get_db() as conn:
+        cur = conn.cursor()
+        cur.execute("SELECT id, status FROM feedback WHERE id=%s AND user_id=%s", (feedback_id, user_id))
+        row = cur.fetchone()
+        if not row:
+            raise __import__("fastapi").HTTPException(status_code=404, detail="Feedback not found")
+        if row[1] == 'resolved':
+            raise __import__("fastapi").HTTPException(status_code=400, detail="该反馈已解决，无法继续发送消息")
+
+        ts = int(time.time() * 1000)
+        cur.execute(
+            "INSERT INTO feedback_messages (feedback_id, sender_type, content, created_at) VALUES (%s, 'user', %s, %s)",
+            (feedback_id, data.content, ts)
+        )
+        conn.commit()
+        return {"ok": True}
+
+
+@router.put("/user/feedback/{feedback_id}/read")
+def mark_feedback_read(feedback_id: int, user_id: int = __import__("fastapi").Depends(get_active_user_id)):
+    """标记反馈消息为已读"""
+    with get_db() as conn:
+        cur = conn.cursor()
+        cur.execute("UPDATE feedback SET user_read=1 WHERE id=%s AND user_id=%s", (feedback_id, user_id))
+        cur.execute("UPDATE feedback_messages SET is_read=1 WHERE feedback_id=%s AND sender_type='admin'", (feedback_id,))
+        conn.commit()
+        return {"ok": True}
+
+
+@router.get("/user/feedback/unread-count")
+def get_unread_feedback_count(user_id: int = __import__("fastapi").Depends(get_active_user_id)):
+    """获取未读消息数量"""
+    with get_db() as conn:
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT COUNT(*) FROM feedback f
+            WHERE f.user_id=%s AND f.user_read=0
+            AND EXISTS (SELECT 1 FROM feedback_messages fm WHERE fm.feedback_id=f.id AND fm.sender_type='admin')
+        """, (user_id,))
+        count = cur.fetchone()[0]
+        return {"count": count}
+
+
+@router.get("/user/export-data")
+def export_user_data(user_id: int = __import__("fastapi").Depends(get_active_user_id)):
+    with get_db() as conn:
+        cur = conn.cursor()
+        user = _get_user_dict(cur, user_id)
+        cur.execute("SELECT * FROM body_records WHERE user_id=%s ORDER BY timestamp DESC", (user_id,))
+        body_records = [_body_record_row(r, user_id) for r in cur.fetchall()]
+        cur.execute("SELECT * FROM workout_records WHERE user_id=%s ORDER BY timestamp DESC", (user_id,))
+        workout_records = [_workout_record_row(r, user_id) for r in cur.fetchall()]
+        cur.execute("SELECT * FROM training_tasks WHERE user_id=%s ORDER BY date DESC", (user_id,))
+        training_tasks = [_training_task_row(r, user_id) for r in cur.fetchall()]
+        return {
+            "profile": user,
+            "body_records": body_records,
+            "workout_records": workout_records,
+            "training_tasks": training_tasks,
+        }
 
 @router.get("/user/check-nickname")
 def check_nickname(nickname: str):
@@ -151,6 +314,9 @@ def _get_user_dict(cur, user_id):
         vip_expire_time=str(d["vip_expire_time"]) if d.get("vip_expire_time") else None,
         workout_reminder=bool(d.get("workout_reminder", 1)),
         achievement_notification=bool(d.get("achievement_notification", 1)),
+        dark_mode=bool(d.get("dark_mode", 1)),
+        unit_system=d.get("unit_system", "metric"),
+        reminder_time=d.get("reminder_time", "18:00"),
         assessment_completed=bool(d.get("assessment_completed", 0)),
         username_set=bool(d.get("username_set", 0)),
     )
@@ -158,14 +324,14 @@ def _get_user_dict(cur, user_id):
 # ==================== 身体记录 ====================
 
 @router.get("/body-records", response_model=list[BodyRecordResponse])
-def get_body_records(user_id: int = __import__("fastapi").Depends(get_current_user_id)):
+def get_body_records(user_id: int = __import__("fastapi").Depends(get_active_user_id)):
     with get_db() as conn:
         cur = conn.cursor()
         cur.execute("SELECT * FROM body_records WHERE user_id=%s ORDER BY timestamp DESC", (user_id,))
         return [_body_record_row(r, user_id) for r in cur.fetchall()]
 
 @router.post("/body-records", response_model=BodyRecordResponse)
-def create_body_record(data: BodyRecordCreate, user_id: int = __import__("fastapi").Depends(get_current_user_id)):
+def create_body_record(data: BodyRecordCreate, user_id: int = __import__("fastapi").Depends(get_active_user_id)):
     with get_db() as conn:
         cur = conn.cursor()
         ts = int(time.time() * 1000)
@@ -178,7 +344,7 @@ def create_body_record(data: BodyRecordCreate, user_id: int = __import__("fastap
                                   body_fat=data.body_fat, waist=data.waist, hip=data.hip, timestamp=ts)
 
 @router.delete("/body-records/{record_id}")
-def delete_body_record(record_id: int, user_id: int = __import__("fastapi").Depends(get_current_user_id)):
+def delete_body_record(record_id: int, user_id: int = __import__("fastapi").Depends(get_active_user_id)):
     with get_db() as conn:
         cur = conn.cursor()
         cur.execute("DELETE FROM body_records WHERE id=%s AND user_id=%s", (record_id, user_id))
@@ -191,14 +357,14 @@ def _body_record_row(r, uid):
 # ==================== 训练记录 ====================
 
 @router.get("/workout-records", response_model=list[WorkoutRecordResponse])
-def get_workout_records(user_id: int = __import__("fastapi").Depends(get_current_user_id)):
+def get_workout_records(user_id: int = __import__("fastapi").Depends(get_active_user_id)):
     with get_db() as conn:
         cur = conn.cursor()
         cur.execute("SELECT * FROM workout_records WHERE user_id=%s ORDER BY timestamp DESC", (user_id,))
         return [_workout_record_row(r, user_id) for r in cur.fetchall()]
 
 @router.post("/workout-records", response_model=WorkoutRecordResponse)
-def create_workout_record(data: WorkoutRecordCreate, user_id: int = __import__("fastapi").Depends(get_current_user_id)):
+def create_workout_record(data: WorkoutRecordCreate, user_id: int = __import__("fastapi").Depends(get_active_user_id)):
     with get_db() as conn:
         cur = conn.cursor()
         ts = int(time.time() * 1000)
@@ -215,7 +381,7 @@ def create_workout_record(data: WorkoutRecordCreate, user_id: int = __import__("
         )
 
 @router.delete("/workout-records/{record_id}")
-def delete_workout_record(record_id: int, user_id: int = __import__("fastapi").Depends(get_current_user_id)):
+def delete_workout_record(record_id: int, user_id: int = __import__("fastapi").Depends(get_active_user_id)):
     with get_db() as conn:
         cur = conn.cursor()
         cur.execute("DELETE FROM workout_records WHERE id=%s AND user_id=%s", (record_id, user_id))
@@ -231,14 +397,14 @@ def _workout_record_row(r, uid):
 # ==================== 训练任务 ====================
 
 @router.get("/training-tasks", response_model=list[TrainingTaskResponse])
-def get_training_tasks(user_id: int = __import__("fastapi").Depends(get_current_user_id)):
+def get_training_tasks(user_id: int = __import__("fastapi").Depends(get_active_user_id)):
     with get_db() as conn:
         cur = conn.cursor()
         cur.execute("SELECT * FROM training_tasks WHERE user_id=%s ORDER BY date DESC", (user_id,))
         return [_training_task_row(r, user_id) for r in cur.fetchall()]
 
 @router.post("/training-tasks", response_model=TrainingTaskResponse)
-def create_training_task(data: TrainingTaskCreate, user_id: int = __import__("fastapi").Depends(get_current_user_id)):
+def create_training_task(data: TrainingTaskCreate, user_id: int = __import__("fastapi").Depends(get_active_user_id)):
     with get_db() as conn:
         cur = conn.cursor()
         cur.execute(
@@ -251,7 +417,7 @@ def create_training_task(data: TrainingTaskCreate, user_id: int = __import__("fa
         return _training_task_dict(cur, tid, user_id)
 
 @router.put("/training-tasks/{task_id}", response_model=TrainingTaskResponse)
-def update_training_task(task_id: int, data: TrainingTaskUpdate, user_id: int = __import__("fastapi").Depends(get_current_user_id)):
+def update_training_task(task_id: int, data: TrainingTaskUpdate, user_id: int = __import__("fastapi").Depends(get_active_user_id)):
     with get_db() as conn:
         cur = conn.cursor()
         fields = []
@@ -272,7 +438,7 @@ def update_training_task(task_id: int, data: TrainingTaskUpdate, user_id: int = 
         return _training_task_dict(cur, task_id, user_id)
 
 @router.delete("/training-tasks/{task_id}")
-def delete_training_task(task_id: int, user_id: int = __import__("fastapi").Depends(get_current_user_id)):
+def delete_training_task(task_id: int, user_id: int = __import__("fastapi").Depends(get_active_user_id)):
     with get_db() as conn:
         cur = conn.cursor()
         cur.execute("DELETE FROM training_tasks WHERE id=%s AND user_id=%s", (task_id, user_id))
@@ -293,14 +459,14 @@ def _training_task_dict(cur, tid, uid):
 # ==================== 训练计划 ====================
 
 @router.get("/exercise-plans", response_model=list[ExercisePlanResponse])
-def get_exercise_plans(user_id: int = __import__("fastapi").Depends(get_current_user_id)):
+def get_exercise_plans(user_id: int = __import__("fastapi").Depends(get_active_user_id)):
     with get_db() as conn:
         cur = conn.cursor()
         cur.execute("SELECT * FROM exercise_plans WHERE user_id=%s ORDER BY day_of_week", (user_id,))
         return [ExercisePlanResponse(id=r[0], user_id=user_id, day_of_week=r[2], status=r[3], completion_status=r[4]) for r in cur.fetchall()]
 
 @router.post("/exercise-plans", response_model=ExercisePlanResponse)
-def create_exercise_plan(data: ExercisePlanCreate, user_id: int = __import__("fastapi").Depends(get_current_user_id)):
+def create_exercise_plan(data: ExercisePlanCreate, user_id: int = __import__("fastapi").Depends(get_active_user_id)):
     with get_db() as conn:
         cur = conn.cursor()
         cur.execute(
@@ -311,7 +477,7 @@ def create_exercise_plan(data: ExercisePlanCreate, user_id: int = __import__("fa
         return ExercisePlanResponse(id=pid, user_id=user_id, day_of_week=data.day_of_week, status=data.status, completion_status=data.completion_status)
 
 @router.put("/exercise-plans/{day_of_week}", response_model=ExercisePlanResponse)
-def update_exercise_plan(day_of_week: int, data: ExercisePlanUpdate, user_id: int = __import__("fastapi").Depends(get_current_user_id)):
+def update_exercise_plan(day_of_week: int, data: ExercisePlanUpdate, user_id: int = __import__("fastapi").Depends(get_active_user_id)):
     with get_db() as conn:
         cur = conn.cursor()
         fields = []
@@ -332,7 +498,7 @@ def update_exercise_plan(day_of_week: int, data: ExercisePlanUpdate, user_id: in
 # ==================== 成就 ====================
 
 @router.get("/achievements", response_model=list[AchievementResponse])
-def get_achievements(user_id: int = __import__("fastapi").Depends(get_current_user_id)):
+def get_achievements(user_id: int = __import__("fastapi").Depends(get_active_user_id)):
     with get_db() as conn:
         cur = conn.cursor()
         cur.execute("SELECT * FROM achievements WHERE user_id=%s", (user_id,))
@@ -341,7 +507,7 @@ def get_achievements(user_id: int = __import__("fastapi").Depends(get_current_us
 
 @router.post("/achievements")
 def save_achievement(achievement_type: str, unlocked: bool = True,
-                     user_id: int = __import__("fastapi").Depends(get_current_user_id)):
+                     user_id: int = __import__("fastapi").Depends(get_active_user_id)):
     with get_db() as conn:
         cur = conn.cursor()
         ts = int(time.time() * 1000) if unlocked else 0
@@ -353,7 +519,7 @@ def save_achievement(achievement_type: str, unlocked: bool = True,
 
 @router.put("/achievements/{achievement_type}")
 def update_achievement(achievement_type: str, data: AchievementUpdate,
-                       user_id: int = __import__("fastapi").Depends(get_current_user_id)):
+                       user_id: int = __import__("fastapi").Depends(get_active_user_id)):
     with get_db() as conn:
         cur = conn.cursor()
         fields = []
@@ -384,3 +550,25 @@ def get_exercises(muscle_group: str = None):
             sub_muscle=r[7] if len(r) > 7 else None,
             needs_equipment=bool(r[8]) if len(r) > 8 else False
         ) for r in rows]
+
+
+# ==================== 公告（公开接口） ====================
+
+@router.get("/announcements")
+def get_announcements():
+    """获取已发布的公告列表（无需登录）"""
+    with get_db() as conn:
+        cur = conn.cursor()
+        cur.execute(
+            "SELECT id, title, content, created_at FROM announcements "
+            "WHERE is_active=1 ORDER BY created_at DESC"
+        )
+        announcements = []
+        for row in cur.fetchall():
+            announcements.append({
+                "id": row[0],
+                "title": row[1],
+                "content": row[2] or "",
+                "created_at": str(row[3]) if row[3] else "",
+            })
+        return {"list": announcements}

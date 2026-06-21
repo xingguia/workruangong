@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Light Theme Colors -->
+    <color name="bg_dark_light">#F5F5F5</color>
+    <color name="bg_card_light_theme">#FFFFFF</color>
+    <color name="bg_card_light_light">#F0F0F0</color>
+    <color name="text_primary_light">#1A1A1A</color>
+    <color name="text_secondary_light">#666666</color>
+    <color name="text_muted_light">#999999</color>
+    <color name="border_color_light">#E0E0E0</color>
+    <color name="primary_light_theme">#FF6B35</color>
+</resources>

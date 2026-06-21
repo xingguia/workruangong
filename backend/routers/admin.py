@@ -84,6 +84,40 @@ def admin_me(admin: dict = Depends(get_admin)):
         }
 
 
+# ---- Notifications ----
+
+@router.get("/notifications")
+def get_notifications(admin: dict = Depends(get_admin)):
+    """获取未读通知数量"""
+    with get_db() as conn:
+        cur = conn.cursor()
+
+        # 未读反馈数量
+        cur.execute("SELECT COUNT(*) FROM feedback")
+        feedback_count = cur.fetchone()[0]
+
+        # 今日新增用户
+        now = datetime.utcnow()
+        today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        cur.execute("SELECT COUNT(*) FROM users WHERE created_at >= %s",
+                    (today_start.strftime("%Y-%m-%d %H:%M:%S"),))
+        new_users_today = cur.fetchone()[0]
+
+        # 今日新增训练记录
+        today_ts = int(today_start.timestamp() * 1000)
+        cur.execute("SELECT COUNT(*) FROM workout_records WHERE timestamp >= %s", (today_ts,))
+        new_records_today = cur.fetchone()[0]
+
+        total = feedback_count + new_users_today + new_records_today
+
+        return {
+            "total": total,
+            "feedback_count": feedback_count,
+            "new_users_today": new_users_today,
+            "new_records_today": new_records_today,
+        }
+
+
 # ---- Dashboard ----
 
 @router.get("/dashboard")
@@ -302,6 +336,7 @@ def admin_user_detail(user_id: int, admin: dict = Depends(get_admin)):
             "height": user.get("height", 0), "weight": user.get("weight", 0),
             "body_fat": user.get("body_fat", 0), "waist": user.get("waist", 0), "hip": user.get("hip", 0),
             "is_vip": bool(user.get("is_vip", 0)), "level": user.get("level", 1),
+            "is_active": bool(user.get("is_active", 1)),
             "vip_expire_time": str(user["vip_expire_time"]) if user.get("vip_expire_time") else None,
             "created_at": str(user["created_at"]) if user.get("created_at") else "",
             "total_workouts": stats[0] or 0,
@@ -368,6 +403,28 @@ def admin_ban_user(user_id: int, banned: bool = True,
     with get_db() as conn:
         cur = conn.cursor()
         cur.execute("UPDATE users SET is_active=%s WHERE id=%s", (0 if banned else 1, user_id))
+        return {"ok": True}
+
+
+@router.delete("/users/{user_id}")
+def admin_delete_user(user_id: int, admin: dict = Depends(get_admin)):
+    with get_db() as conn:
+        cur = conn.cursor()
+        # 先获取用户名，释放保留的用户名
+        cur.execute("SELECT nickname FROM users WHERE id=%s", (user_id,))
+        row = cur.fetchone()
+        if row and row[0]:
+            cur.execute("DELETE FROM usernames WHERE username=%s", (row[0],))
+        # 删除关联数据（外键有 CASCADE，但显式删除更安全）
+        cur.execute("DELETE FROM feedback_messages WHERE feedback_id IN (SELECT id FROM feedback WHERE user_id=%s)", (user_id,))
+        cur.execute("DELETE FROM feedback WHERE user_id=%s", (user_id,))
+        cur.execute("DELETE FROM workout_records WHERE user_id=%s", (user_id,))
+        cur.execute("DELETE FROM body_records WHERE user_id=%s", (user_id,))
+        cur.execute("DELETE FROM training_tasks WHERE user_id=%s", (user_id,))
+        cur.execute("DELETE FROM exercise_plans WHERE user_id=%s", (user_id,))
+        cur.execute("DELETE FROM achievements WHERE user_id=%s", (user_id,))
+        cur.execute("DELETE FROM users WHERE id=%s", (user_id,))
+        conn.commit()
         return {"ok": True}
 
 
@@ -875,4 +932,187 @@ def admin_delete_workout_record(record_id: int, admin: dict = Depends(get_admin)
     with get_db() as conn:
         cur = conn.cursor()
         cur.execute("DELETE FROM workout_records WHERE id=%s", (record_id,))
+        return {"ok": True}
+
+
+# ---- Feedback ----
+
+class FeedbackReply(BaseModel):
+    content: str
+
+class FeedbackStatusUpdate(BaseModel):
+    status: str
+
+class FeedbackBatchDelete(BaseModel):
+    ids: list[int]
+
+class FeedbackBatchStatus(BaseModel):
+    ids: list[int]
+    status: str
+
+@router.get("/feedback")
+def feedback_list(page: int = 1, page_size: int = 20, keyword: str = "",
+                  category: str = "", status: str = "",
+                  admin: dict = Depends(get_admin)):
+    with get_db() as conn:
+        cur = conn.cursor()
+
+        where_clauses = []
+        params = []
+
+        if keyword:
+            where_clauses.append("(f.content LIKE %s OR f.contact LIKE %s OR u.nickname LIKE %s)")
+            kw = f"%{keyword}%"
+            params.extend([kw, kw, kw])
+
+        if category:
+            where_clauses.append("f.category = %s")
+            params.append(category)
+
+        if status:
+            where_clauses.append("f.status = %s")
+            params.append(status)
+
+        where = " AND ".join(where_clauses) if where_clauses else "1=1"
+
+        cur.execute(f"SELECT COUNT(*) FROM feedback f LEFT JOIN users u ON f.user_id = u.id WHERE {where}", params)
+        total = cur.fetchone()[0]
+
+        offset = (page - 1) * page_size
+        cur.execute(f"""
+            SELECT f.id, f.user_id, f.content, f.contact, f.created_at, u.nickname, u.phone,
+                   COALESCE(f.category, 'other') as category,
+                   COALESCE(f.status, 'pending') as status,
+                   (SELECT COUNT(*) FROM feedback_messages fm WHERE fm.feedback_id=f.id AND fm.sender_type='user' AND fm.is_read=0) as unread_count,
+                   (SELECT fm.content FROM feedback_messages fm WHERE fm.feedback_id=f.id ORDER BY fm.created_at DESC LIMIT 1) as last_message
+            FROM feedback f LEFT JOIN users u ON f.user_id = u.id
+            WHERE {where}
+            ORDER BY f.created_at DESC LIMIT %s OFFSET %s
+        """, params + [page_size, offset])
+        rows = cur.fetchall()
+        items = []
+        for r in rows:
+            items.append({
+                "id": r[0], "user_id": r[1], "content": r[2], "contact": r[3],
+                "created_at": r[4], "nickname": r[5] or "", "phone": r[6] or "",
+                "category": r[7], "status": r[8],
+                "unread_count": r[9], "last_message": r[10]
+            })
+        return {"total": total, "page": page, "page_size": page_size, "list": items}
+
+
+@router.get("/feedback/{feedback_id}")
+def feedback_detail(feedback_id: int, admin: dict = Depends(get_admin)):
+    with get_db() as conn:
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT f.id, f.user_id, f.content, f.contact, f.created_at, u.nickname, u.phone,
+                   COALESCE(f.category, 'other') as category,
+                   COALESCE(f.status, 'pending') as status
+            FROM feedback f LEFT JOIN users u ON f.user_id = u.id
+            WHERE f.id = %s
+        """, (feedback_id,))
+        r = cur.fetchone()
+        if not r:
+            raise HTTPException(status_code=404, detail="Feedback not found")
+        return {
+            "id": r[0], "user_id": r[1], "content": r[2], "contact": r[3],
+            "created_at": r[4], "nickname": r[5] or "", "phone": r[6] or "",
+            "category": r[7], "status": r[8]
+        }
+
+
+@router.get("/feedback/{feedback_id}/messages")
+def get_feedback_messages(feedback_id: int, admin: dict = Depends(get_admin)):
+    """获取反馈的对话消息"""
+    with get_db() as conn:
+        cur = conn.cursor()
+        # 获取反馈详情
+        cur.execute("""
+            SELECT f.id, f.user_id, f.content, f.contact, f.category, f.status, f.created_at,
+                   u.nickname, u.phone
+            FROM feedback f LEFT JOIN users u ON f.user_id = u.id WHERE f.id = %s
+        """, (feedback_id,))
+        fb_row = cur.fetchone()
+        feedback = {}
+        if fb_row:
+            feedback = {
+                "id": fb_row[0], "user_id": fb_row[1], "content": fb_row[2],
+                "contact": fb_row[3], "category": fb_row[4], "status": fb_row[5],
+                "created_at": str(fb_row[6]) if fb_row[6] else "",
+                "nickname": fb_row[7], "phone": fb_row[8]
+            }
+
+        cur.execute("""
+            SELECT id, sender_type, content, is_read, created_at
+            FROM feedback_messages WHERE feedback_id = %s ORDER BY created_at ASC
+        """, (feedback_id,))
+        messages = []
+        for r in cur.fetchall():
+            messages.append({
+                "id": r[0], "sender_type": r[1], "content": r[2],
+                "is_read": bool(r[3]), "created_at": str(r[4]) if r[4] else ""
+            })
+
+        cur.execute("UPDATE feedback_messages SET is_read=1 WHERE feedback_id=%s AND sender_type='user'", (feedback_id,))
+        conn.commit()
+        return {"feedback": feedback, "messages": messages}
+
+
+@router.post("/feedback/{feedback_id}/messages")
+def send_admin_reply(feedback_id: int, body: FeedbackReply, admin: dict = Depends(get_admin)):
+    """管理员发送回复消息"""
+    with get_db() as conn:
+        cur = conn.cursor()
+        ts = int(time.time() * 1000)
+        cur.execute(
+            "INSERT INTO feedback_messages (feedback_id, sender_type, content, created_at) VALUES (%s, 'admin', %s, %s)",
+            (feedback_id, body.content, ts)
+        )
+        cur.execute("UPDATE feedback SET status='replied' WHERE id=%s AND status='pending'", (feedback_id,))
+        conn.commit()
+        return {"ok": True}
+
+
+@router.put("/feedback/{feedback_id}/status")
+def update_feedback_status(feedback_id: int, body: FeedbackStatusUpdate, admin: dict = Depends(get_admin)):
+    if body.status not in ['pending', 'processing', 'resolved', 'replied']:
+        raise HTTPException(status_code=400, detail="Invalid status")
+    with get_db() as conn:
+        cur = conn.cursor()
+        cur.execute("UPDATE feedback SET status=%s WHERE id=%s", (body.status, feedback_id))
+        conn.commit()
+        return {"ok": True}
+
+
+@router.delete("/feedback/{feedback_id}")
+def delete_feedback(feedback_id: int, admin: dict = Depends(get_admin)):
+    with get_db() as conn:
+        cur = conn.cursor()
+        cur.execute("DELETE FROM feedback_messages WHERE feedback_id=%s", (feedback_id,))
+        cur.execute("DELETE FROM feedback WHERE id=%s", (feedback_id,))
+        return {"ok": True}
+
+
+@router.post("/feedback/batch-delete")
+def batch_delete_feedback(body: FeedbackBatchDelete, admin: dict = Depends(get_admin)):
+    with get_db() as conn:
+        cur = conn.cursor()
+        if body.ids:
+            placeholders = ','.join(['%s'] * len(body.ids))
+            cur.execute(f"DELETE FROM feedback WHERE id IN ({placeholders})", body.ids)
+        return {"ok": True}
+
+
+@router.put("/feedback/batch-status")
+def batch_update_status(body: FeedbackBatchStatus, admin: dict = Depends(get_admin)):
+    if body.status not in ['pending', 'processing', 'resolved', 'replied']:
+        raise HTTPException(status_code=400, detail="Invalid status")
+    with get_db() as conn:
+        cur = conn.cursor()
+        if body.ids:
+            placeholders = ','.join(['%s'] * len(body.ids))
+            cur.execute(f"UPDATE feedback SET status=%s WHERE id IN ({placeholders})",
+                       [body.status] + body.ids)
+        conn.commit()
         return {"ok": True}

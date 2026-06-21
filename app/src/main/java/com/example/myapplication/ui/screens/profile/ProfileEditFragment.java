@@ -355,7 +355,7 @@ public class ProfileEditFragment extends Fragment {
         editText.setText(binding.nicknameValue.getText().toString());
         editText.selectAll();
 
-        new AlertDialog.Builder(requireContext())
+        new AlertDialog.Builder(requireContext(), R.style.DarkDialog)
                 .setView(dialogView)
                 .setPositiveButton("保存", (dialog, which) -> {
                     String newNickname = editText.getText().toString().trim();
@@ -385,7 +385,7 @@ public class ProfileEditFragment extends Fragment {
             }
         }
 
-        new AlertDialog.Builder(requireContext())
+        new AlertDialog.Builder(requireContext(), R.style.DarkDialog)
                 .setTitle("选择性别")
                 .setSingleChoiceItems(genders, currentIndex, (dialog, which) -> {
                     String selected = genders[which];
@@ -411,7 +411,7 @@ public class ProfileEditFragment extends Fragment {
             editText.selectAll();
         }
 
-        new AlertDialog.Builder(requireContext())
+        new AlertDialog.Builder(requireContext(), R.style.DarkDialog)
                 .setView(dialogView)
                 .setPositiveButton("保存", (dialog, which) -> {
                     String heightStr = editText.getText().toString().trim();
@@ -447,7 +447,7 @@ public class ProfileEditFragment extends Fragment {
             editText.selectAll();
         }
 
-        new AlertDialog.Builder(requireContext())
+        new AlertDialog.Builder(requireContext(), R.style.DarkDialog)
                 .setView(dialogView)
                 .setPositiveButton("保存", (dialog, which) -> {
                     String weightStr = editText.getText().toString().trim();
@@ -482,7 +482,7 @@ public class ProfileEditFragment extends Fragment {
             }
         }
 
-        new AlertDialog.Builder(requireContext())
+        new AlertDialog.Builder(requireContext(), R.style.DarkDialog)
                 .setTitle("选择健身目的")
                 .setSingleChoiceItems(goals, currentIndex, (dialog, which) -> {
                     String selected = goals[which];

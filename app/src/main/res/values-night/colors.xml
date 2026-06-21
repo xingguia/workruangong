@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Night (Dark) Mode Colors - 保持原有深色主题 -->
+    <color name="bg_dark">#0D0D14</color>
+    <color name="bg_card">#1A1A2E</color>
+    <color name="bg_card_light">#252545</color>
+    <color name="bg_input">#252545</color>
+    <color name="text_primary">#FFFFFF</color>
+    <color name="text_secondary">#B0B0B0</color>
+    <color name="text_muted">#6B6B6B</color>
+    <color name="border_color">#2A2A3E</color>
+</resources>

@@ -150,19 +150,23 @@ public class AssessmentFragment extends Fragment {
                     return;
                 }
 
+                if (!isAdded()) return;
                 UsernameValidator.ValidationResult result = UsernameValidator.validateWithAvailability(requireContext(), username);
                 if (!result.valid) {
                     usernameInputLayout.setError(result.errorMessage);
                     return;
                 }
-
-                // Save the username
-                sessionManager.saveNickname(username);
-                sessionManager.addUsernameToSet(username);
-                sessionManager.markUsernameSet();
-
-                dialog.dismiss();
-                navigateToHome();
+                // Save the username and wait for server confirmation before navigating
+                sessionManager.saveNickname(username, () -> {
+                    sessionManager.addUsernameToSet(username);
+                    sessionManager.markUsernameSet();
+                    if (getActivity() != null) {
+                        getActivity().runOnUiThread(() -> {
+                            dialog.dismiss();
+                            navigateToHome();
+                        });
+                    }
+                });
             });
         });
 

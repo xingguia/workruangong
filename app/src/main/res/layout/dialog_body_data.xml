@@ -5,14 +5,14 @@
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:padding="24dp"
-    android:background="#FFFFFF">
+    android:background="@color/bg_card">
 
     <TextView
         android:id="@+id/dialogTitle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="设置最初数据"
-        android:textColor="#000000"
+        android:textColor="@color/text_primary"
         android:textSize="20sp"
         android:textStyle="bold"
         android:gravity="center" />
@@ -23,7 +23,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:text="作为基准线，记录你的起点"
-        android:textColor="#666666"
+        android:textColor="@color/text_secondary"
         android:textSize="14sp"
         android:gravity="center" />
 
@@ -43,16 +43,17 @@
             android:layout_marginEnd="8dp"
             app:errorEnabled="true"
             app:suffixText="kg"
-            app:hintTextColor="#666666"
-            app:boxStrokeColor="#FF6B35">
+            app:hintTextColor="@color/text_muted"
+            app:boxStrokeColor="@color/primary"
+            app:boxBackgroundColor="@color/bg_input">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/weightInput"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="体重"
-                android:textColor="#000000"
-                android:textColorHint="#999999"
+                android:textColor="@color/text_primary"
+                android:textColorHint="@color/text_muted"
                 android:inputType="numberDecimal"
                 android:maxLength="5" />
 
@@ -67,16 +68,17 @@
             android:layout_marginStart="8dp"
             app:errorEnabled="true"
             app:suffixText="cm"
-            app:hintTextColor="#666666"
-            app:boxStrokeColor="#FF6B35">
+            app:hintTextColor="@color/text_muted"
+            app:boxStrokeColor="@color/primary"
+            app:boxBackgroundColor="@color/bg_input">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/heightInput"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="身高"
-                android:textColor="#000000"
-                android:textColorHint="#999999"
+                android:textColor="@color/text_primary"
+                android:textColorHint="@color/text_muted"
                 android:inputType="number"
                 android:maxLength="3" />
 
@@ -93,16 +95,17 @@
         android:layout_marginTop="8dp"
         app:errorEnabled="true"
         app:suffixText="%"
-        app:hintTextColor="#666666"
-        app:boxStrokeColor="#FF6B35">
+        app:hintTextColor="@color/text_muted"
+        app:boxStrokeColor="@color/primary"
+        app:boxBackgroundColor="@color/bg_input">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/bodyFatInput"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="体脂率（可选）"
-            android:textColor="#000000"
-            android:textColorHint="#999999"
+            android:textColor="@color/text_primary"
+            android:textColorHint="@color/text_muted"
             android:inputType="numberDecimal"
             android:maxLength="4" />
 
@@ -124,16 +127,17 @@
             android:layout_marginEnd="8dp"
             app:errorEnabled="true"
             app:suffixText="cm"
-            app:hintTextColor="#666666"
-            app:boxStrokeColor="#FF6B35">
+            app:hintTextColor="@color/text_muted"
+            app:boxStrokeColor="@color/primary"
+            app:boxBackgroundColor="@color/bg_input">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/waistInput"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="腰围（可选）"
-                android:textColor="#000000"
-                android:textColorHint="#999999"
+                android:textColor="@color/text_primary"
+                android:textColorHint="@color/text_muted"
                 android:inputType="numberDecimal"
                 android:maxLength="5" />
 
@@ -148,16 +152,17 @@
             android:layout_marginStart="8dp"
             app:errorEnabled="true"
             app:suffixText="cm"
-            app:hintTextColor="#666666"
-            app:boxStrokeColor="#FF6B35">
+            app:hintTextColor="@color/text_muted"
+            app:boxStrokeColor="@color/primary"
+            app:boxBackgroundColor="@color/bg_input">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/hipInput"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="臀围（可选）"
-                android:textColor="#000000"
-                android:textColorHint="#999999"
+                android:textColor="@color/text_primary"
+                android:textColorHint="@color/text_muted"
                 android:inputType="numberDecimal"
                 android:maxLength="5" />
 
@@ -170,7 +175,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:text="这些数据将作为你的基准线保存"
-        android:textColor="#999999"
+        android:textColor="@color/text_muted"
         android:textSize="12sp"
         android:gravity="center" />
 

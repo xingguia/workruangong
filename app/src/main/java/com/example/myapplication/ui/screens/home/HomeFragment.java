@@ -29,6 +29,7 @@ import androidx.navigation.Navigation;
 
 import com.example.myapplication.R;
 import com.example.myapplication.api.AICalorieService;
+import com.example.myapplication.api.ApiClient;
 import com.example.myapplication.databinding.FragmentHomeBinding;
 import com.example.myapplication.model.ExerciseDatabase;
 import com.example.myapplication.model.ExercisePlan;
@@ -93,6 +94,7 @@ public class HomeFragment extends Fragment {
         setupBodyData();
         setupTrainingTasks();
         setupListeners();
+        loadAnnouncementBadge();
     }
 
     private void loadDataFromApi() {
@@ -181,6 +183,9 @@ public class HomeFragment extends Fragment {
         boolean isRestDay = plan.isRestDay();
         boolean isWorkoutDay = plan.isWorkoutDay();
 
+        // 判断是否是过去的日期（未设置状态的已过去日期自动显示为休息）
+        boolean isPastDay = index < todayIndex && isNotSet;
+
         LinearLayout container = new LinearLayout(requireContext());
         container.setOrientation(LinearLayout.VERTICAL);
         container.setGravity(Gravity.CENTER);
@@ -192,9 +197,9 @@ public class HomeFragment extends Fragment {
         container.setLayoutParams(params);
         container.setPadding(8, 12, 8, 12);
 
-        // Day label - 默认显示周一到周日，选择休息日后显示"休"
+        // Day label - 默认显示周一到周日，选择休息日后显示"休"，过去的未设置日期也显示"休"
         TextView labelView = new TextView(requireContext());
-        if (isRestDay) {
+        if (isRestDay || isPastDay) {
             labelView.setText("休");
         } else {
             labelView.setText(dayLabel);
@@ -1055,8 +1060,157 @@ public class HomeFragment extends Fragment {
 
     private void setupListeners() {
         binding.addTaskBtn.setOnClickListener(v -> showAddTaskDialog());
-
         binding.startTrainingBtn.setOnClickListener(v -> showTrainingGuideDialog());
+        binding.announcementBtn.setOnClickListener(v -> showAnnouncementsDialog());
+    }
+
+    private static final String PREF_NAME = "announcement_prefs";
+    private static final String KEY_LAST_READ_ID = "last_read_announcement_id";
+
+    private void loadAnnouncementBadge() {
+        ApiClient.getInstance(requireContext()).getAnnouncements(new ApiClient.Callback<List<java.util.Map<String, Object>>>() {
+            @Override
+            public void onSuccess(List<java.util.Map<String, Object>> data) {
+                if (!isAdded() || binding == null) return;
+                getActivity().runOnUiThread(() -> {
+                    if (data == null || data.isEmpty()) {
+                        binding.announcementBadge.setVisibility(View.GONE);
+                        return;
+                    }
+
+                    android.content.SharedPreferences prefs = requireContext()
+                            .getSharedPreferences(PREF_NAME, android.content.Context.MODE_PRIVATE);
+                    long lastReadId = prefs.getLong(KEY_LAST_READ_ID, 0);
+
+                    int unreadCount = 0;
+                    for (java.util.Map<String, Object> item : data) {
+                        long id = item.get("id") instanceof Number ? ((Number) item.get("id")).longValue() : 0;
+                        if (id > lastReadId) {
+                            unreadCount++;
+                        }
+                    }
+
+                    if (unreadCount > 0) {
+                        binding.announcementBadge.setVisibility(View.VISIBLE);
+                        binding.announcementBadge.setText(String.valueOf(unreadCount));
+                    } else {
+                        binding.announcementBadge.setVisibility(View.GONE);
+                    }
+                });
+            }
+
+            @Override
+            public void onError(String error) {
+                // 静默失败，不影响用户体验
+            }
+        });
+    }
+
+    private void showAnnouncementsDialog() {
+        ApiClient.getInstance(requireContext()).getAnnouncements(new ApiClient.Callback<List<java.util.Map<String, Object>>>() {
+            @Override
+            public void onSuccess(List<java.util.Map<String, Object>> data) {
+                if (!isAdded() || binding == null) return;
+                getActivity().runOnUiThread(() -> {
+                    View dialogView = LayoutInflater.from(requireContext())
+                            .inflate(R.layout.dialog_announcements, null);
+
+                    TextView emptyText = dialogView.findViewById(R.id.emptyText);
+                    androidx.recyclerview.widget.RecyclerView list = dialogView.findViewById(R.id.announcementList);
+
+                    if (data == null || data.isEmpty()) {
+                        emptyText.setVisibility(View.VISIBLE);
+                        list.setVisibility(View.GONE);
+                    } else {
+                        emptyText.setVisibility(View.GONE);
+                        list.setVisibility(View.VISIBLE);
+                        list.setLayoutManager(new androidx.recyclerview.widget.LinearLayoutManager(requireContext()));
+
+                        list.setAdapter(new androidx.recyclerview.widget.RecyclerView.Adapter<AnnouncementViewHolder>() {
+                            @NonNull
+                            @Override
+                            public AnnouncementViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+                                View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_announcement, parent, false);
+                                return new AnnouncementViewHolder(v);
+                            }
+
+                            @Override
+                            public void onBindViewHolder(@NonNull AnnouncementViewHolder holder, int position) {
+                                java.util.Map<String, Object> item = data.get(position);
+                                holder.title.setText(String.valueOf(item.getOrDefault("title", "")));
+                                holder.content.setText(String.valueOf(item.getOrDefault("content", "")));
+                                holder.time.setText(String.valueOf(item.getOrDefault("created_at", "")));
+                            }
+
+                            @Override
+                            public int getItemCount() {
+                                return data.size();
+                            }
+                        });
+                    }
+
+                    AlertDialog dialog = new AlertDialog.Builder(requireContext())
+                            .setTitle("公告通知")
+                            .setView(dialogView)
+                            .setPositiveButton("关闭", null)
+                            .create();
+
+                    dialog.setOnShowListener(d -> {
+                        Window window = dialog.getWindow();
+                        if (window != null) {
+                            window.setBackgroundDrawableResource(R.drawable.dialog_background);
+                            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(
+                                    getResources().getColor(R.color.primary, null));
+                        }
+                    });
+
+                    dialog.setOnDismissListener(d -> {
+                        // 关闭对话框时，标记所有公告为已读
+                        markAnnouncementsAsRead(data);
+                    });
+
+                    dialog.show();
+                });
+            }
+
+            @Override
+            public void onError(String error) {
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(() ->
+                            Toast.makeText(requireContext(), "加载公告失败", Toast.LENGTH_SHORT).show());
+                }
+            }
+        });
+    }
+
+    private void markAnnouncementsAsRead(List<java.util.Map<String, Object>> data) {
+        if (data == null || data.isEmpty()) return;
+
+        long maxId = 0;
+        for (java.util.Map<String, Object> item : data) {
+            long id = item.get("id") instanceof Number ? ((Number) item.get("id")).longValue() : 0;
+            if (id > maxId) {
+                maxId = id;
+            }
+        }
+
+        if (maxId > 0) {
+            requireContext().getSharedPreferences(PREF_NAME, android.content.Context.MODE_PRIVATE)
+                    .edit()
+                    .putLong(KEY_LAST_READ_ID, maxId)
+                    .apply();
+            binding.announcementBadge.setVisibility(View.GONE);
+        }
+    }
+
+    static class AnnouncementViewHolder extends androidx.recyclerview.widget.RecyclerView.ViewHolder {
+        TextView title, content, time;
+        AnnouncementViewHolder(@NonNull View itemView) {
+            super(itemView);
+            title = itemView.findViewById(R.id.annTitle);
+            content = itemView.findViewById(R.id.annContent);
+            time = itemView.findViewById(R.id.annTime);
+        }
     }
 
     /**

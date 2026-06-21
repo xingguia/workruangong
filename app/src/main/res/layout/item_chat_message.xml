@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:layout_marginBottom="12dp">
+
+    <!-- 管理员消息（靠左） -->
+    <LinearLayout
+        android:id="@+id/adminMessageLayout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_gravity="start"
+        android:maxWidth="280dp"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/adminSenderLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="官方"
+            android:textSize="11sp"
+            android:textColor="#999999"
+            android:layout_marginBottom="4dp" />
+
+        <TextView
+            android:id="@+id/adminContentText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_chat_bubble_admin"
+            android:paddingHorizontal="14dp"
+            android:paddingVertical="10dp"
+            android:textSize="14sp"
+            android:textColor="#1A1A1A"
+            android:lineSpacingExtra="3dp" />
+
+        <TextView
+            android:id="@+id/adminTimeText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="06-21 14:00"
+            android:textSize="11sp"
+            android:textColor="#BBBBBB"
+            android:layout_marginTop="4dp" />
+    </LinearLayout>
+
+    <!-- 用户消息（靠右） -->
+    <LinearLayout
+        android:id="@+id/userMessageLayout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_gravity="end"
+        android:maxWidth="280dp"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/userSenderLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="我"
+            android:textSize="11sp"
+            android:textColor="#999999"
+            android:layout_marginBottom="4dp"
+            android:layout_gravity="end" />
+
+        <TextView
+            android:id="@+id/userContentText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_chat_bubble_user"
+            android:paddingHorizontal="14dp"
+            android:paddingVertical="10dp"
+            android:textSize="14sp"
+            android:textColor="@android:color/white"
+            android:lineSpacingExtra="3dp" />
+
+        <TextView
+            android:id="@+id/userTimeText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="06-21 14:00"
+            android:textSize="11sp"
+            android:textColor="#BBBBBB"
+            android:layout_marginTop="4dp"
+            android:layout_gravity="end" />
+    </LinearLayout>
+</LinearLayout>

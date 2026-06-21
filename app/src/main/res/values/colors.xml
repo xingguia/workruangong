@@ -9,23 +9,25 @@
     <color name="accent">#00FF88</color>
     <color name="accent_dark">#00DD77</color>
 
-    <!-- Background Colors -->
-    <color name="bg_dark">#0D0D14</color>
-    <color name="bg_card">#1A1A2E</color>
-    <color name="bg_card_light">#252545</color>
+    <!-- Background Colors (Light Theme Default) -->
+    <color name="bg_dark">#F5F5F5</color>
+    <color name="bg_card">#FFFFFF</color>
+    <color name="bg_card_light">#F0F0F0</color>
+    <color name="bg_input">#F0F0F0</color>
 
-    <!-- Text Colors -->
-    <color name="text_primary">#FFFFFF</color>
-    <color name="text_secondary">#B0B0B0</color>
-    <color name="text_muted">#6B6B6B</color>
+    <!-- Text Colors (Light Theme Default) -->
+    <color name="text_primary">#1A1A1A</color>
+    <color name="text_secondary">#666666</color>
+    <color name="text_muted">#999999</color>
 
-    <!-- Border Color -->
-    <color name="border_color">#2A2A3E</color>
+    <!-- Border Color (Light Theme Default) -->
+    <color name="border_color">#E0E0E0</color>
 
     <!-- Status Colors -->
     <color name="success">#2ED573</color>
     <color name="warning">#FFA502</color>
     <color name="error">#FF4757</color>
+    <color name="danger">#FF4757</color>
     <color name="info">#3498DB</color>
 
     <!-- VIP Colors -->

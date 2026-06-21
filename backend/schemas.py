@@ -22,6 +22,11 @@ class UserUpdate(BaseModel):
     body_fat: Optional[float] = None
     waist: Optional[float] = None
     hip: Optional[float] = None
+    initial_height: Optional[int] = None
+    initial_weight: Optional[float] = None
+    initial_body_fat: Optional[float] = None
+    initial_waist: Optional[float] = None
+    initial_hip: Optional[float] = None
 
 class UserResponse(BaseModel):
     id: int
@@ -45,6 +50,9 @@ class UserResponse(BaseModel):
     vip_expire_time: Optional[str] = None
     workout_reminder: bool
     achievement_notification: bool
+    dark_mode: bool = True
+    unit_system: str = "metric"
+    reminder_time: str = "18:00"
     assessment_completed: bool
     username_set: bool
 
@@ -174,6 +182,17 @@ class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     user: UserResponse
+
+# ---------- 修改密码 ----------
+class ChangePasswordRequest(BaseModel):
+    old_password: str
+    new_password: str
+
+# ---------- 意见反馈 ----------
+class FeedbackCreate(BaseModel):
+    content: str
+    contact: Optional[str] = None
+    category: Optional[str] = "other"
 
 # ---------- 动作库 ----------
 class ExerciseResponse(BaseModel):

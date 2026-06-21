@@ -54,8 +54,9 @@ public class VipFragment extends Fragment {
             binding.vipStatusSection.setVisibility(View.VISIBLE);
 
             String expireTime = sessionManager.getVipExpireTime();
-            if (expireTime != null) {
-                binding.vipExpiry.setText("有效期至 " + expireTime.split("T")[0]);
+            if (expireTime != null && !expireTime.isEmpty()) {
+                String displayDate = expireTime.split("T")[0].split(" ")[0];
+                binding.vipExpiry.setText("有效期至 " + displayDate);
             }
         } else {
             binding.vipHeroSection.setVisibility(View.VISIBLE);

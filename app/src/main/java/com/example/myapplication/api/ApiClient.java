@@ -253,6 +253,164 @@ public class ApiClient {
         });
     }
 
+    public void updateSettingsFull(Boolean workoutReminder, Boolean achievementNotification,
+                                   Boolean darkMode, String unitSystem, String reminderTime,
+                                   Callback<Map<String, Object>> callback) {
+        StringBuilder url = new StringBuilder("/user/settings?");
+        if (workoutReminder != null) url.append("workout_reminder=").append(workoutReminder).append("&");
+        if (achievementNotification != null) url.append("achievement_notification=").append(achievementNotification).append("&");
+        if (darkMode != null) url.append("dark_mode=").append(darkMode).append("&");
+        if (unitSystem != null) url.append("unit_system=").append(unitSystem).append("&");
+        if (reminderTime != null) url.append("reminder_time=").append(reminderTime);
+        put(url.toString(), null, new RawCallback() {
+            @Override
+            public void onResponse(String json) {
+                deliverSuccess(callback, gson.fromJson(json, new TypeToken<Map<String, Object>>(){}.getType()));
+            }
+            @Override
+            public void onFailure(String error) {
+                deliverError(callback, error);
+            }
+        });
+    }
+
+    public void changePassword(String oldPassword, String newPassword, Callback<Map<String, Object>> callback) {
+        Map<String, String> body = new HashMap<>();
+        body.put("old_password", oldPassword);
+        body.put("new_password", newPassword);
+        post("/user/change-password", body, new RawCallback() {
+            @Override
+            public void onResponse(String json) {
+                deliverSuccess(callback, gson.fromJson(json, new TypeToken<Map<String, Object>>(){}.getType()));
+            }
+            @Override
+            public void onFailure(String error) {
+                deliverError(callback, error);
+            }
+        });
+    }
+
+    public void deleteAccount(Callback<Map<String, Object>> callback) {
+        delete("/user/account", new RawCallback() {
+            @Override
+            public void onResponse(String json) {
+                deliverSuccess(callback, gson.fromJson(json, new TypeToken<Map<String, Object>>(){}.getType()));
+            }
+            @Override
+            public void onFailure(String error) {
+                deliverError(callback, error);
+            }
+        });
+    }
+
+    public void submitFeedback(String content, String contact, String category, Callback<Map<String, Object>> callback) {
+        Map<String, String> body = new HashMap<>();
+        body.put("content", content);
+        if (contact != null) body.put("contact", contact);
+        if (category != null) body.put("category", category);
+        post("/user/feedback", body, new RawCallback() {
+            @Override
+            public void onResponse(String json) {
+                deliverSuccess(callback, gson.fromJson(json, new TypeToken<Map<String, Object>>(){}.getType()));
+            }
+            @Override
+            public void onFailure(String error) {
+                deliverError(callback, error);
+            }
+        });
+    }
+
+    public void getUserFeedback(Callback<List<Map<String, Object>>> callback) {
+        get("/user/feedback", new RawCallback() {
+            @Override
+            public void onResponse(String json) {
+                try {
+                    Map<String, Object> wrapper = gson.fromJson(json, new TypeToken<Map<String, Object>>(){}.getType());
+                    List<Map<String, Object>> list = (List<Map<String, Object>>) wrapper.get("list");
+                    deliverSuccess(callback, list != null ? list : new java.util.ArrayList<>());
+                } catch (Exception e) {
+                    deliverError(callback, "解析失败");
+                }
+            }
+            @Override
+            public void onFailure(String error) {
+                deliverError(callback, error);
+            }
+        });
+    }
+
+    public void getUnreadFeedbackCount(Callback<Map<String, Object>> callback) {
+        get("/user/feedback/unread-count", new RawCallback() {
+            @Override
+            public void onResponse(String json) {
+                deliverSuccess(callback, gson.fromJson(json, new TypeToken<Map<String, Object>>(){}.getType()));
+            }
+            @Override
+            public void onFailure(String error) {
+                deliverError(callback, error);
+            }
+        });
+    }
+
+    public void getFeedbackMessages(long feedbackId, Callback<Map<String, Object>> callback) {
+        get("/user/feedback/" + feedbackId + "/messages", new RawCallback() {
+            @Override
+            public void onResponse(String json) {
+                try {
+                    Map<String, Object> wrapper = gson.fromJson(json, new TypeToken<Map<String, Object>>(){}.getType());
+                    deliverSuccess(callback, wrapper != null ? wrapper : new java.util.HashMap<>());
+                } catch (Exception e) {
+                    deliverError(callback, "解析失败");
+                }
+            }
+            @Override
+            public void onFailure(String error) {
+                deliverError(callback, error);
+            }
+        });
+    }
+
+    public void sendFeedbackMessage(long feedbackId, String content, Callback<Map<String, Object>> callback) {
+        Map<String, String> body = new HashMap<>();
+        body.put("content", content);
+        post("/user/feedback/" + feedbackId + "/messages", body, new RawCallback() {
+            @Override
+            public void onResponse(String json) {
+                deliverSuccess(callback, gson.fromJson(json, new TypeToken<Map<String, Object>>(){}.getType()));
+            }
+            @Override
+            public void onFailure(String error) {
+                deliverError(callback, error);
+            }
+        });
+    }
+
+    public void markFeedbackRead(long feedbackId, Callback<Map<String, Object>> callback) {
+        put("/user/feedback/" + feedbackId + "/read", new Object(), new RawCallback() {
+            @Override
+            public void onResponse(String json) {
+                deliverSuccess(callback, gson.fromJson(json, new TypeToken<Map<String, Object>>(){}.getType()));
+            }
+            @Override
+            public void onFailure(String error) {
+                deliverError(callback, error);
+            }
+        });
+    }
+
+    public void exportData(Callback<Map<String, Object>> callback) {
+        get("/user/export-data", new RawCallback() {
+            @Override
+            public void onResponse(String json) {
+                deliverSuccess(callback, gson.fromJson(json, new TypeToken<Map<String, Object>>(){}.getType()));
+            }
+            @Override
+            public void onFailure(String error) {
+                deliverError(callback, error);
+            }
+        });
+    }
+
     // ==================== Body Records ====================
 
     public void getBodyRecords(Callback<List<Map<String, Object>>> callback) {
@@ -557,6 +715,25 @@ public class ApiClient {
                 Type listType = new TypeToken<List<Map<String, Object>>>(){}.getType();
                 List<Map<String, Object>> result = gson.fromJson(json, listType);
                 deliverSuccess(callback, result);
+            }
+            @Override
+            public void onFailure(String error) {
+                deliverError(callback, error);
+            }
+        });
+    }
+
+    public void getAnnouncements(Callback<List<Map<String, Object>>> callback) {
+        get("/announcements", new RawCallback() {
+            @Override
+            public void onResponse(String json) {
+                try {
+                    Map<String, Object> wrapper = gson.fromJson(json, new TypeToken<Map<String, Object>>(){}.getType());
+                    List<Map<String, Object>> list = (List<Map<String, Object>>) wrapper.get("list");
+                    deliverSuccess(callback, list != null ? list : new java.util.ArrayList<>());
+                } catch (Exception e) {
+                    deliverError(callback, "解析失败");
+                }
             }
             @Override
             public void onFailure(String error) {

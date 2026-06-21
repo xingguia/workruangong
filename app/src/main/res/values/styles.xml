@@ -107,4 +107,13 @@
         <item name="itemTextColor">@color/bottom_nav_color</item>
         <item name="android:background">@color/bg_card</item>
     </style>
+
+    <!-- 深色模式弹窗样式 -->
+    <style name="DarkDialog" parent="ThemeOverlay.MaterialComponents.Dialog.Alert">
+        <item name="android:background">@color/bg_card</item>
+        <item name="android:textColorPrimary">@color/text_primary</item>
+        <item name="android:textColorSecondary">@color/text_secondary</item>
+        <item name="colorAccent">@color/primary</item>
+        <item name="dialogCornerRadius">16dp</item>
+    </style>
 </resources>
