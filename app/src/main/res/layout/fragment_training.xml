@@ -118,9 +118,10 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:text="点击下方按钮添加训练任务"
+                android:text=""
                 android:textColor="@color/text_muted"
-                android:textSize="14sp" />
+                android:textSize="14sp"
+                android:visibility="gone" />
         </LinearLayout>
 
         <!-- Tasks Container -->

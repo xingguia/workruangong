@@ -659,7 +659,14 @@ public class SettingsFragment extends Fragment {
 
     private android.app.AlertDialog chatDialog;
 
+    private android.os.Handler chatRefreshHandler;
+    private Runnable chatRefreshRunnable;
+    private static final long CHAT_REFRESH_INTERVAL = 3000; // 3秒刷新一次
+
     private void showFeedbackChat(long feedbackId) {
+        // 停止之前的轮询
+        stopChatRefresh();
+
         com.example.myapplication.api.ApiClient.getInstance(requireContext())
                 .getFeedbackMessages(feedbackId, new com.example.myapplication.api.ApiClient.Callback<java.util.Map<String, Object>>() {
                     @Override
@@ -726,6 +733,12 @@ public class SettingsFragment extends Fragment {
 
                             chatDialog.show();
 
+                            // 对话关闭时停止轮询
+                            chatDialog.setOnDismissListener(d -> stopChatRefresh());
+
+                            // 启动轮询刷新
+                            startChatRefresh(feedbackId, container, chatView);
+
                             // 发送按钮
                             EditText chatInput = chatView.findViewById(R.id.chatInput);
                             TextView sendBtn = chatView.findViewById(R.id.chatSendBtn);
@@ -746,8 +759,8 @@ public class SettingsFragment extends Fragment {
                                                     chatInput.setText("");
                                                     sendBtn.setEnabled(true);
                                                     sendBtn.setText("发送");
-                                                    // 重新加载对话
-                                                    showFeedbackChat(feedbackId);
+                                                    // 立即刷新消息并滚动到底部
+                                                    refreshChatMessages(feedbackId, container, chatView);
                                                 });
                                             }
 
@@ -782,6 +795,81 @@ public class SettingsFragment extends Fragment {
                     public void onError(String error) {
                         if (!isAdded()) return;
                         Toast.makeText(requireContext(), "加载失败", Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
+
+    private void startChatRefresh(long feedbackId, LinearLayout container, View chatView) {
+        chatRefreshHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+        chatRefreshRunnable = new Runnable() {
+            @Override
+            public void run() {
+                if (!isAdded() || chatDialog == null || !chatDialog.isShowing()) {
+                    stopChatRefresh();
+                    return;
+                }
+                refreshChatMessages(feedbackId, container, chatView);
+                chatRefreshHandler.postDelayed(this, CHAT_REFRESH_INTERVAL);
+            }
+        };
+        chatRefreshHandler.postDelayed(chatRefreshRunnable, CHAT_REFRESH_INTERVAL);
+    }
+
+    private void stopChatRefresh() {
+        if (chatRefreshHandler != null && chatRefreshRunnable != null) {
+            chatRefreshHandler.removeCallbacks(chatRefreshRunnable);
+            chatRefreshHandler = null;
+            chatRefreshRunnable = null;
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private void refreshChatMessages(long feedbackId, LinearLayout container, View chatView) {
+        com.example.myapplication.api.ApiClient.getInstance(requireContext())
+                .getFeedbackMessages(feedbackId, new com.example.myapplication.api.ApiClient.Callback<java.util.Map<String, Object>>() {
+                    @Override
+                    public void onSuccess(java.util.Map<String, Object> data) {
+                        if (!isAdded()) return;
+                        requireActivity().runOnUiThread(() -> {
+                            java.util.List<java.util.Map<String, Object>> messages =
+                                    (java.util.List<java.util.Map<String, Object>>) data.get("messages");
+                            if (messages == null) messages = new java.util.ArrayList<>();
+
+                            // 记录当前消息数量
+                            int oldCount = container.getChildCount();
+
+                            // 只在有新消息时更新
+                            if (messages.size() != oldCount) {
+                                container.removeAllViews();
+                                if (messages.isEmpty()) {
+                                    TextView empty = new TextView(requireContext());
+                                    empty.setText("暂无消息");
+                                    empty.setTextSize(13);
+                                    empty.setTextColor(0xFF999999);
+                                    empty.setGravity(android.view.Gravity.CENTER);
+                                    empty.setPadding(0, 40, 0, 40);
+                                    container.addView(empty);
+                                } else {
+                                    for (java.util.Map<String, Object> msg : messages) {
+                                        addChatMessage(container, msg);
+                                    }
+                                    // 滚动到底部
+                                    View scrollView = chatView.findViewById(R.id.chatScrollView);
+                                    if (scrollView instanceof android.widget.ScrollView) {
+                                        ((android.widget.ScrollView) scrollView).post(() ->
+                                                ((android.widget.ScrollView) scrollView).fullScroll(android.view.View.FOCUS_DOWN));
+                                    } else if (scrollView instanceof androidx.core.widget.NestedScrollView) {
+                                        ((androidx.core.widget.NestedScrollView) scrollView).post(() ->
+                                                ((androidx.core.widget.NestedScrollView) scrollView).fullScroll(android.view.View.FOCUS_DOWN));
+                                    }
+                                }
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void onError(String error) {
+                        // 静默失败，下次轮询会重试
                     }
                 });
     }

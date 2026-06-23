@@ -1901,6 +1901,58 @@ function batchUpdateFeedbackStatus(status) {
   }).catch(e => toast(e.message,'error'));
 }
 
+let chatRefreshTimer = null;
+const CHAT_REFRESH_INTERVAL = 3000; // 3秒刷新一次
+
+function stopChatRefresh() {
+  if (chatRefreshTimer) {
+    clearInterval(chatRefreshTimer);
+    chatRefreshTimer = null;
+  }
+}
+
+function startChatRefresh(feedbackId) {
+  stopChatRefresh();
+  chatRefreshTimer = setInterval(() => {
+    if (!document.getElementById('modalOverlay')?.classList.contains('show')) {
+      stopChatRefresh();
+      return;
+    }
+    refreshChatMessages(feedbackId);
+  }, CHAT_REFRESH_INTERVAL);
+}
+
+function refreshChatMessages(feedbackId) {
+  api('/feedback/'+feedbackId+'/messages').then(data => {
+    const messages = data.messages || [];
+    const msgBox = document.getElementById('chatMessages');
+    if (!msgBox) { stopChatRefresh(); return; }
+
+    const messagesHtml = messages.length === 0
+      ? '<div style="text-align:center;color:var(--text-muted);padding:20px;font-size:13px">暂无消息</div>'
+      : messages.map(m => {
+        const time = new Date(m.created_at).toLocaleString('zh-CN');
+        const isAdmin = m.sender_type === 'admin';
+        return `
+          <div class="chat-msg ${isAdmin?'admin':'user'}">
+            <div>${m.content}</div>
+            <div class="msg-time">${isAdmin?'管理员':'用户'} · ${time}</div>
+          </div>
+        `;
+      }).join('');
+
+    // 保存滚动位置
+    const wasAtBottom = msgBox.scrollHeight - msgBox.scrollTop <= msgBox.clientHeight + 50;
+
+    msgBox.innerHTML = messagesHtml;
+
+    // 如果之前在底部，滚动到底部
+    if (wasAtBottom) {
+      msgBox.scrollTop = msgBox.scrollHeight;
+    }
+  }).catch(() => {});
+}
+
 function showChatModal(feedbackId) {
   const categoryMap = {bug:'BUG反馈', suggestion:'功能建议', other:'其他'};
   const statusMap = {pending:'待处理', processing:'处理中', replied:'已回复', resolved:'已解决'};
@@ -1960,6 +2012,8 @@ function showChatModal(feedbackId) {
     // Scroll to bottom
     const msgBox = document.getElementById('chatMessages');
     if(msgBox) msgBox.scrollTop = msgBox.scrollHeight;
+    // 启动轮询刷新
+    startChatRefresh(feedbackId);
   }).catch(e => toast('加载对话失败: '+e.message, 'error'));
 }
 
@@ -2009,6 +2063,7 @@ function copyText(text) {
 
 // ============ Modal ============
 function closeModal() {
+  stopChatRefresh();
   document.getElementById('modalOverlay').classList.remove('show');
   document.getElementById('modalBox').innerHTML = '';
   document.getElementById('modalBox').classList.remove('chat-modal');

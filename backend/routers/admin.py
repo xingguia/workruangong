@@ -578,7 +578,7 @@ def statistics_users(admin: dict = Depends(get_admin)):
     with get_db() as conn:
         cur = conn.cursor()
 
-        cur.execute("SELECT COALESCE(gender,'男') as gender, COUNT(*) FROM users GROUP BY gender")
+        cur.execute("SELECT CASE WHEN gender IS NULL OR gender='' THEN '未设置' ELSE gender END as gender, COUNT(*) FROM users GROUP BY gender")
         gender_data = [{"name": r[0], "value": r[1]} for r in cur.fetchall()]
 
         cur.execute("SELECT CASE WHEN fitness_goal IS NULL OR fitness_goal='' THEN '未设置' ELSE fitness_goal END as goal, COUNT(*) FROM users GROUP BY goal")

@@ -43,7 +43,7 @@ public class TrainingFragment extends Fragment {
     private ExercisePlanManager exercisePlanManager;
     private AchievementManager achievementManager;
     private int currentWeek = 1;
-    private int selectedDayIndex = 0;
+    private int selectedDayIndex = -1;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -142,7 +142,12 @@ public class TrainingFragment extends Fragment {
             container.setBackgroundTintList(ContextCompat.getColorStateList(requireContext(), R.color.primary));
             labelView.setTextColor(ContextCompat.getColor(requireContext(), R.color.white));
             statusView.setTextColor(ContextCompat.getColor(requireContext(), R.color.white));
-            selectedDayIndex = index;
+            if (selectedDayIndex == -1) selectedDayIndex = index;
+        } else if (index == selectedDayIndex) {
+            // 选中的非今天日期：显示选中边框
+            container.setBackgroundResource(R.drawable.bg_day_selected);
+            labelView.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_primary));
+            statusView.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_secondary));
         } else if (isCompletedDay) {
             // 已全部完成：显示绿色
             container.setBackgroundTintList(ContextCompat.getColorStateList(requireContext(), R.color.success));

@@ -103,6 +103,8 @@ public class LoginFragment extends Fragment {
                         errorMsg = "手机号或密码错误";
                     } else if (error.contains("not found") || error.contains("404")) {
                         errorMsg = "用户不存在";
+                    } else if (error.contains("该账号已被封禁") || error.contains("403")) {
+                        errorMsg = "该账号已被封禁，请联系管理员";
                     } else if (error.contains("timeout") || error.contains("connect")) {
                         errorMsg = "网络连接失败，请检查网络";
                     } else {
